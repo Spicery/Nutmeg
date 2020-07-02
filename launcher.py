@@ -1,0 +1,157 @@
+import argparse
+import json
+import sys
+
+###############################################################################
+# CodeTree - the internal representation of a nutmeg program
+###############################################################################
+
+class CodeTree:
+	"""
+	This is a loose sketch of a class that will represent the
+	internal syntax-tree of a unit of Nutmeg source code. It 
+	will become an abstract class with many subclasses.
+	"""
+
+	def __init__( self, jdata ):
+		"""This example class cheats and constructs directly from JSON"""
+		self._jdata = jdata
+
+
+	def serialise( self, dst ):
+		"""
+		Converts a this node into a text stream. We continue the
+		cheating by just digging out the JSON we stored earlier.
+		"""
+		json.dump( self._jdata, dst, sort_keys=True, indent=4 )
+		print( file=dst )
+
+
+@staticmethod
+def deserialise( src ):
+	"""
+	Reads a text stream in JSON format into a nutmeg-tree. It will probably
+	use an object_hook that maps a "type" field into a constructor for that
+	type of object.
+	"""
+	return CodeTree( json.load( src ) )
+
+
+###############################################################################
+# Components 
+###############################################################################
+
+# There will be a class for each component - and they will all be moved
+# to their own modules. 
+
+class Parser:
+	"""
+	A placeholder class that does something a little
+	like the real parser.
+	"""
+
+	def parse( self, src ):
+		return CodeTree( { "lines": src.read().splitlines() } )
+
+
+
+###############################################################################
+# Classes that implement the command-line functionality for each component
+###############################################################################
+
+
+class Launcher:
+
+	def __init__( self, args ):
+		self._args = args
+	
+	def launch( self ):
+		print( f'Not yet implemented: {self._args}' )
+
+
+class ParseLauncher( Launcher ):
+	
+	def launch( self ):
+		"""
+		This is a dummy function to show how the launcher and the basic
+		functionality will relate to each other.
+		"""
+		codetree = Parser().parse( self._args.input )
+		codetree.serialise( self._args.output )
+
+
+class ResolveLauncher( Launcher ):
+	"""Placeholder"""
+	pass
+
+
+class OptimiseLauncher( Launcher ):
+	"""Placeholder"""
+	pass
+
+
+class GenCodeLauncher( Launcher ):
+	"""Placeholder"""
+	pass
+
+
+class CompileLauncher( Launcher ):
+	"""Placeholder"""
+	pass
+
+
+class RunLauncher( Launcher ):
+	"""
+	We expect this will fork-and-exec into the C# monolithic runtime-engine 
+	after preparing the arguments. 
+	"""
+	pass
+
+
+###############################################################################
+# The command-line option parser
+###############################################################################
+
+if __name__ == "__main__":
+	parser = (
+		argparse.ArgumentParser( 
+			prog='nutmeg',
+			description=
+			"""
+			The nutmeg command is used to run part of or all of nutmeg\'s toolchain.
+			Typically is is used to compile nutmeg files together to produce a
+			runnable "bundle" file or to run a bundle-file. But by specifying the mode,
+			it can be used to run any single part of the toolchain.	
+			"""
+		)
+	)
+	parser.set_defaults( mode=RunLauncher )
+	
+	subparsers = (
+		parser.add_subparsers( 
+			help='Selects which part(s) of the nutmeg system to use'
+		)
+	)
+
+	mode_parse = subparsers.add_parser('parse', help='Parses nutmeg source code to generate a tree')
+	mode_parse.set_defaults( mode=ParseLauncher )
+	mode_parse.add_argument( '--input', type=argparse.FileType('r'), default=sys.stdin )
+	mode_parse.add_argument( '--output', type=argparse.FileType('w'), default=sys.stdout )
+
+	mode_resolve = subparsers.add_parser('resolve', help='Annotates a tree with scope information')
+	mode_resolve.set_defaults( mode=ResolveLauncher )
+
+	mode_optimise = subparsers.add_parser('optimise', help='Transforms a tree to improve performance')
+	mode_optimise.set_defaults( mode=OptimiseLauncher )
+
+	mode_gencode = subparsers.add_parser('gencode', help='Transforms a tree into back-end code')
+	mode_gencode.set_defaults( mode=GenCodeLauncher )
+
+	mode_compile = subparsers.add_parser('compile', help='Compiles nutmeg files to produce a bundle-file')
+	mode_compile.set_defaults( mode=CompileLauncher )
+
+	mode_run = subparsers.add_parser('run', help='Runs a bundle-file')
+	mode_run.set_defaults( mode=RunLauncher )
+
+	args = parser.parse_args()
+	args.mode( args ).launch()
