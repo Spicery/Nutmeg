@@ -1,0 +1,14 @@
+{
+    "comment": "x := 'hello, world!'",
+    "kind": "binding",
+    "lhs": {
+        "kind": "id",
+        "name": "x",
+        "reftype": "var"
+    },
+    "rhs": {
+        "kind": "int",
+        "value": "FF",
+        "radix": 16
+    }
+}

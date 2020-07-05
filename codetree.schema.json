@@ -1,0 +1,55 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "$ref": "#/definitions/STATEMENT",
+    "definitions": {
+        "STATEMENT": { "anyOf": [ { "$ref": "#/definitions/EXPRESSION" }, { "$ref": "#/definitions/BINDING" } ] },
+        "PATTERN": {
+            "type": "object",
+            "properties": {
+                "kind": { "enum": [ "id" ] },
+                "name": { "type": "string" },
+                "reftype": { "enum": [ "var" ] }  
+            },
+            "required": ["kind", "name", "reftype"]
+        },
+        "EXPRESSION": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "enum": [ "string" ] },
+                        "value": { "type": "string" }
+                    },
+                    "required": ["kind", "value"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "enum": [ "int" ] },
+                        "radix": { "type": "integer" },
+                        "value": { "type": "string" }
+                    },
+                    "required": ["kind", "value"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "enum": [ "id" ] },
+                        "name": { "type": "string" },
+                        "reftype": { "enum": [ "get", "set" ] }
+                    },
+                    "required": ["kind", "name", "reftype"]
+                }
+            ]
+        },
+        "BINDING": {
+            "type": "object",
+            "properties": {
+                "kind": { "enum": [ "binding" ] },
+                "lhs": { "$ref": "#/definitions/PATTERN" },
+                "rhs": { "$ref": "#/definitions/EXPRESSION" }
+            },
+            "required": ["kind", "lhs", "rhs"]
+        }
+    }
+}
