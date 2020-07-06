@@ -1,0 +1,12 @@
+### A switch-expression in Nutmeg
+switch x
+case 0
+case 1
+case 2 then
+    y
+case 3
+case 4
+    z
+else
+    null
+endswitch

@@ -32,7 +32,7 @@ LetExpression ::= 'let' Statements 'in' Statements ('endlet'|'end')
 
 IfExpression ::= 'if' Expression ('then'|':') Statements ( 'elseif' Expression ('then'|':') Statments )* ('else' ':'? Statements)? ('endif'|'end')
 
-SwitchExpression ::= 'switch' Expression ( ( 'case' Pattern )+ ('then'|':') Statements )* ('else' ':'? Statements)? ('endswitch'|'end')
+SwitchExpression ::= 'switch' Expression ':'? ( ( 'case' Pattern )+ ('then'|':') Statements )* ('else' ':'? Statements)? ('endswitch'|'end')
 
 LoopExpression ::= 'for' Queries ('do'|':') Statements ('endfor'|'end')
 

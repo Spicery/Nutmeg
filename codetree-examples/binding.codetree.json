@@ -1,5 +1,5 @@
 {
-    "comment": "x := 'hello, world!'",
+    "comment": "x := 16:FF",
     "kind": "binding",
     "lhs": {
         "kind": "id",

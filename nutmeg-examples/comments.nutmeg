@@ -1,0 +1,9 @@
+### This is an end of line comment.
+
+##[ This is a long comment that can go over
+    several lines. It allows nested long
+    comments. ##[ Like this ##]. Swift also
+    allows nested comments. This does make
+    the tokeniser a bit more complicated.
+##]
+
