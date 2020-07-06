@@ -1,0 +1,57 @@
+/* Prototype Grammar for Nutmeg */
+
+Statements ::= Statement ( ';' Statement )* ';'?
+
+Statement ::= Expression | Binding
+
+Binding ::= 
+    Pattern ':=' Expression |
+    'def' Identifier '(' Pattern ')' ('=>>'|':') Statements ('enddef'|'end')
+
+Pattern ::= 
+    LiteralConstant |
+    Identifier | 
+    '(' Pattern? ')' |
+    Pattern '(' Pattern ')' |
+    Pattern ( ',' Pattern )
+
+Expression ::= 
+    LiteralConstant |
+    Identifier | 
+    '(' Expression? ')' |
+    Expression '(' Expression ')' |
+    Expression InfixOperator Expression |
+    LetExpression |
+    IfExpression |
+    SwitchExpression |
+    LoopExpression |
+    LambdaExpression
+     
+
+LetExpression ::= 'let' Statements 'in' Statements ('endlet'|'end')
+
+IfExpression ::= 'if' Expression ('then'|':') Statements ( 'elseif' Expression ('then'|':') Statments )* ('else' ':'? Statements)? ('endif'|'end')
+
+SwitchExpression ::= 'switch' Expression ( ( 'case' Pattern )+ ('then'|':') Statements )* ('else' ':'? Statements)? ('endswitch'|'end')
+
+LoopExpression ::= 'for' Queries ('do'|':') Statements ('endfor'|'end')
+
+LambdaExpression ::= 'fn' Identifier? Pattern ('=>>'|':') Statements ('endfn'|'end')
+
+Queries ::= 
+    Query ('&&' Query)* |
+    Query ('||' Query)*
+
+Query ::= 
+    Expression |
+    Binding |
+    Identifier 'in' Expression |
+    '(' Queries ')'
+
+InfixOperator ::= ',' | '+' | '*' | '-' | '/' | '//' | 'and' | 'or' | '..' | '...' | '.' Identifier
+
+/* This is not quite right */
+Identifier ::= [http://www.w3.org/TR/xml-names/#NT-NCName]
+
+LiteralConstant ::= String | Number | Boolean | Null
+
