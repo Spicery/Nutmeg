@@ -1,0 +1,4 @@
+### A simple for-loop in Nutmeg.
+for i in 0 .. 10 do
+    x <- x + i
+endfor
