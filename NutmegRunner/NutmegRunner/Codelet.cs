@@ -83,7 +83,7 @@ namespace NutmegRunner {
 
         public abstract void Evaluate( RuntimeEngine runtimeEngine );
 
-        public abstract void Weave( Codelet continuation );
+        public abstract Codelet Weave( Codelet continuation );
 
         public abstract Codelet RunWovenCodelets( RuntimeEngine runtimeEngine );
 
@@ -99,8 +99,8 @@ namespace NutmegRunner {
             throw new NormalExitNutmegException();
         }
 
-        public override void Weave( Codelet continuation ) {
-            //  Skip.
+        public override Codelet Weave( Codelet continuation ) {
+            return this;
         }
 
     }
@@ -127,9 +127,10 @@ namespace NutmegRunner {
             this._next = continuation;
         }
 
-        public override void Weave( Codelet continuation ) {
-            this._functionCodelet.Weave( null );
+        public override Codelet Weave( Codelet continuation ) {
+            Codelet fc = this._functionCodelet.Weave( null );
             this.ShallowWeave( continuation );
+            return this;
         }
     }
 
@@ -143,8 +144,8 @@ namespace NutmegRunner {
             return runtimeEngine.Return();
         }
 
-        public override void Weave( Codelet continuation ) {
-            // Skip.
+        public override Codelet Weave( Codelet continuation ) {
+            return this;
         }
 
 
@@ -173,8 +174,9 @@ namespace NutmegRunner {
             this.Body.Evaluate( runtimeEngine );
         }
 
-        public override void Weave( Codelet continuation ) {
-            this.Body.Weave( new ReturnCodelet() );
+        public override Codelet Weave( Codelet continuation ) {
+            this.Body = this.Body.Weave( new ReturnCodelet() );
+            return this;
         }
 
         public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
@@ -213,8 +215,9 @@ namespace NutmegRunner {
             this._systemFunction( runtimeEngine );
         }
 
-        public override void Weave( Codelet continuation ) {
+        public override Codelet Weave( Codelet continuation ) {
             this._next = continuation;
+            return this;
         }
 
         public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
@@ -245,8 +248,9 @@ namespace NutmegRunner {
             runtimeEngine.Push( this.Value );
         }
 
-        public override void Weave( Codelet continuation ) {
+        public override Codelet Weave( Codelet continuation ) {
             this._next = continuation;
+            return this;
         }
 
         public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {

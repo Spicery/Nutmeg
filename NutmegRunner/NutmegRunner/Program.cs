@@ -34,14 +34,18 @@ namespace NutmegRunner {
                 var option = args.First.Value;
                 args.RemoveFirst();
                 var n = option.IndexOf( '=' );
-                var parameter = "";
+                string parameter = null;
                 if (n != -1) {
                     parameter = option.Substring( n + 1 );
                     option = option.Substring( 0, n );
                 }
                 switch (option) {
                     case "--entry-point":
-                        entryPoint = parameter;
+                        if (parameter != null) {
+                            entryPoint = parameter;
+                        } else {
+                            throw new UsageNutmegException();
+                        }
                         break;
                     default:
                         throw new NutmegException( "Unrecognised option" ).Culprit( "Option", option );
@@ -69,7 +73,7 @@ namespace NutmegRunner {
                     Codelet codelet = Codelet.DeserialiseCodelet( jsonValue );
                     RuntimeEngine runtimeEngine = new RuntimeEngine();
                     runtimeEngine.Bind( idName, codelet );
-                    runtimeEngine.WeaveCodelets();
+                    runtimeEngine.WeaveDictionary();
                     runtimeEngine.Start( idName, useEvaluate: false, debug: true );
                 } else {
                     stdErr.WriteLine( "No such entry point, so sorry" );
