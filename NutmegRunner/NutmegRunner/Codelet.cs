@@ -83,6 +83,71 @@ namespace NutmegRunner {
 
         public abstract void Evaluate( RuntimeEngine runtimeEngine );
 
+        public abstract void Weave( Codelet continuation );
+
+        public abstract Codelet RunWovenCodelets( RuntimeEngine runtimeEngine );
+
+    }
+
+    public class HaltCodelet : Codelet {
+
+        public override void Evaluate( RuntimeEngine runtimeEngine ) {
+            throw new NormalExitNutmegException();
+        }
+
+        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
+            throw new NormalExitNutmegException();
+        }
+
+        public override void Weave( Codelet continuation ) {
+            //  Skip.
+        }
+
+    }
+
+    public class CallQCodelet : Codelet {
+
+        FunctionCodelet _functionCodelet;
+        Codelet _next;
+
+        public CallQCodelet( FunctionCodelet fc ) {
+            this._functionCodelet = fc;
+        }
+
+        public override void Evaluate( RuntimeEngine runtimeEngine ) {
+            throw new NotImplementedException();
+        }
+
+        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.PushReturnAddress( this._next );
+            return this._functionCodelet.Body;
+        }
+
+        public void ShallowWeave( Codelet continuation ) {
+            this._next = continuation;
+        }
+
+        public override void Weave( Codelet continuation ) {
+            this._functionCodelet.Weave( null );
+            this.ShallowWeave( continuation );
+        }
+    }
+
+    public class ReturnCodelet : Codelet {
+
+        public override void Evaluate( RuntimeEngine runtimeEngine ) {
+            throw new NutmegException("Unreachable");
+        }
+
+        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
+            return runtimeEngine.Return();
+        }
+
+        public override void Weave( Codelet continuation ) {
+            // Skip.
+        }
+
+
     }
 
     public class FunctionCodelet : Codelet {
@@ -108,6 +173,14 @@ namespace NutmegRunner {
             this.Body.Evaluate( runtimeEngine );
         }
 
+        public override void Weave( Codelet continuation ) {
+            this.Body.Weave( new ReturnCodelet() );
+        }
+
+        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
+            throw new NutmegException( "This never happens" );
+        }
+
     }
 
     public class SyscallCodelet : Codelet {
@@ -124,6 +197,8 @@ namespace NutmegRunner {
 
         private SystemFunction _systemFunction;
 
+        private Codelet _next;
+
         [JsonProperty( "arguments" )]
         public Codelet[] Arguments { get; set; }
 
@@ -138,6 +213,17 @@ namespace NutmegRunner {
             this._systemFunction( runtimeEngine );
         }
 
+        public override void Weave( Codelet continuation ) {
+            this._next = continuation;
+        }
+
+        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
+            foreach (var arg in Arguments) {
+                arg.Evaluate( runtimeEngine );
+            }
+            this._systemFunction( runtimeEngine );
+            return this._next;
+        }
     }
 
     public class StringCodelet : Codelet {
@@ -150,6 +236,8 @@ namespace NutmegRunner {
             this.Value = value;
         }
 
+        private Codelet _next;
+
         [JsonProperty( "value" )]
         public string Value { get; set; }
 
@@ -157,6 +245,14 @@ namespace NutmegRunner {
             runtimeEngine.Push( this.Value );
         }
 
+        public override void Weave( Codelet continuation ) {
+            this._next = continuation;
+        }
+
+        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.Push( this.Value );
+            return this._next;
+        }
     }
 
 }

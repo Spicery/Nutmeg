@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace NutmegRunner {
 
@@ -61,17 +59,18 @@ namespace NutmegRunner {
             using (SQLiteConnection connection = new SQLiteConnection($"Data Source={this.bundleFile}"))
             {
                 connection.Open();
-                var cmd = new SQLiteCommand("SELECT [Value] FROM [Bindings] B JOIN [EntryPoints] E ON E.[IdName] = B.[IdName] WHERE E.[IdName]=@EntryPoint", connection);
+                var cmd = new SQLiteCommand("SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [EntryPoints] E ON E.[IdName] = B.[IdName] WHERE E.[IdName]=@EntryPoint", connection);
                 cmd.Parameters.AddWithValue( "@EntryPoint", this.entryPoint );
                 cmd.Prepare();
                 var reader = cmd.ExecuteReader();
                 if (reader.Read()) {
-                    string jsonValue = reader.GetString( 0 );
+                    string idName = reader.GetString( 0 );
+                    string jsonValue = reader.GetString( 1 );
                     Codelet codelet = Codelet.DeserialiseCodelet( jsonValue );
-                    if (debug) stdErr.WriteLine( $"Running codelet ..." );
                     RuntimeEngine runtimeEngine = new RuntimeEngine();
-                    codelet.Evaluate( runtimeEngine );
-                    if (debug) stdErr.WriteLine( $"Bye, bye ..." );
+                    runtimeEngine.Bind( idName, codelet );
+                    runtimeEngine.WeaveCodelets();
+                    runtimeEngine.Start( idName, useEvaluate: false, debug: true );
                 } else {
                     stdErr.WriteLine( "No such entry point, so sorry" );
                 }

@@ -24,8 +24,12 @@ namespace NutmegRunner {
     }
 
     public class UsageNutmegException : NutmegException {
-        public UsageNutmegException() : base( "" ) {
+        public UsageNutmegException() : base( "Usage" ) {
+        }
+    }
 
+    public class NormalExitNutmegException : NutmegException {
+        public NormalExitNutmegException() : base( "NormalExit" ) {
         }
     }
 
