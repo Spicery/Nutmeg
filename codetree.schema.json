@@ -47,7 +47,7 @@
                         "top": { "$ref": "#/definitions/EXPRESSION" },
                         "bottom": { "$ref": "#/definitions/EXPRESSION" }
                     }
-                }
+                },
                 {
                     "type": "object",
                     "properties": {
