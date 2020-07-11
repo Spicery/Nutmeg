@@ -1,0 +1,51 @@
+{
+    "comment": "let x := 1; y := 2 in x + y endlet",
+    "kind": "let",
+    "top": [
+        {
+            "kind": "binding",
+            "lhs": {
+                "kind": "id",
+                "name": "x",
+                "reftype": "var"
+            },
+            "rhs": {
+                "kind": "int",
+                "value": "1"
+            }
+        },
+        {
+            "kind": "binding",
+            "lhs": {
+                "kind": "id",
+                "name": "y",
+                "reftype": "var"
+            },
+            "rhs": {
+                "kind": "int",
+                "value": "2"
+            }
+        }
+    ],
+    "bottom": [
+        {
+            "kind": "syscall",
+            "name": "+",
+            "arguments": {
+                "kind": "seq",
+                "body": [
+                    {
+                        "kind": "id",
+                        "name": "x",
+                        "reftype": "get"
+                    },
+                    {
+                        "kind": "id",
+                        "name": "y",
+                        "reftype": "get"
+                    }
+                ]
+            }
+        }
+    ]
+}

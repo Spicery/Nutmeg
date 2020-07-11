@@ -1,0 +1,35 @@
+{
+    "comment": "x * y + 1",
+    "kind": "syscall",
+    "name": "+",
+    "arguments": {
+        "kind": "seq",
+        "body": [
+            {
+                "comment": "x * y",
+                "kind": "syscall",
+                "name": "+",
+                "arguments": {
+                    "kind": "seq",
+                    "body": [
+                        {
+                            "kind": "id",
+                            "name": "x",
+                            "reftype": "get"
+                        },
+                        {
+                            "kind": "id",
+                            "name": "y",
+                            "reftype": "get"
+                        }
+                    ]
+                }
+            },
+            {
+                "comment": "1",
+                "kind": "int",
+                "value": "1"
+            }
+        ]
+    }
+}

@@ -1,23 +1,57 @@
 {
     "$schema": "http://json-schema.org/schema#",
-    "$ref": "#/definitions/STATEMENT",
+    "$ref": "#/definitions/EXPRESSION",
     "definitions": {
-        "STATEMENT": { "anyOf": [ { "$ref": "#/definitions/EXPRESSION" }, { "$ref": "#/definitions/BINDING" } ] },
         "PATTERN": {
-            "type": "object",
-            "properties": {
-                "kind": { "enum": [ "id" ] },
-                "name": { "type": "string" },
-                "reftype": { "enum": [ "var" ] }  
-            },
-            "required": ["kind", "name", "reftype"]
-        },
-        "EXPRESSION": {
-            "anyOf": [
+            "oneOf": [
                 {
                     "type": "object",
                     "properties": {
-                        "kind": { "enum": [ "string" ] },
+                        "kind": { "const": "id" },
+                        "name": { "type": "string" },
+                        "reftype": { "enum": [ "var" ] }  
+                    },
+                    "required": ["kind", "name", "reftype"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "const": "seq" },
+                        "body": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/PATTERN" }
+                        }
+                    },
+                    "required": ["kind", "body"]
+                }
+            ]
+        },
+        "EXPRESSION": {
+            "oneOf": [
+                { "$ref": "#/definitions/BINDING" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "const": "seq" },
+                        "body": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/EXPRESSION" }
+                        }
+                    },
+                    "required": ["kind", "body"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "const": "let" },
+                        "top": { "$ref": "#/definitions/EXPRESSION" },
+                        "bottom": { "$ref": "#/definitions/EXPRESSION" }
+                    }
+                }
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "const": "string" },
                         "value": { "type": "string" }
                     },
                     "required": ["kind", "value"]
@@ -25,7 +59,7 @@
                 {
                     "type": "object",
                     "properties": {
-                        "kind": { "enum": [ "int" ] },
+                        "kind": { "const": "int" },
                         "radix": { "type": "integer" },
                         "value": { "type": "string" }
                     },
@@ -34,11 +68,54 @@
                 {
                     "type": "object",
                     "properties": {
-                        "kind": { "enum": [ "id" ] },
+                        "kind": { "const": "id" },
                         "name": { "type": "string" },
                         "reftype": { "enum": [ "get", "set" ] }
                     },
                     "required": ["kind", "name", "reftype"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind" : { "const": "syscall" },
+                        "name" : { "type": "string" },
+                        "arguments": { "$ref": "#/definitions/EXPRESSION" }
+                    }
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind" : { "const": "if" },
+                        "testactions" : { 
+                            "type": "array",
+                            "items": {
+                                "type": "array",
+                                "items": [
+                                    { "$ref": "#/definitions/EXPRESSION" },
+                                    { "$ref": "#/definitions/EXPRESSION" }
+                                ]
+                            }
+                        },
+                        "else": { "$ref": "#/definitions/EXPRESSION" }
+                    },
+                    "required": ["kind", "testactions", "else"]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind" : { "const": "call" },
+                        "function": { "$ref": "#/definitions/EXPRESSION" },
+                        "arguments": { "$ref": "#/definitions/EXPRESSION" }
+                    }
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind" : { "const": "function" },
+                        "parameters": { "$ref": "#/definitions/PATTERN" },
+                        "body": { "$ref": "#/definitions/EXPRESSION" }
+                    },
+                    "required": ["kind", "parameters", "body"]
                 }
             ]
         },
