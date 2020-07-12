@@ -42,7 +42,7 @@ namespace NutmegRunner {
                 switch (option) {
                     case "--entry-point":
                         if (parameter != null) {
-                            entryPoint = parameter;
+                            this.entryPoint = parameter;
                         } else {
                             throw new UsageNutmegException();
                         }

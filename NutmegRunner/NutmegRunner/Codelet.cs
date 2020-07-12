@@ -105,6 +105,9 @@ namespace NutmegRunner {
 
     }
 
+    /// <summary>
+    /// This is a runtimeEngine-only class that will be synthesized on-the-fly.
+    /// </summary>
     public class CallQCodelet : Codelet {
 
         FunctionCodelet _functionCodelet;
@@ -134,6 +137,9 @@ namespace NutmegRunner {
         }
     }
 
+    /// <summary>
+    /// This is a runtimeEngine-only class that will be synthesized on-the-fly.
+    /// </summary>
     public class ReturnCodelet : Codelet {
 
         public override void Evaluate( RuntimeEngine runtimeEngine ) {
