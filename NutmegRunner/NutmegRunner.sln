@@ -1,14 +1,13 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutmegRunner", "NutmegRunner\NutmegRunner.csproj", "{F0D17658-A393-46CE-87EE-E1683F3CE441}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D24854D5-A3F1-4302-A61C-713FD388F41E}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutmegRunnerTests", "NutmegRunnerTests\NutmegRunnerTests.csproj", "{A96D35BA-362D-4C93-8BDF-49331F875621}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutmegRunner", "NutmegRunner\NutmegRunner.csproj", "{CFABF166-01D5-4620-AA05-D3ECD08B4430}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutmegRunnerTests", "NutmegRunnerTests\NutmegRunnerTests.csproj", "{141B3D0E-F4AA-4E21-93C0-662DF0E980E8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,13 +15,13 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F0D17658-A393-46CE-87EE-E1683F3CE441}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F0D17658-A393-46CE-87EE-E1683F3CE441}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F0D17658-A393-46CE-87EE-E1683F3CE441}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F0D17658-A393-46CE-87EE-E1683F3CE441}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A96D35BA-362D-4C93-8BDF-49331F875621}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A96D35BA-362D-4C93-8BDF-49331F875621}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A96D35BA-362D-4C93-8BDF-49331F875621}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A96D35BA-362D-4C93-8BDF-49331F875621}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFABF166-01D5-4620-AA05-D3ECD08B4430}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFABF166-01D5-4620-AA05-D3ECD08B4430}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFABF166-01D5-4620-AA05-D3ECD08B4430}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFABF166-01D5-4620-AA05-D3ECD08B4430}.Release|Any CPU.Build.0 = Release|Any CPU
+		{141B3D0E-F4AA-4E21-93C0-662DF0E980E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{141B3D0E-F4AA-4E21-93C0-662DF0E980E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{141B3D0E-F4AA-4E21-93C0-662DF0E980E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{141B3D0E-F4AA-4E21-93C0-662DF0E980E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

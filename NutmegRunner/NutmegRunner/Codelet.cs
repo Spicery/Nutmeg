@@ -81,81 +81,10 @@ namespace NutmegRunner {
             return JsonConvert.DeserializeObject<FunctionCodelet>( jsonValue );
         }
 
-        public abstract void Evaluate( RuntimeEngine runtimeEngine );
-
-        public abstract Codelet Weave( Codelet continuation );
-
-        public abstract Codelet RunWovenCodelets( RuntimeEngine runtimeEngine );
+        public abstract WovenCodelet Weave( WovenCodelet continuation );
 
     }
 
-    public class HaltCodelet : Codelet {
-
-        public override void Evaluate( RuntimeEngine runtimeEngine ) {
-            throw new NormalExitNutmegException();
-        }
-
-        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
-            throw new NormalExitNutmegException();
-        }
-
-        public override Codelet Weave( Codelet continuation ) {
-            return this;
-        }
-
-    }
-
-    /// <summary>
-    /// This is a runtimeEngine-only class that will be synthesized on-the-fly.
-    /// </summary>
-    public class CallQCodelet : Codelet {
-
-        FunctionCodelet _functionCodelet;
-        Codelet _next;
-
-        public CallQCodelet( FunctionCodelet fc ) {
-            this._functionCodelet = fc;
-        }
-
-        public override void Evaluate( RuntimeEngine runtimeEngine ) {
-            throw new NotImplementedException();
-        }
-
-        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
-            runtimeEngine.PushReturnAddress( this._next );
-            return this._functionCodelet.Body;
-        }
-
-        public void ShallowWeave( Codelet continuation ) {
-            this._next = continuation;
-        }
-
-        public override Codelet Weave( Codelet continuation ) {
-            Codelet fc = this._functionCodelet.Weave( null );
-            this.ShallowWeave( continuation );
-            return this;
-        }
-    }
-
-    /// <summary>
-    /// This is a runtimeEngine-only class that will be synthesized on-the-fly.
-    /// </summary>
-    public class ReturnCodelet : Codelet {
-
-        public override void Evaluate( RuntimeEngine runtimeEngine ) {
-            throw new NutmegException("Unreachable");
-        }
-
-        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
-            return runtimeEngine.Return();
-        }
-
-        public override Codelet Weave( Codelet continuation ) {
-            return this;
-        }
-
-
-    }
 
     public class FunctionCodelet : Codelet {
 
@@ -166,27 +95,73 @@ namespace NutmegRunner {
         [JsonProperty( "body" )]
         public Codelet Body { get; set; }
 
+
         public FunctionCodelet() {
             //  Used by deserialisation.
         }
 
         public FunctionCodelet( int nargs, int nlocals, Codelet body ) {
-            Nargs = nargs;
-            Nlocals = nlocals;
+            this.Nargs = nargs;
+            this.Nlocals = nlocals;
+            this.Body = body;
+        }
+
+        public override WovenCodelet Weave( WovenCodelet continuation ) {
+            return new FunctionWovenCodelet(Nargs, Nlocals, this.Body.Weave( new ReturnWovenCodelet() ) );
+        }
+
+
+    }
+
+    public class SeqCodelet : Codelet {
+
+        [JsonProperty( "body" )]
+        Codelet[] Body { get; set; }
+
+        public SeqCodelet() {
+            //  Used by deserialisation.
+        }
+
+        public SeqCodelet( params Codelet[] body ) {
             Body = body;
         }
 
-        public override void Evaluate( RuntimeEngine runtimeEngine ) {
-            this.Body.Evaluate( runtimeEngine );
+        public override WovenCodelet Weave( WovenCodelet continuation ) {
+            for ( int i = Body.Length - 1; i >= 0; i -= 1 ) {
+                Codelet codelet = Body[i];
+                continuation = codelet.Weave( continuation );
+            }
+            return continuation;
         }
 
-        public override Codelet Weave( Codelet continuation ) {
-            this.Body = this.Body.Weave( new ReturnCodelet() );
-            return this;
+    }
+
+
+
+    public class If3Codelet : Codelet {
+
+        [JsonProperty( "test" )]
+        Codelet TestPart { get; set; }
+
+        [JsonProperty( "then" )]
+        Codelet ThenPart { get; set; }
+
+        [JsonProperty( "else" )]
+        Codelet ElsePart { get; set; }
+
+        public If3Codelet() {
+            //  Used by deserialisation
         }
 
-        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
-            throw new NutmegException( "This never happens" );
+        public If3Codelet( Codelet testPart, Codelet thenPart, Codelet elsePart) {
+            TestPart = testPart;
+            ThenPart = thenPart;
+            ElsePart = elsePart;
+        }
+
+
+        public override WovenCodelet Weave( WovenCodelet continuation ) {
+            return TestPart.Weave( new ForkWovenCodelet( ThenPart.Weave( continuation ), ElsePart.Weave( continuation ) ) );
         }
 
     }
@@ -205,34 +180,17 @@ namespace NutmegRunner {
 
         private SystemFunction _systemFunction;
 
-        private Codelet _next;
-
         [JsonProperty( "arguments" )]
-        public Codelet[] Arguments { get; set; }
+        public Codelet Arguments { get; set; }
 
         public SyscallCodelet() {
             //  Used by deserialisation.
         }
 
-        public override void Evaluate( RuntimeEngine runtimeEngine ) {
-            foreach ( var arg in Arguments ) {
-                arg.Evaluate( runtimeEngine );
-            }
-            this._systemFunction( runtimeEngine );
+        public override WovenCodelet Weave( WovenCodelet continuation ) {
+            return Arguments.Weave( new SyscallWovenCodelet( _systemFunction, continuation ) );
         }
 
-        public override Codelet Weave( Codelet continuation ) {
-            this._next = continuation;
-            return this;
-        }
-
-        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
-            foreach (var arg in Arguments) {
-                arg.Evaluate( runtimeEngine );
-            }
-            this._systemFunction( runtimeEngine );
-            return this._next;
-        }
     }
 
     public class StringCodelet : Codelet {
@@ -245,24 +203,13 @@ namespace NutmegRunner {
             this.Value = value;
         }
 
-        private Codelet _next;
-
         [JsonProperty( "value" )]
         public string Value { get; set; }
 
-        public override void Evaluate( RuntimeEngine runtimeEngine ) {
-            runtimeEngine.Push( this.Value );
+        public override WovenCodelet Weave( WovenCodelet continuation ) {
+            return new PushQWovenCodelet( this.Value, continuation );
         }
 
-        public override Codelet Weave( Codelet continuation ) {
-            this._next = continuation;
-            return this;
-        }
-
-        public override Codelet RunWovenCodelets( RuntimeEngine runtimeEngine ) {
-            runtimeEngine.Push( this.Value );
-            return this._next;
-        }
     }
 
 }

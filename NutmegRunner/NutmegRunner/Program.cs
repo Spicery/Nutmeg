@@ -73,7 +73,6 @@ namespace NutmegRunner {
                     Codelet codelet = Codelet.DeserialiseCodelet( jsonValue );
                     RuntimeEngine runtimeEngine = new RuntimeEngine();
                     runtimeEngine.Bind( idName, codelet );
-                    runtimeEngine.WeaveDictionary();
                     runtimeEngine.Start( idName, useEvaluate: false, debug: true );
                 } else {
                     stdErr.WriteLine( "No such entry point, so sorry" );
