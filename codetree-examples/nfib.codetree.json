@@ -1,0 +1,112 @@
+{
+    "comment": "An example function 'nfib'",
+    "kind": "binding",
+    "lhs": {
+        "kind": "id",
+        "name": "nfib",
+        "reftype": "var"
+    },
+    "rhs": {
+        "kind": "function",
+        "parameters": {
+            "kind": "id",
+            "name": "n",
+            "reftype": "var"
+        },
+        "body": {
+            "kind": "if",
+            "test": {
+                "kind": "syscall",
+                "name": "<=",
+                "arguments": {
+                    "kind": "seq",
+                    "body": [
+                        {
+                            "kind": "id",
+                            "name": "n",
+                            "reftype": "get"
+                        },
+                        {
+                            "kind": "int",
+                            "value": "1"
+                        }
+                    ]
+                }
+            },
+            "then": {
+                "kind": "int",
+                "value": "1"
+            },
+            "else": {
+                "kind": "syscall",
+                "name": "+",
+                "arguments": {
+                    "kind": "seq",
+                    "body": [
+                        {
+                            "kind": "int",
+                            "value": "1"
+                        },
+                        {
+                            "kind": "call",
+                            "function": {
+                                "kind": "id",
+                                "name": "nfib",
+                                "reftype": "get"
+                            },
+                            "arguments": {
+                                "kind": "seq",
+                                "body": [
+                                    {
+                                        "kind": "syscall",
+                                        "name": "-",
+                                        "arguments": {
+                                            "kind": "seq",
+                                            "body": [
+                                                {
+                                                    "kind": "id",
+                                                    "name": "n",
+                                                    "reftype": "get"
+                                                },
+                                                {
+                                                    "kind": "int",
+                                                    "value": "1"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "kind": "call",
+                            "function": {
+                                "kind": "id",
+                                "name": "nfib",
+                                "reftype": "get"
+                            },
+                            "arguments": {
+                                "kind": "syscall",
+                                "name": "-",
+                                "arguments": {
+                                    "kind": "seq",
+                                    "body": [
+                                        {
+                                            "kind": "id",
+                                            "name": "n",
+                                            "reftype": "get"
+                                        },
+                                        {
+                                            "kind": "int",
+                                            "value": "2"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
