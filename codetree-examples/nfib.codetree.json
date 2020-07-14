@@ -15,32 +15,28 @@
         },
         "body": {
             "kind": "if",
-            "testactions": [
-                [
-                    {
-                        "kind": "syscall",
-                        "name": "<=",
-                        "arguments": {
-                            "kind": "seq",
-                            "body": [
-                                {
-                                    "kind": "id",
-                                    "name": "n",
-                                    "reftype": "get"
-                                },
-                                {
-                                    "kind": "int",
-                                    "value": "1"
-                                }
-                            ]
+            "test": {
+                "kind": "syscall",
+                "name": "<=",
+                "arguments": {
+                    "kind": "seq",
+                    "body": [
+                        {
+                            "kind": "id",
+                            "name": "n",
+                            "reftype": "get"
+                        },
+                        {
+                            "kind": "int",
+                            "value": "1"
                         }
-                    },
-                    {
-                        "kind": "int",
-                        "value": "1"
-                    }
-                ]
-            ],
+                    ]
+                }
+            },
+            "then": {
+                "kind": "int",
+                "value": "1"
+            },
             "else": {
                 "kind": "syscall",
                 "name": "+",

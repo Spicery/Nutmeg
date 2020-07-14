@@ -86,16 +86,8 @@
                     "type": "object",
                     "properties": {
                         "kind" : { "const": "if" },
-                        "testactions" : { 
-                            "type": "array",
-                            "items": {
-                                "type": "array",
-                                "items": [
-                                    { "$ref": "#/definitions/EXPRESSION" },
-                                    { "$ref": "#/definitions/EXPRESSION" }
-                                ]
-                            }
-                        },
+                        "test" : { "$ref": "#/definitions/EXPRESSION" },
+                        "then" : { "$ref": "#/definitions/EXPRESSION" },
                         "else": { "$ref": "#/definitions/EXPRESSION" }
                     },
                     "required": ["kind", "testactions", "else"]
