@@ -5,9 +5,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutmegRunner", "NutmegRunner\NutmegRunner.csproj", "{CFABF166-01D5-4620-AA05-D3ECD08B4430}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutmegRunner", "NutmegRunner\NutmegRunner.csproj", "{EAFCD20E-1EC9-4365-A0C7-EF0FB842768C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutmegRunnerTests", "NutmegRunnerTests\NutmegRunnerTests.csproj", "{141B3D0E-F4AA-4E21-93C0-662DF0E980E8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutmegRunnerTests", "NutmegRunnerTests\NutmegRunnerTests.csproj", "{BA9B98D5-FC8B-451C-9543-D02CE59FC18A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,13 +15,13 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CFABF166-01D5-4620-AA05-D3ECD08B4430}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CFABF166-01D5-4620-AA05-D3ECD08B4430}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CFABF166-01D5-4620-AA05-D3ECD08B4430}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CFABF166-01D5-4620-AA05-D3ECD08B4430}.Release|Any CPU.Build.0 = Release|Any CPU
-		{141B3D0E-F4AA-4E21-93C0-662DF0E980E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{141B3D0E-F4AA-4E21-93C0-662DF0E980E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{141B3D0E-F4AA-4E21-93C0-662DF0E980E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{141B3D0E-F4AA-4E21-93C0-662DF0E980E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAFCD20E-1EC9-4365-A0C7-EF0FB842768C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAFCD20E-1EC9-4365-A0C7-EF0FB842768C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAFCD20E-1EC9-4365-A0C7-EF0FB842768C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAFCD20E-1EC9-4365-A0C7-EF0FB842768C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA9B98D5-FC8B-451C-9543-D02CE59FC18A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA9B98D5-FC8B-451C-9543-D02CE59FC18A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA9B98D5-FC8B-451C-9543-D02CE59FC18A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA9B98D5-FC8B-451C-9543-D02CE59FC18A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

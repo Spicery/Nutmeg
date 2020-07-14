@@ -68,6 +68,8 @@ namespace NutmegRunner {
                 case "function": return new FunctionCodelet();
                 case "syscall": return new SyscallCodelet();
                 case "string": return new StringCodelet();
+                case "bool": return new BoolCodelet();
+                case "if": return new If3Codelet();
                 default: throw new NutmegException( $"Unrecognised kind: {kind}" );
             }
         }
@@ -205,6 +207,25 @@ namespace NutmegRunner {
 
         [JsonProperty( "value" )]
         public string Value { get; set; }
+
+        public override WovenCodelet Weave( WovenCodelet continuation ) {
+            return new PushQWovenCodelet( this.Value, continuation );
+        }
+
+    }
+
+    public class BoolCodelet : Codelet {
+
+        public BoolCodelet() {
+            //  Used by deserialisation.
+        }
+
+        public BoolCodelet( bool value ) {
+            this.Value = value;
+        }
+
+        [JsonProperty( "value" )]
+        public bool Value { get; set; }
 
         public override WovenCodelet Weave( WovenCodelet continuation ) {
             return new PushQWovenCodelet( this.Value, continuation );
