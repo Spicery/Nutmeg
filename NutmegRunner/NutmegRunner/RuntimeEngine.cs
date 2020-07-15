@@ -22,7 +22,7 @@ namespace NutmegRunner {
 
     public class RuntimeEngine {
 
-        Dictionary<string, WovenCodelet> _dictionary = new Dictionary<string, WovenCodelet>();
+        Dictionary<string, Runlet> _dictionary = new Dictionary<string, Runlet>();
 
         /// <summary>
         /// Soon we will need to replace this with a custom implementation of a layered stack
@@ -67,24 +67,24 @@ namespace NutmegRunner {
             this._dictionary.Add( idName, codelet.Weave( null ) );
         }
 
-        public WovenCodelet Return() {
-            return (WovenCodelet)this._callStack.Pop();
+        public Runlet Return() {
+            return (Runlet)this._callStack.Pop();
         }
 
         public void Start( string idName, bool useEvaluate, bool debug ) {
-            WovenCodelet codelet = this._dictionary.TryGetValue( idName, out var c ) ? c : null;
+            Runlet codelet = this._dictionary.TryGetValue( idName, out var c ) ? c : null;
             StartFromCodelet( codelet, useEvaluate, debug );
         }
 
-        public void StartFromCodelet( WovenCodelet codelet, bool useEvaluate, bool debug ) {
+        public void StartFromCodelet( Runlet codelet, bool useEvaluate, bool debug ) {
             TextWriter stdErr = Console.Error;
-            if (codelet is FunctionWovenCodelet fwc) {
+            if (codelet is FunctionRunlet fwc) {
                 if (debug) stdErr.WriteLine( $"Running codelet ..." );
                 try {
-                    WovenCodelet currentInstruction = new CallQWovenCodelet( fwc, new HaltWovenCodelet() );
+                    Runlet currentInstruction = new CallQRunlet( fwc, new HaltWovenCodelet() );
                     while (true) {
                         //Console.WriteLine( $"current instruction is {currentInstruction}" );
-                        currentInstruction = currentInstruction.RunWovenCodelets( this );
+                        currentInstruction = currentInstruction.ExecuteRunlet( this );
                     }
                 } catch (NormalExitNutmegException) {
                     //  Normal exit.
@@ -96,7 +96,7 @@ namespace NutmegRunner {
             }
         }
 
-        public void PushReturnAddress( WovenCodelet next ) {
+        public void PushReturnAddress( Runlet next ) {
             this._callStack.Push( next );
         }
 

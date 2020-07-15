@@ -3,26 +3,13 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace NutmegRunner {
-
-
-    public delegate void SystemFunction( RuntimeEngine runtimeEngine );
-
-    public class System {
-
-        static readonly Dictionary<string, SystemFunction> SYSTEM_FUNCTION_TABLE = new Dictionary<string, SystemFunction>() {
-            { "println",  x => Console.WriteLine( $"{x.Pop()}" )  }
-        };
-
-        public static SystemFunction Find( string name ) {
-            return SYSTEM_FUNCTION_TABLE.TryGetValue( name, out var value ) ? value : null;
-        }
-
-    }
+namespace NutmegRunner
+{
 
     // See https://stackoverflow.com/questions/8030538/how-to-implement-custom-jsonconverter-in-json-net-to-deserialize-a-list-of-base
 
-    public abstract class JsonCreationConverter<T> : JsonConverter {
+    public abstract class JsonCreationConverter<T> : JsonConverter
+     {
         /// <summary>
         /// Create an instance of objectType, based properties in the JSON object
         /// </summary>
@@ -31,107 +18,114 @@ namespace NutmegRunner {
         /// contents of JSON object that will be deserialized
         /// </param>
         /// <returns></returns>
-        protected abstract T Create( Type objectType, JObject jObject );
+        protected abstract T Create(Type objectType, JObject jObject);
 
-        public override bool CanConvert( Type objectType ) {
-            return typeof( T ).IsAssignableFrom( objectType );
+        public override bool CanConvert(Type objectType) {
+            return typeof(T).IsAssignableFrom(objectType);
         }
 
         public override bool CanWrite => false;
 
-        public override object ReadJson( JsonReader reader,
+        public override object ReadJson(JsonReader reader,
                                         Type objectType,
                                          object existingValue,
-                                         JsonSerializer serializer ) {
+                                         JsonSerializer serializer) {
             // Load JObject from stream
-            JObject jObject = JObject.Load( reader );
+            JObject jObject = JObject.Load(reader);
 
             // Create target object based on JObject
-            T target = this.Create( objectType, jObject );
+            T target = this.Create(objectType, jObject);
 
             // Populate the object properties
-            serializer.Populate( jObject.CreateReader(), target );
+            serializer.Populate(jObject.CreateReader(), target);
 
             return target;
         }
     }
 
-    public class CodeletConverter : JsonCreationConverter<Codelet> {
+    public class CodeletConverter : JsonCreationConverter<Codelet>
+     {
 
-        public override void WriteJson( JsonWriter writer, object value, JsonSerializer serializer ) {
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
             throw new NotImplementedException();
         }
 
-        protected override Codelet Create( Type objectType, JObject jObject ) {
+        protected override Codelet Create(Type objectType, JObject jObject) {
             var kind = jObject["kind"];
-            switch (kind.ToString()) {
+            switch (kind.ToString())
+            {
                 case "function": return new FunctionCodelet();
                 case "syscall": return new SyscallCodelet();
                 case "string": return new StringCodelet();
                 case "bool": return new BoolCodelet();
                 case "if": return new If3Codelet();
-                default: throw new NutmegException( $"Unrecognised kind: {kind}" );
+                default: throw new NutmegException($"Unrecognised kind: {kind}");
             }
         }
 
     }
 
-    [JsonConverter( typeof( CodeletConverter ) )]
-    public abstract class Codelet {
+    [JsonConverter(typeof(CodeletConverter))]
+    public abstract class Codelet
+     {
 
-        public static Codelet DeserialiseCodelet( string jsonValue ) {
-            return JsonConvert.DeserializeObject<FunctionCodelet>( jsonValue );
+        public static Codelet DeserialiseCodelet(string jsonValue) {
+            return JsonConvert.DeserializeObject<FunctionCodelet>(jsonValue);
         }
 
-        public abstract WovenCodelet Weave( WovenCodelet continuation );
+        public abstract Runlet Weave(Runlet continuation);
 
     }
 
 
-    public class FunctionCodelet : Codelet {
+    public class FunctionCodelet : Codelet
+    {
 
-        [JsonProperty( "nargs" )]
+        [JsonProperty("nargs")]
         public int Nargs { get; set; }
-        [JsonProperty( "nlocals" )]
+        [JsonProperty("nlocals")]
         public int Nlocals { get; set; }
-        [JsonProperty( "body" )]
+        [JsonProperty("body")]
         public Codelet Body { get; set; }
 
 
-        public FunctionCodelet() {
+        public FunctionCodelet()
+         {
             //  Used by deserialisation.
         }
 
-        public FunctionCodelet( int nargs, int nlocals, Codelet body ) {
+        public FunctionCodelet(int nargs, int nlocals, Codelet body) {
             this.Nargs = nargs;
             this.Nlocals = nlocals;
             this.Body = body;
         }
 
-        public override WovenCodelet Weave( WovenCodelet continuation ) {
-            return new FunctionWovenCodelet(Nargs, Nlocals, this.Body.Weave( new ReturnWovenCodelet() ) );
+        public override Runlet Weave(Runlet continuation) {
+            return new FunctionRunlet(Nargs, Nlocals, this.Body.Weave(new ReturnRunlet()));
         }
 
 
     }
 
-    public class SeqCodelet : Codelet {
+    public class SeqCodelet : Codelet
+     {
 
-        [JsonProperty( "body" )]
+        [JsonProperty("body")]
         Codelet[] Body { get; set; }
 
-        public SeqCodelet() {
+        public SeqCodelet()
+         {
             //  Used by deserialisation.
         }
 
-        public SeqCodelet( params Codelet[] body ) {
+        public SeqCodelet(params Codelet[] body) {
             Body = body;
         }
 
-        public override WovenCodelet Weave( WovenCodelet continuation ) {
-            for ( int i = Body.Length - 1; i >= 0; i -= 1 ) {
+        public override Runlet Weave(Runlet continuation) {
+            for (int i = Body.Length - 1; i >= 0; i -= 1) {
                 Codelet codelet = Body[i];
-                continuation = codelet.Weave( continuation );
+                continuation = codelet.Weave(continuation);
             }
             return continuation;
         }
@@ -140,95 +134,106 @@ namespace NutmegRunner {
 
 
 
-    public class If3Codelet : Codelet {
+    public class If3Codelet : Codelet
+     {
 
-        [JsonProperty( "test" )]
+        [JsonProperty("test")]
         Codelet TestPart { get; set; }
 
-        [JsonProperty( "then" )]
+        [JsonProperty("then")]
         Codelet ThenPart { get; set; }
 
-        [JsonProperty( "else" )]
+        [JsonProperty("else")]
         Codelet ElsePart { get; set; }
 
-        public If3Codelet() {
+        public If3Codelet()
+         {
             //  Used by deserialisation
         }
 
-        public If3Codelet( Codelet testPart, Codelet thenPart, Codelet elsePart) {
+        public If3Codelet(Codelet testPart, Codelet thenPart, Codelet elsePart)
+         {
             TestPart = testPart;
             ThenPart = thenPart;
             ElsePart = elsePart;
         }
 
 
-        public override WovenCodelet Weave( WovenCodelet continuation ) {
-            return TestPart.Weave( new ForkWovenCodelet( ThenPart.Weave( continuation ), ElsePart.Weave( continuation ) ) );
+        public override Runlet Weave(Runlet continuation) {
+            return TestPart.Weave(new ForkWovenCodelet(ThenPart.Weave(continuation), ElsePart.Weave(continuation)));
         }
 
     }
 
-    public class SyscallCodelet : Codelet {
+    public class SyscallCodelet : Codelet
+    {
 
         string _name;
-        [JsonProperty( "name" )]
-        public string Name {
+        [JsonProperty("name")]
+        public string Name
+        {
             get { return _name; }
-            set {
-                _systemFunction = System.Find( value );
+            set
+            {
+                _systemFunction = System.Find(value);
                 _name = value;
             }
         }
 
-        private SystemFunction _systemFunction;
+        private SystemFunctionMaker _systemFunction;
 
-        [JsonProperty( "arguments" )]
+        [JsonProperty("arguments")]
         public Codelet Arguments { get; set; }
 
-        public SyscallCodelet() {
+        public SyscallCodelet()
+         {
             //  Used by deserialisation.
         }
 
-        public override WovenCodelet Weave( WovenCodelet continuation ) {
-            return Arguments.Weave( new SyscallWovenCodelet( _systemFunction, continuation ) );
+        public override Runlet Weave(Runlet continuation) {
+            return Arguments.Weave( _systemFunction( continuation ) );
         }
 
     }
 
-    public class StringCodelet : Codelet {
+    public class StringCodelet : Codelet
+     {
 
-        public StringCodelet() {
+        public StringCodelet()
+         {
             //  Used by deserialisation.
         }
 
-        public StringCodelet( string value ) {
+        public StringCodelet(string value) {
             this.Value = value;
         }
 
-        [JsonProperty( "value" )]
+        [JsonProperty("value")]
         public string Value { get; set; }
 
-        public override WovenCodelet Weave( WovenCodelet continuation ) {
-            return new PushQWovenCodelet( this.Value, continuation );
+        public override Runlet Weave( Runlet continuation ) {
+            return new PushQRunlet(this.Value, continuation);
         }
 
     }
 
-    public class BoolCodelet : Codelet {
+    public class BoolCodelet : Codelet
+     {
 
-        public BoolCodelet() {
+        public BoolCodelet()
+         {
             //  Used by deserialisation.
         }
 
-        public BoolCodelet( bool value ) {
+        public BoolCodelet(bool value) {
             this.Value = value;
         }
 
-        [JsonProperty( "value" )]
+        [JsonProperty("value")]
         public bool Value { get; set; }
 
-        public override WovenCodelet Weave( WovenCodelet continuation ) {
-            return new PushQWovenCodelet( this.Value, continuation );
+        public override Runlet Weave( Runlet continuation ) {
+            return new PushQRunlet(this.Value, continuation);
         }
 
     }
