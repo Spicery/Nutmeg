@@ -16,9 +16,9 @@ namespace NutmegRunnerTests {
             //  Arrange
             var arbitraryString = "foo";
             var s = Encapsulate( new StringCodelet( arbitraryString ) );
-            var rte = new RuntimeEngine();
+            var rte = new RuntimeEngine(false);
             //  Act
-            rte.StartFromCodelet(s, false, false);
+            rte.StartFromCodelet(s, false);
             //  Assert
             Assert.Equal( 1, rte.ValueStackLength() );
             Assert.Equal( arbitraryString, rte.PeekOrElse() );

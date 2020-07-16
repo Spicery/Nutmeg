@@ -36,7 +36,10 @@ namespace NutmegRunner {
         /// </summary>
         Stack<object> _valueStack = new Stack<object>();
 
-        public RuntimeEngine() {
+        public bool Debug { get; }
+
+        public RuntimeEngine( bool debug ) {
+            this.Debug = debug;
         }
 
         public void Push( object value ) {
@@ -71,25 +74,31 @@ namespace NutmegRunner {
             return (Runlet)this._callStack.Pop();
         }
 
-        public void Start( string idName, bool useEvaluate, bool debug ) {
+        public void Start( string idName, bool useEvaluate ) {
             Runlet codelet = this._dictionary.TryGetValue( idName, out var c ) ? c : null;
-            StartFromCodelet( codelet, useEvaluate, debug );
+            StartFromCodelet( codelet, useEvaluate );
         }
 
-        public void StartFromCodelet( Runlet codelet, bool useEvaluate, bool debug ) {
+        public void StartFromCodelet( Runlet codelet, bool useEvaluate ) {
             TextWriter stdErr = Console.Error;
             if (codelet is FunctionRunlet fwc) {
-                if (debug) stdErr.WriteLine( $"Running codelet ..." );
+                if (Debug) stdErr.WriteLine( $"Running codelet ..." );
                 try {
-                    Runlet currentInstruction = new CallQRunlet( fwc, new HaltWovenCodelet() );
-                    while (true) {
-                        //Console.WriteLine( $"current instruction is {currentInstruction}" );
-                        currentInstruction = currentInstruction.ExecuteRunlet( this );
+                    Runlet currentInstruction = new CallQRunlet( fwc, new HaltRunlet() );
+                    if (Debug) {
+                        while (true) {
+                            Console.WriteLine( $"current instruction is {currentInstruction}" );
+                            currentInstruction = currentInstruction.ExecuteRunlet( this );
+                        }
+                    } else {
+                        while (true) {
+                            currentInstruction = currentInstruction.ExecuteRunlet( this );
+                        }
                     }
                 } catch (NormalExitNutmegException) {
                     //  Normal exit.
                 } finally {
-                    if (debug) stdErr.WriteLine( $"Bye, bye ..." );
+                    if (Debug) stdErr.WriteLine( $"Bye, bye ..." );
                 }
             } else {
                 stdErr.WriteLine( "Entry point {id} is not a function" );

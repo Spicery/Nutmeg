@@ -5,15 +5,12 @@ namespace NutmegRunner {
         public abstract Runlet ExecuteRunlet( RuntimeEngine runtimeEngine );
     }
 
-    public class HaltWovenCodelet : Runlet {
+    public class HaltRunlet : Runlet {
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             throw new NormalExitNutmegException();
         }
     }
 
-    /// <summary>
-    /// This is a runtimeEngine-only class that will be synthesized on-the-fly.
-    /// </summary>
     public class CallQRunlet : Runlet {
 
         FunctionRunlet _functionRunlet;
@@ -31,9 +28,6 @@ namespace NutmegRunner {
 
     }
 
-    /// <summary>
-    /// This is a runtimeEngine-only class that will be synthesized on-the-fly.
-    /// </summary>
     public class ReturnRunlet : Runlet {
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
@@ -72,8 +66,8 @@ namespace NutmegRunner {
         Runlet ElsePart { get; set; }
 
         public ForkWovenCodelet( Runlet thenPart, Runlet elsePart ) {
-            ThenPart = thenPart;
-            ElsePart = elsePart;
+            this.ThenPart = thenPart;
+            this.ElsePart = elsePart;
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
