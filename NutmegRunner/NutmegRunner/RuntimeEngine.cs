@@ -20,9 +20,39 @@ namespace NutmegRunner {
         public object PeekItemOrElse( int n, object orElse = null );
     }
 
+    public class Ident {
+        public object Value { get; set; }
+
+        public Ident( object value ) {
+            Value = value;
+        }
+    }
+
+    public class GlobalDictionary {
+
+        Dictionary<string, Ident> _dictionary = new Dictionary<string, Ident>();
+
+        public void Add( string varName, object value ) {
+            if ( this._dictionary.TryGetValue( varName, out var ident ) ) {
+                ident.Value = value;
+            } else {
+                this._dictionary.Add( varName, new Ident( value ) );
+            }
+        }
+
+        public Ident Get( string idName ) {
+            if ( this._dictionary.TryGetValue( idName, out var ident ) ) {
+                return ident;
+            } else {
+                throw new NutmegException( $"Unknown identifier: {idName}" );
+            }
+        }
+
+    }
+
     public class RuntimeEngine {
 
-        Dictionary<string, Runlet> _dictionary = new Dictionary<string, Runlet>();
+        GlobalDictionary _dictionary = new GlobalDictionary();
 
         /// <summary>
         /// Soon we will need to replace this with a custom implementation of a layered stack
@@ -67,7 +97,11 @@ namespace NutmegRunner {
         }
 
         public void Bind( string idName, Codelet codelet ) {
-            this._dictionary.Add( idName, codelet.Weave( null ) );
+            this._dictionary.Add( idName, codelet.Weave( null, this._dictionary ) );
+        }
+
+        public void PreBind( string idName ) {
+            this._dictionary.Add( idName, null );
         }
 
         public Runlet Return() {
@@ -75,7 +109,7 @@ namespace NutmegRunner {
         }
 
         public void Start( string idName, bool useEvaluate ) {
-            Runlet codelet = this._dictionary.TryGetValue( idName, out var c ) ? c : null;
+            Runlet codelet = (Runlet)(this._dictionary.Get( idName ).Value );
             StartFromCodelet( codelet, useEvaluate );
         }
 
@@ -87,7 +121,7 @@ namespace NutmegRunner {
                     Runlet currentInstruction = new CallQRunlet( fwc, new HaltRunlet() );
                     if (Debug) {
                         while (true) {
-                            Console.WriteLine( $"current instruction is {currentInstruction}" );
+                            Console.WriteLine( $"Instruction: {currentInstruction}" );
                             currentInstruction = currentInstruction.ExecuteRunlet( this );
                         }
                     } else {

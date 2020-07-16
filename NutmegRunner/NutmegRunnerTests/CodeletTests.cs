@@ -8,7 +8,7 @@ namespace NutmegRunnerTests {
 
         private Runlet Encapsulate( Codelet codelet ) {
             var fc = new FunctionCodelet( 0, 0, codelet );
-            return fc.Weave( new ReturnRunlet() );
+            return fc.Weave( new ReturnRunlet(), null );
         }
 
         [Fact]

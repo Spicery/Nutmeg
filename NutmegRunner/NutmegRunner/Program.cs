@@ -59,29 +59,32 @@ namespace NutmegRunner {
 
         private void Run()
         {
-            var debug = false;
             TextWriter stdErr = Console.Error;
-            if ( debug ) stdErr.WriteLine("Nutmeg kicks the ball ...");
-            if (debug) stdErr.WriteLine( $"bundle file: {this._bundleFile}" );
-            if (debug) stdErr.WriteLine( $"entry point: {this._entryPoint}" );
+            if (this._debug) stdErr.WriteLine("Nutmeg kicks the ball ...");
+            if (this._debug) stdErr.WriteLine( $"Bundle file: {this._bundleFile}" );
+            if (this._debug) stdErr.WriteLine( $"Entry point: {this._entryPoint}" );
+            RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
             using (SQLiteConnection connection = new SQLiteConnection($"Data Source={this._bundleFile}"))
             {
                 connection.Open();
-                var cmd = new SQLiteCommand("SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [EntryPoints] E ON E.[IdName] = B.[IdName] WHERE E.[IdName]=@EntryPoint", connection);
+                var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [EntryPoints] E ON E.[Needs] = B.[IdName] WHERE E.[EntryPoint]=@EntryPoint", connection);
                 cmd.Parameters.AddWithValue( "@EntryPoint", this._entryPoint );
                 cmd.Prepare();
                 var reader = cmd.ExecuteReader();
-                if (reader.Read()) {
+                var bindings = new Dictionary<string, Codelet>();
+                while (reader.Read()) {
                     string idName = reader.GetString( 0 );
                     string jsonValue = reader.GetString( 1 );
+                    if (this._debug) stdErr.WriteLine( $"Loading definition: {idName}" );
                     Codelet codelet = Codelet.DeserialiseCodelet( jsonValue );
-                    RuntimeEngine runtimeEngine = new RuntimeEngine(this._debug);
-                    runtimeEngine.Bind( idName, codelet );
-                    runtimeEngine.Start( idName, useEvaluate: false );
-                } else {
-                    stdErr.WriteLine( "No such entry point. So sorry." );
+                    bindings.Add( idName, codelet );
+                    runtimeEngine.PreBind( idName );
+                }
+                foreach (var k in bindings) {
+                    runtimeEngine.Bind( k.Key, k.Value );
                 }
             }
+            runtimeEngine.Start( this._entryPoint, useEvaluate: false );
 
             //var jobj = JToken.ReadFrom(new JsonTextReader(new StreamReader(Console.OpenStandardInput())));
             //Console.WriteLine($"Output = {jobj.ToString()}");

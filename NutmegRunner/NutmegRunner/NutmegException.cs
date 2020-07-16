@@ -33,6 +33,11 @@ namespace NutmegRunner {
         }
     }
 
+    public class UnimplementedNutmegException : NutmegException {
+        public UnimplementedNutmegException() : base( "Unreachable" ) {
+        }
+    }
+
     public class NormalExitNutmegException : NutmegException {
         public NormalExitNutmegException() : base( "NormalExit" ) {
         }

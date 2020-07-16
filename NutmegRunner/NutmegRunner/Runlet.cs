@@ -11,6 +11,23 @@ namespace NutmegRunner {
         }
     }
 
+    public class PushIdentRunlet : Runlet {
+
+        Runlet _next;
+        Ident _ident;
+
+        public PushIdentRunlet( Ident ident, Runlet next ) {
+            this._ident = ident;
+            this._next = next;
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.Push( this._ident.Value );
+            return this._next;
+        }
+
+    }
+
     public class CallQRunlet : Runlet {
 
         FunctionRunlet _functionRunlet;
@@ -42,22 +59,40 @@ namespace NutmegRunner {
         private int Nargs { get; set; }
         public int Nlocals { get; set; }
 
-        private Runlet startCodelet = null;
+        private Runlet _next;
+        private Runlet _startCodelet = null;
 
-        public FunctionRunlet( int nargs, int nlocals, Runlet startCodelet ) {
+        public FunctionRunlet( int nargs, int nlocals, Runlet startCodelet, Runlet next ) {
             this.Nargs = nargs;
             this.Nlocals = nlocals;
-            this.startCodelet = startCodelet;
+            this._startCodelet = startCodelet;
+            this._next = next;
         }
 
         public Runlet Call( RuntimeEngine runtimeEngine ) {
-            return this.startCodelet;
+            return this._startCodelet;
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            throw new NutmegException( "Not Implemented" );
+            runtimeEngine.Push( this );
+            return this._next;
         }
 
+    }
+
+    public class CallSRunlet : Runlet {
+
+        private Runlet _next;
+
+        public CallSRunlet( Runlet next ) {
+            this._next = next;
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            FunctionRunlet f = (FunctionRunlet)runtimeEngine.Pop();
+            runtimeEngine.PushReturnAddress( this._next );
+            return f.Call( runtimeEngine );
+        }
     }
 
     public class ForkWovenCodelet : Runlet {

@@ -56,7 +56,9 @@ namespace NutmegRunner {
                 case "int": return new IntCodelet();
                 case "bool": return new BoolCodelet();
                 case "if": return new If3Codelet();
+                case "call": return new CallCodelet();
                 case "seq": return new SeqCodelet();
+                case "id": return new IdCodelet();
                 default: throw new NutmegException( $"Unrecognised kind: {kind}" );
             }
         }
@@ -70,8 +72,47 @@ namespace NutmegRunner {
             return JsonConvert.DeserializeObject<FunctionCodelet>( jsonValue );
         }
 
-        public abstract Runlet Weave( Runlet continuation );
+        public abstract Runlet Weave( Runlet continuation, GlobalDictionary g );
 
+    }
+
+    public class IdCodelet : Codelet {
+
+        [JsonProperty( "name" )]
+        public string Name { get; set; }
+
+        [JsonProperty( "reftype" )]
+        public string Reftype { get; set; }
+
+        [JsonProperty( "scope" )]
+        public string Scope { get; set; }
+
+        [JsonProperty( "slot" )]
+        public int Slot { get; set; }
+
+        public IdCodelet() {
+            //  Used by deserialisation.
+        }
+
+        public IdCodelet( string name, string reftype, string scope = null, int? slot = null ) {
+            Name = name;
+            Reftype = reftype;
+            Scope = scope;
+            Slot = slot ?? -1;
+        }
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            if (Scope == "global") {
+                Ident ident = g.Get( Name );
+                if (Reftype == "get") {
+                    return new PushIdentRunlet( ident, continuation );
+                } else {
+                    throw new UnimplementedNutmegException();
+                }
+            } else {
+                throw new UnimplementedNutmegException();
+            }
+        }
     }
 
 
@@ -95,10 +136,31 @@ namespace NutmegRunner {
             this.Body = body;
         }
 
-        public override Runlet Weave( Runlet continuation ) {
-            return new FunctionRunlet( Nargs, Nlocals, this.Body.Weave( new ReturnRunlet() ) );
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            return new FunctionRunlet( Nargs, Nlocals, this.Body.Weave( new ReturnRunlet(), g ), continuation );
         }
 
+    }
+
+    public class CallCodelet : Codelet{
+        [JsonProperty( "function" )]
+        Codelet Function { get; set; }
+
+        [JsonProperty( "arguments" )]
+        Codelet Arguments { get; set; }
+
+        public CallCodelet() {
+            //  Used by deserialisation.
+        }
+
+        public CallCodelet( Codelet f, Codelet a ) {
+            this.Function = f;
+            this.Arguments = a;
+        }
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            return Arguments.Weave( Function.Weave( new CallSRunlet( continuation ), g ), g);
+        }
 
     }
 
@@ -112,20 +174,18 @@ namespace NutmegRunner {
         }
 
         public SeqCodelet( params Codelet[] body ) {
-            Body = body;
+            this.Body = body;
         }
 
-        public override Runlet Weave( Runlet continuation ) {
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
             for (int i = Body.Length - 1; i >= 0; i -= 1) {
                 Codelet codelet = Body[i];
-                continuation = codelet.Weave( continuation );
+                continuation = codelet.Weave( continuation, g );
             }
             return continuation;
         }
 
     }
-
-
 
     public class If3Codelet : Codelet {
 
@@ -149,8 +209,8 @@ namespace NutmegRunner {
         }
 
 
-        public override Runlet Weave( Runlet continuation ) {
-            return TestPart.Weave( new ForkWovenCodelet( ThenPart.Weave( continuation ), ElsePart.Weave( continuation ) ) );
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            return TestPart.Weave( new ForkWovenCodelet( ThenPart.Weave( continuation, g ), ElsePart.Weave( continuation, g ) ), g );
         }
 
     }
@@ -176,8 +236,8 @@ namespace NutmegRunner {
             //  Used by deserialisation.
         }
 
-        public override Runlet Weave( Runlet continuation ) {
-            return Arguments.Weave( _systemFunction( continuation ) );
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            return Arguments.Weave( _systemFunction( continuation ), g );
         }
 
     }
@@ -195,7 +255,7 @@ namespace NutmegRunner {
         [JsonProperty( "value" )]
         public string Value { get; set; }
 
-        public override Runlet Weave( Runlet continuation ) {
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
             return new PushQRunlet( this.Value, continuation );
         }
 
@@ -214,7 +274,7 @@ namespace NutmegRunner {
         [JsonProperty( "value" )]
         public string Value { get; set; }
 
-        public override Runlet Weave( Runlet continuation ) {
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
             if (long.TryParse( this.Value, out var n ) ) {
                 return new PushQRunlet( n, continuation );
             } else {
@@ -237,7 +297,7 @@ namespace NutmegRunner {
         [JsonProperty( "value" )]
         public bool Value { get; set; }
 
-        public override Runlet Weave( Runlet continuation ) {
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
             return new PushQRunlet( this.Value, continuation );
         }
 
