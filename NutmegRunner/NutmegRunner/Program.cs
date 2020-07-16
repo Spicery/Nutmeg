@@ -79,7 +79,7 @@ namespace NutmegRunner {
                     runtimeEngine.Bind( idName, codelet );
                     runtimeEngine.Start( idName, useEvaluate: false );
                 } else {
-                    stdErr.WriteLine( "No such entry point, so sorry" );
+                    stdErr.WriteLine( "No such entry point. So sorry." );
                 }
             }
 

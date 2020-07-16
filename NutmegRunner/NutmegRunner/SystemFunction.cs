@@ -29,8 +29,8 @@ namespace NutmegRunner {
         public AddSystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int y = (int)runtimeEngine.Pop();
-            int x = (int)runtimeEngine.Pop();
+            long y = (long)runtimeEngine.Pop();
+            long x = (long)runtimeEngine.Pop();
             runtimeEngine.Push( x + y );
             return this.Next;
         }
@@ -42,8 +42,8 @@ namespace NutmegRunner {
         public SubtractSystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int y = (int)runtimeEngine.Pop();
-            int x = (int)runtimeEngine.Pop();
+            long y = (long)runtimeEngine.Pop();
+            long x = (long)runtimeEngine.Pop();
             runtimeEngine.Push( x - y );
             return this.Next;
         }

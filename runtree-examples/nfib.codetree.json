@@ -1,0 +1,125 @@
+{
+    "comment": "An example function 'nfib'",
+    "kind": "binding",
+    "lhs": {
+        "kind": "id",
+        "name": "nfib",
+        "reftype": "var",
+        "scope": "global"
+    },
+    "rhs": {
+        "kind": "function",
+        "nlocals": 1,
+        "nargs": 1,
+        "parameters": {
+            "kind": "id",
+            "name": "n",
+            "reftype": "var",
+            "scope": "local",
+            "slot": 1
+        },
+        "body": {
+            "kind": "if",
+            "test": {
+                "kind": "syscall",
+                "name": "<=",
+                "arguments": {
+                    "kind": "seq",
+                    "body": [
+                        {
+                            "kind": "id",
+                            "name": "n",
+                            "reftype": "get",
+                            "scope": "local",
+                            "slot": 1
+                        },
+                        {
+                            "kind": "int",
+                            "value": "1"
+                        }
+                    ]
+                }
+            },
+            "then": {
+                "kind": "int",
+                "value": "1"
+            },
+            "else": {
+                "kind": "syscall",
+                "name": "+",
+                "arguments": {
+                    "kind": "seq",
+                    "body": [
+                        {
+                            "kind": "int",
+                            "value": "1"
+                        },
+                        {
+                            "kind": "call",
+                            "function": {
+                                "kind": "id",
+                                "name": "nfib",
+                                "reftype": "get",
+                                "scope": "global"
+                            },
+                            "arguments": {
+                                "kind": "seq",
+                                "body": [
+                                    {
+                                        "kind": "syscall",
+                                        "name": "-",
+                                        "arguments": {
+                                            "kind": "seq",
+                                            "body": [
+                                                {
+                                                    "kind": "id",
+                                                    "name": "n",
+                                                    "reftype": "get",
+                                                    "scope": "local",
+                                                    "slot": 1
+                                                },
+                                                {
+                                                    "kind": "int",
+                                                    "value": "1"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "kind": "call",
+                            "function": {
+                                "kind": "id",
+                                "name": "nfib",
+                                "reftype": "get",
+                                "scope": "global"
+                            },
+                            "arguments": {
+                                "kind": "syscall",
+                                "name": "-",
+                                "arguments": {
+                                    "kind": "seq",
+                                    "body": [
+                                        {
+                                            "kind": "id",
+                                            "name": "n",
+                                            "reftype": "get",
+                                            "scope": "local",
+                                            "slot": 1
+                                        },
+                                        {
+                                            "kind": "int",
+                                            "value": "2"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
