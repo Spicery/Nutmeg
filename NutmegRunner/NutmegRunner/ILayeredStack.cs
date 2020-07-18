@@ -220,12 +220,13 @@ namespace NutmegRunner {
         //    this.top += n;
         //}
 
-        public void RawLock( int nlocals, CheckedLayeredStack<T> src ) {
+        public int RawLock( int nlocals, CheckedLayeredStack<T> src ) {
             this.EnsureRoom( nlocals );
             this.Lock();
             var nargs = src.RawSend( this );
             Array.Fill( this.items, default( T ), this.top + nargs, nlocals - nargs );
             this.top += nlocals;
+            return nargs;
         }
 
         public void RawReceive( T[] src_data, int src_top, int src_nargs ) {
@@ -233,6 +234,11 @@ namespace NutmegRunner {
         }
 
         public void Unlock() {
+            this.layer = this.dump.Pop();
+        }
+
+        public void ClearAndUnlock() {
+            this.top = this.layer;
             this.layer = this.dump.Pop();
         }
 

@@ -57,12 +57,24 @@ namespace NutmegRunner {
             this.Debug = debug;
         }
 
+        public void LockValueStack() {
+            this._valueStack.Lock();
+        }
+
+        public void PushSlot( int slot ) {
+            this._valueStack.Push( this._callStack[slot] );
+        }
+
         public void Push( object value ) {
             this._valueStack.Push( value );
         }
 
         public object Pop() {
             return this._valueStack.Pop();
+        }
+
+        public int CreateFrameAndCopyValueStack( int nlocals ) {
+            return this._callStack.RawLock( nlocals, this._valueStack );
         }
 
         public bool PopBool() {
@@ -86,6 +98,8 @@ namespace NutmegRunner {
         }
 
         public Runlet Return() {
+            this._valueStack.Unlock();
+            this._callStack.ClearAndUnlock();
             return (Runlet)this._callStack.Pop();
         }
 
@@ -99,7 +113,7 @@ namespace NutmegRunner {
             if (codelet is FunctionRunlet fwc) {
                 if (Debug) stdErr.WriteLine( $"Running codelet ..." );
                 try {
-                    Runlet currentInstruction = new CallQRunlet( fwc, new HaltRunlet() );
+                    Runlet currentInstruction = new LockRunlet( new CallQRunlet( fwc, new HaltRunlet() ) );
                     if (Debug) {
                         while (true) {
                             Console.WriteLine( $"Instruction: {currentInstruction}" );
@@ -112,6 +126,12 @@ namespace NutmegRunner {
                     }
                 } catch (NormalExitNutmegException) {
                     //  Normal exit.
+                } catch (NutmegException nme) {
+                    Console.Error.WriteLine( nme.Message );
+                    foreach ( var culprit in nme.Culprits ) {
+                        Console.Error.WriteLine( $" {culprit.Key}: {culprit.Value}" );
+                    }
+                    throw nme;  // rethrow
                 } finally {
                     if (Debug) stdErr.WriteLine( $"Bye, bye ..." );
                 }
@@ -122,6 +142,13 @@ namespace NutmegRunner {
 
         public void PushReturnAddress( Runlet next ) {
             this._callStack.Push( next );
+        }
+
+        public void ShowFrames() {
+            Console.WriteLine( $"Current frame has {this._callStack.Size()} slots" );
+            for ( int i = 0; i < this._callStack.Size(); i++ ) {
+                Console.WriteLine( $"Slot {i}: {this._callStack[i]}" );
+            }
         }
 
 

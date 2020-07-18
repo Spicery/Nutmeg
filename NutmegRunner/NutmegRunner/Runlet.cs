@@ -28,6 +28,22 @@ namespace NutmegRunner {
 
     }
 
+    public class PushSlotRunlet : Runlet {
+        Runlet _next;
+        int _slot;
+        public PushSlotRunlet( int slot, Runlet next ) {
+            this._slot = slot;
+            this._next = next;
+        }
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            //runtimeEngine.ShowFrames();
+            //Console.WriteLine( $"Slot number {this._slot}" );
+            runtimeEngine.PushSlot( this._slot );
+            //Console.WriteLine( $"PUSHED <<{runtimeEngine.PeekOrElse()}>>" );
+            return this._next;
+        }
+    }
+
     public class CallQRunlet : Runlet {
 
         FunctionRunlet _functionRunlet;
@@ -53,6 +69,19 @@ namespace NutmegRunner {
 
     }
 
+    public class LockRunlet : Runlet {
+
+        Runlet _next;
+
+        public LockRunlet( Runlet next ) {
+            this._next = next;
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.LockValueStack();
+            return _next;
+        }
+    }
 
     public class FunctionRunlet : Runlet {
 
@@ -70,7 +99,15 @@ namespace NutmegRunner {
         }
 
         public Runlet Call( RuntimeEngine runtimeEngine ) {
-            return this._startCodelet;
+            var nargs = runtimeEngine.CreateFrameAndCopyValueStack( this.Nlocals );
+            if (nargs != this.Nargs) {
+                throw
+                    new NutmegException( "Mismatch in the number of arguments to the number of parameters" )
+                    .Culprit( "Expected", $"{this.Nargs}" )
+                    .Culprit( "Found", $"{nargs}" );
+            } else {
+                return this._startCodelet;
+            }
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {

@@ -95,17 +95,23 @@ namespace NutmegRunner {
         }
 
         public IdCodelet( string name, string reftype, string scope = null, int? slot = null ) {
-            Name = name;
-            Reftype = reftype;
-            Scope = scope;
-            Slot = slot ?? -1;
+            this.Name = name;
+            this.Reftype = reftype;
+            this.Scope = scope;
+            this.Slot = slot ?? -1;
         }
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            if (Scope == "global") {
+            if (this.Scope == "global") {
                 Ident ident = g.Get( Name );
-                if (Reftype == "get") {
+                if (this.Reftype == "get") {
                     return new PushIdentRunlet( ident, continuation );
+                } else {
+                    throw new UnimplementedNutmegException();
+                }
+            } else if (this.Scope == "local" && this.Slot >= 0 ) {
+                if (this.Reftype == "get") {
+                    return new PushSlotRunlet( this.Slot, continuation );
                 } else {
                     throw new UnimplementedNutmegException();
                 }
@@ -159,7 +165,7 @@ namespace NutmegRunner {
         }
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            return Arguments.Weave( Function.Weave( new CallSRunlet( continuation ), g ), g);
+            return new LockRunlet( Arguments.Weave( Function.Weave( new CallSRunlet( continuation ), g ), g ) );
         }
 
     }

@@ -6,7 +6,7 @@ namespace NutmegRunner {
     public class NutmegException : ApplicationException {
         protected Dictionary<string, string> _culprits = new Dictionary<string, string>();
 
-        public IEnumerator<KeyValuePair<string, string>> Culprits => this._culprits.GetEnumerator();
+        public IEnumerable<KeyValuePair<string, string>> Culprits => this._culprits;
 
         public NutmegException Culprit( string name, string value ) {
             this._culprits.Add( name, value );
@@ -34,7 +34,7 @@ namespace NutmegRunner {
     }
 
     public class UnimplementedNutmegException : NutmegException {
-        public UnimplementedNutmegException() : base( "Unreachable" ) {
+        public UnimplementedNutmegException() : base( "Unimplemented" ) {
         }
     }
 
