@@ -45,6 +45,8 @@ namespace NutmegRunner {
         /// </summary>
         UncheckedLayeredStack<object> _callStack = new UncheckedLayeredStack<object>();
 
+
+
         /// <summary>
         /// Soon we will need to replace this with a custom implementation of a layered stack.
         /// The emphasis is on efficient pushing and popping from the top of the stack.
@@ -61,6 +63,10 @@ namespace NutmegRunner {
             this._valueStack.Lock();
         }
 
+        public void UnlockValueStack() {
+            this._valueStack.Unlock();
+        }
+
         public void PushSlot( int slot ) {
             this._valueStack.Push( this._callStack[slot] );
         }
@@ -71,6 +77,17 @@ namespace NutmegRunner {
 
         public object Pop() {
             return this._valueStack.Pop();
+        }
+
+        public bool TryPop( out object d ) {
+            //  TODO: This can be made faster by handling exceptions.
+            if (this._valueStack.IsEmpty()) {
+                d = 0;
+                return false;
+            } else {
+                d = this._valueStack.Pop();
+                return true;
+            }
         }
 
         public int CreateFrameAndCopyValueStack( int nlocals ) {
@@ -126,12 +143,6 @@ namespace NutmegRunner {
                     }
                 } catch (NormalExitNutmegException) {
                     //  Normal exit.
-                } catch (NutmegException nme) {
-                    Console.Error.WriteLine( nme.Message );
-                    foreach ( var culprit in nme.Culprits ) {
-                        Console.Error.WriteLine( $" {culprit.Key}: {culprit.Value}" );
-                    }
-                    throw nme;  // rethrow
                 } finally {
                     if (Debug) stdErr.WriteLine( $"Bye, bye ..." );
                 }

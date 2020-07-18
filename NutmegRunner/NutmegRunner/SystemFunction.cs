@@ -32,6 +32,23 @@ namespace NutmegRunner {
             long y = (long)runtimeEngine.Pop();
             long x = (long)runtimeEngine.Pop();
             runtimeEngine.Push( x + y );
+            runtimeEngine.UnlockValueStack();
+            return this.Next;
+        }
+
+    }
+
+    public class SumSystemFunction : SystemFunction {
+
+        public SumSystemFunction( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long n = 0;
+            while ( runtimeEngine.TryPop( out var d ) ) {
+                n += (long)d;
+            }
+            runtimeEngine.Push( n );
+            runtimeEngine.UnlockValueStack();
             return this.Next;
         }
 
@@ -45,6 +62,21 @@ namespace NutmegRunner {
             long y = (long)runtimeEngine.Pop();
             long x = (long)runtimeEngine.Pop();
             runtimeEngine.Push( x - y );
+            runtimeEngine.UnlockValueStack();
+            return this.Next;
+        }
+
+    }
+
+    public class LTESystemFunction : SystemFunction {
+
+        public LTESystemFunction( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long y = (long)runtimeEngine.Pop();
+            long x = (long)runtimeEngine.Pop();
+            runtimeEngine.Push( x <= y );
+            runtimeEngine.UnlockValueStack();
             return this.Next;
         }
 
@@ -63,17 +95,24 @@ namespace NutmegRunner {
 
     }
 
-    public class System {
+    public class NutmegSystem {
 
         static readonly Dictionary<string, SystemFunctionMaker> SYSTEM_FUNCTION_TABLE =
             new LookupTableBuilder()
             .Add( "println", r => new PrintlnSystemFunction( r ) )
             .Add( "+", r => new AddSystemFunction( r ) )
+            .Add( "sum", r => new SumSystemFunction( r ) )
             .Add( "-", r => new SubtractSystemFunction( r ) )
+            .Add( "<=", r => new LTESystemFunction( r ) )
             .Table;
 
         public static SystemFunctionMaker Find( string name ) {
-            return SYSTEM_FUNCTION_TABLE.TryGetValue( name, out var value ) ? value : null;
+            if (SYSTEM_FUNCTION_TABLE.TryGetValue( name, out var value )) {
+                return value;
+            } else {
+                throw new NutmegException( "Cannot resolve the following system function" )
+                    .Culprit( "Identifier", name );
+            }
         }
 
     }

@@ -228,7 +228,7 @@ namespace NutmegRunner {
         public string Name {
             get { return _name; }
             set {
-                _systemFunction = System.Find( value );
+                _systemFunction = NutmegSystem.Find( value );
                 _name = value;
             }
         }
@@ -243,7 +243,7 @@ namespace NutmegRunner {
         }
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            return Arguments.Weave( _systemFunction( continuation ), g );
+            return new LockRunlet( Arguments.Weave( _systemFunction( continuation ), g ) );
         }
 
     }
