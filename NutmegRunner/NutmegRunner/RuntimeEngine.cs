@@ -4,21 +4,6 @@ using System.IO;
 
 namespace NutmegRunner {
 
-    public interface ILayeredStack {
-        public void Push( string value );
-        public object Pop();
-        public bool IsEmpty();
-        public int Size();
-
-        public int Lock();
-        public int Unlock();
-        public int LockCount();
-
-        public object Peek();
-        public object PeekOrElse( object orElse = null );
-        public object PeekItem( int n );
-        public object PeekItemOrElse( int n, object orElse = null );
-    }
 
     public class Ident {
         public object Value { get; set; }
