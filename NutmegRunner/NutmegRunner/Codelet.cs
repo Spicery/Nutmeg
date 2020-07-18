@@ -149,8 +149,8 @@ namespace NutmegRunner {
     }
 
     public class CallCodelet : Codelet{
-        [JsonProperty( "function" )]
-        Codelet Function { get; set; }
+        [JsonProperty( "function" )]        //  TODO: I propose we change this to "run".
+        Codelet Funarg { get; set; }
 
         [JsonProperty( "arguments" )]
         Codelet Arguments { get; set; }
@@ -160,12 +160,12 @@ namespace NutmegRunner {
         }
 
         public CallCodelet( Codelet f, Codelet a ) {
-            this.Function = f;
+            this.Funarg = f;
             this.Arguments = a;
         }
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            return new LockRunlet( Arguments.Weave( Function.Weave( new CallSRunlet( continuation ), g ), g ) );
+            return new LockRunlet( Arguments.Weave( Funarg.Weave( new CallSRunlet( continuation ), g ), g ) );
         }
 
     }
