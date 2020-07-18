@@ -39,7 +39,7 @@
             },
             "else": {
                 "kind": "syscall",
-                "name": "+",
+                "name": "sum",
                 "arguments": {
                     "kind": "seq",
                     "body": [
