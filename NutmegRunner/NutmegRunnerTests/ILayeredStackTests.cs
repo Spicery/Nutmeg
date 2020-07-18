@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using NutmegRunner;
+﻿using NutmegRunner;
 using Xunit;
 
 namespace NutmegRunnerTests {
