@@ -43,13 +43,13 @@ namespace NutmegRunner {
         /// Soon we will need to replace this with a custom implementation of a layered stack
         /// with the ability to address from the bottom of the current frame.
         /// </summary>
-        Stack<object> _callStack = new Stack<object>();
+        UncheckedLayeredStack<object> _callStack = new UncheckedLayeredStack<object>();
 
         /// <summary>
         /// Soon we will need to replace this with a custom implementation of a layered stack.
         /// The emphasis is on efficient pushing and popping from the top of the stack.
         /// </summary>
-        Stack<object> _valueStack = new Stack<object>();
+        CheckedLayeredStack<object> _valueStack = new CheckedLayeredStack<object>();
 
         public bool Debug { get; }
 
@@ -70,15 +70,11 @@ namespace NutmegRunner {
         }
 
         public object PeekOrElse(object orElse = null) {
-            return this._valueStack.TryPeek( out var top ) ? top : orElse;
-        }
-
-        public object[] ValueStackAsArrayWithTop0() {
-            return this._valueStack.ToArray();
+            return this._valueStack.PeekOrElse( orElse: orElse );
         }
 
         public int ValueStackLength() {
-            return this._valueStack.Count;
+            return this._valueStack.Size();
         }
 
         public void Bind( string idName, Codelet codelet ) {
