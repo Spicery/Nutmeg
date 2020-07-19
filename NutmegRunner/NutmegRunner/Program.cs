@@ -72,14 +72,19 @@ namespace NutmegRunner {
                     cmd.Prepare();
                     var reader = cmd.ExecuteReader();
                     var bindings = new Dictionary<string, Codelet>();
+                    var initialisations = new List<KeyValuePair<string, Codelet>>();
                     while (reader.Read()) {
                         string idName = reader.GetString( 0 );
                         string jsonValue = reader.GetString( 1 );
                         if (this._debug) stdErr.WriteLine( $"Loading definition: {idName}" );
                         try {
                             Codelet codelet = Codelet.DeserialiseCodelet( jsonValue );
-                            bindings.Add( idName, codelet );
                             runtimeEngine.PreBind( idName );
+                            if (codelet is FunctionCodelet fc) {
+                                bindings.Add( idName, codelet );
+                            } else {
+                                initialisations.Add( new KeyValuePair<string, Codelet>( idName, codelet ) );
+                            }
                         } catch ( Newtonsoft.Json.JsonSerializationException e ) {
                             Exception inner = e.InnerException;
                             throw ( inner is NutmegException nme ) ? (Exception)nme : (Exception)e;
@@ -87,6 +92,14 @@ namespace NutmegRunner {
                     }
                     foreach (var k in bindings) {
                         runtimeEngine.Bind( k.Key, k.Value );
+                    }
+                    foreach (var kvp in initialisations ) {
+                        if (this._debug) Console.WriteLine( $"Binding {kvp.Key}" );
+                        try {
+                            runtimeEngine.Initialise( kvp.Key, kvp.Value );
+                        } catch ( NormalExitNutmegException ) {
+                            //  This is how initialisation is halted.
+                        }
                     }
                 }
                 runtimeEngine.Start( this._entryPoint, useEvaluate: false );

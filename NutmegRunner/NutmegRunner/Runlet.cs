@@ -83,6 +83,34 @@ namespace NutmegRunner {
         }
     }
 
+    public class UnlockRunlet : Runlet {
+        Runlet _next;
+
+        public UnlockRunlet( Runlet next ) {
+            this._next = next;
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.UnlockValueStack();
+            return _next;
+        }
+    }
+
+    public class PopGlobalRunlet : Runlet {
+        Runlet _next;
+        Ident _ident;
+
+        public PopGlobalRunlet( Ident ident, Runlet next ) {
+            this._ident = ident;
+            this._next = next;
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            this._ident.Value = runtimeEngine.Pop1();
+            return _next;
+        }
+    }
+
     public class FunctionRunlet : Runlet {
 
         private int Nargs { get; set; }

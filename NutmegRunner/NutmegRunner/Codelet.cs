@@ -69,7 +69,7 @@ namespace NutmegRunner {
     public abstract class Codelet {
 
         public static Codelet DeserialiseCodelet( string jsonValue ) {
-            return JsonConvert.DeserializeObject<FunctionCodelet>( jsonValue );
+            return JsonConvert.DeserializeObject< Codelet >( jsonValue );
         }
 
         public abstract Runlet Weave( Runlet continuation, GlobalDictionary g );

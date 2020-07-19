@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace NutmegRunner {
 
     public class NutmegException : ApplicationException {
+
         protected Dictionary<string, string> _culprits = new Dictionary<string, string>();
 
         public IEnumerable<KeyValuePair<string, string>> Culprits => this._culprits;
@@ -21,6 +22,12 @@ namespace NutmegRunner {
 
         public NutmegException( string message, Exception exn ) : base( message, exn ) {
         }
+
+        public NutmegException Hint(string v)
+        {
+            return this.Culprit( "Hint", v );
+        }
+
     }
 
     public class UsageNutmegException : NutmegException {

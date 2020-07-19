@@ -79,6 +79,16 @@ namespace NutmegRunner {
             return this._valueStack.Pop();
         }
 
+        public object Pop1() {
+            if ( this._valueStack.Size() == 1 ) {
+                return this._valueStack.Pop();
+            } else if ( this._valueStack.IsEmpty() ) {
+                throw new NutmegException( "Required value is missing" ).Hint( "Exactly one value needed but none supplied" );
+            } else {
+                throw new NutmegException( "Too many values" ).Hint( "Exactly one value needed but too many are supplied" );
+            }
+        }
+
         public bool TryPop( out object d ) {
             //  TODO: This can be made faster by handling exceptions.
             if (this._valueStack.IsEmpty()) {
@@ -159,6 +169,17 @@ namespace NutmegRunner {
             Console.WriteLine( $"Current frame has {this._callStack.Size()} slots" );
             for ( int i = 0; i < this._callStack.Size(); i++ ) {
                 Console.WriteLine( $"Slot {i}: {this._callStack[i]}" );
+            }
+        }
+
+        public void Initialise( string key, Codelet value ) {
+            var halt = new HaltRunlet();
+            var unlock = new UnlockRunlet( halt );
+            var pop = new PopGlobalRunlet( this._dictionary.Get( key ), unlock );
+            var init = value.Weave( pop, this._dictionary );
+            Runlet currentInstruction = new LockRunlet( init );
+            while (true) {
+                currentInstruction = currentInstruction.ExecuteRunlet( this );
             }
         }
 
