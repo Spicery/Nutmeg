@@ -216,7 +216,7 @@ namespace NutmegRunner {
 
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            return TestPart.Weave( new ForkWovenCodelet( ThenPart.Weave( continuation, g ), ElsePart.Weave( continuation, g ) ), g );
+            return TestPart.Weave( new ForkRunlet( ThenPart.Weave( continuation, g ), ElsePart.Weave( continuation, g ) ), g );
         }
 
     }

@@ -1,8 +1,74 @@
 ﻿using System;
+using System.Collections.Generic;
+
 namespace NutmegRunner {
 
     public abstract class Runlet {
+
         public abstract Runlet ExecuteRunlet( RuntimeEngine runtimeEngine );
+
+        public virtual Runlet Track( Runlet runlet ) {
+            return this;
+        }
+
+        public virtual void UpdateLinkNotification() {
+            //  Skip
+        }
+
+    }
+
+    public abstract class RunletWithNext : Runlet {
+
+        protected Runlet _next;
+
+        public Runlet Next => this._next;
+
+        public RunletWithNext( Runlet next ) {
+            while ( next is JumpRunlet j && j.Next != null ) {
+                next = j.Next;
+            }
+            this._next = next?.Track( this );
+        }
+
+        public override void UpdateLinkNotification() {
+            while ( this._next is JumpRunlet j && j.Next != null) { 
+                this._next = j.Next;
+            }
+        }
+
+    }
+
+    /// <summary>
+    /// The JumpRunlet is a kind of no-op that simply passes control to
+    /// the next runlet. As a consequence we want to elide it wherever
+    /// possible. However, the target of a JumpRunlet might be assigned
+    /// _after_ it is created - unlike any other Runlet - and indeed that
+    /// is the real purpose of the JumpRunlet. When the target is assigned
+    /// the nodes that reference it are notified and perform the elision.
+    /// </summary>
+    public class JumpRunlet : RunletWithNext {
+
+        List<Runlet> _tracked = new List<Runlet>();
+
+        public JumpRunlet( Runlet next ) : base( next ) {
+        }
+
+        public override Runlet Track( Runlet runlet ) {
+            this._tracked.Add( runlet );
+            return this;
+        }
+
+        public void UpdateLink( Runlet runlet ) {
+            this._next = runlet;
+            foreach ( var r in this._tracked ) {
+                r.UpdateLinkNotification();
+            }
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            return this._next;
+        }
+
     }
 
     public class HaltRunlet : Runlet {
@@ -11,14 +77,12 @@ namespace NutmegRunner {
         }
     }
 
-    public class PushIdentRunlet : Runlet {
+    public class PushIdentRunlet : RunletWithNext {
 
-        Runlet _next;
         Ident _ident;
 
-        public PushIdentRunlet( Ident ident, Runlet next ) {
+        public PushIdentRunlet( Ident ident, Runlet next ) : base( next ) {
             this._ident = ident;
-            this._next = next;
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
@@ -28,12 +92,10 @@ namespace NutmegRunner {
 
     }
 
-    public class PushSlotRunlet : Runlet {
-        Runlet _next;
+    public class PushSlotRunlet : RunletWithNext {
         int _slot;
-        public PushSlotRunlet( int slot, Runlet next ) {
+        public PushSlotRunlet( int slot, Runlet next ) : base( next ) { 
             this._slot = slot;
-            this._next = next;
         }
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             //runtimeEngine.ShowFrames();
@@ -44,14 +106,12 @@ namespace NutmegRunner {
         }
     }
 
-    public class CallQRunlet : Runlet {
+    public class CallQRunlet : RunletWithNext {
 
         FunctionRunlet _functionRunlet;
-        Runlet _next;
 
-        public CallQRunlet( FunctionRunlet fc, Runlet next ) {
+        public CallQRunlet( FunctionRunlet fc, Runlet next ) : base( next ) {
             this._functionRunlet = fc;
-            this._next = next;
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
@@ -69,12 +129,9 @@ namespace NutmegRunner {
 
     }
 
-    public class LockRunlet : Runlet {
+    public class LockRunlet : RunletWithNext {
 
-        Runlet _next;
-
-        public LockRunlet( Runlet next ) {
-            this._next = next;
+        public LockRunlet( Runlet next ) : base( next ) {
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
@@ -83,11 +140,9 @@ namespace NutmegRunner {
         }
     }
 
-    public class UnlockRunlet : Runlet {
-        Runlet _next;
+    public class UnlockRunlet : RunletWithNext {
 
-        public UnlockRunlet( Runlet next ) {
-            this._next = next;
+        public UnlockRunlet( Runlet next ) : base( next ){
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
@@ -96,13 +151,11 @@ namespace NutmegRunner {
         }
     }
 
-    public class PopGlobalRunlet : Runlet {
-        Runlet _next;
+    public class PopGlobalRunlet : RunletWithNext {
         Ident _ident;
 
-        public PopGlobalRunlet( Ident ident, Runlet next ) {
+        public PopGlobalRunlet( Ident ident, Runlet next ) : base( next ) {
             this._ident = ident;
-            this._next = next;
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
@@ -111,19 +164,17 @@ namespace NutmegRunner {
         }
     }
 
-    public class FunctionRunlet : Runlet {
+    public class FunctionRunlet : RunletWithNext {
 
         private int Nargs { get; set; }
         public int Nlocals { get; set; }
 
-        private Runlet _next;
         private Runlet _startCodelet = null;
 
-        public FunctionRunlet( int nargs, int nlocals, Runlet startCodelet, Runlet next ) {
+        public FunctionRunlet( int nargs, int nlocals, Runlet startCodelet, Runlet next ) : base( next ) {
             this.Nargs = nargs;
             this.Nlocals = nlocals;
             this._startCodelet = startCodelet;
-            this._next = next;
         }
 
         public Runlet Call( RuntimeEngine runtimeEngine ) {
@@ -145,12 +196,9 @@ namespace NutmegRunner {
 
     }
 
-    public class CallSRunlet : Runlet {
+    public class CallSRunlet : RunletWithNext {
 
-        private Runlet _next;
-
-        public CallSRunlet( Runlet next ) {
-            this._next = next;
+        public CallSRunlet( Runlet next ) : base( next ) {
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
@@ -160,14 +208,23 @@ namespace NutmegRunner {
         }
     }
 
-    public class ForkWovenCodelet : Runlet {
+    public class ForkRunlet : Runlet {
 
-        Runlet ThenPart { get; set; }
-        Runlet ElsePart { get; set; }
+        public Runlet ThenPart { get; set; }
+        public Runlet ElsePart { get; set; }
 
-        public ForkWovenCodelet( Runlet thenPart, Runlet elsePart ) {
-            this.ThenPart = thenPart;
-            this.ElsePart = elsePart;
+        public ForkRunlet( Runlet thenPart, Runlet elsePart ) {
+            this.ThenPart = thenPart.Track( this );
+            this.ElsePart = elsePart.Track( this );
+        }
+
+        public override void UpdateLinkNotification() {
+            while ( this.ThenPart is JumpRunlet thenj && thenj.Next != null ) {
+                this.ThenPart = thenj.Next;
+            }
+            while ( this.ElsePart is JumpRunlet elsej && elsej.Next != null ) {
+                this.ElsePart = elsej.Next;
+            }
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
@@ -176,14 +233,12 @@ namespace NutmegRunner {
 
     }
 
-    public class PushQRunlet : Runlet {
+    public class PushQRunlet : RunletWithNext {
 
         private object _value;
-        private Runlet _next;
 
-        public PushQRunlet( object value, Runlet next ) {
+        public PushQRunlet( object value, Runlet next ) : base( next ) {
             this._value = value;
-            this._next = next;
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
