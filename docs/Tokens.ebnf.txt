@@ -1,0 +1,46 @@
+Identifier ::= IdStartChar IdChar*
+ 
+IdStartChar ::= [A-Z] | '_' | [a-z] | LowerCase | UpperCase
+
+IdChar ::= IdStartChar | DecimalDigit
+
+DecimalNumber ::=
+    [-+]? DecimalDigit+ ( '_' DecimalDigit+ )* ( '.' DecimalDigit+ ( '_' DecimalDigit+ )* )? ( e [-+]? DecimalDigit+ ( '_' DecimalDigit+ )* )
+
+HexNumber ::=
+    [-+]? '0x' HexDigit+ ( '_' HexDigit+ )* ( '.' HexDigit+ ( '_' HexDigit+ )* )? 
+    
+BinaryNumber ::=
+    [-+]? '0b' BinaryDigit+ ( '_' BinaryDigit+ )* ( '.' BinaryDigit+ ( '_' BinaryDigit+ )* )? 
+    
+RadixNumber ::=
+    [-+]? ([2-9]|[12][0-9]|[3][0-6]) 'r' RadixDigit ( '_' RadixDigit+ )* ( '.' RadixDigit+ ( '_' RadixDigit+ )* )? 
+
+String ::=
+    '"' DoubleQuotedCharacter* '"' |
+    "'" SingleQuotedCharacter* "'"
+
+DoubleQuotedCharacter ::= QuotedCharacter - '"'
+
+SingleQuotedCharacter ::= QuotedCharacter - "'"
+
+QuotedCharacter ::=
+    PrintableCharacter |
+    '\' ( '"' | "'" | 'n' | 'r' | 's' | 't' | 'v' | 'u' [0-9A-F][0-9A-F][0-9A-F][0-9A-F] ) |
+    '\&' HTMLEntity ';'
+
+PrintableCharacter ::= 
+
+HTMLEntity ::= [A-Za-z]+
+
+DecimalDigit ::= [_0-9]
+
+HexDigit ::= [_0-9A-F]
+
+BinaryDigit ::= [_01]
+
+RadixDigit ::= [_0-9A-Z]
+
+LowerCase ::= [https://www.compart.com/en/unicode/category/Ll] 
+
+UpperCase ::= [https://www.compart.com/en/unicode/category/Lu]
