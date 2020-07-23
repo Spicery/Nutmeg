@@ -1,20 +1,20 @@
-Identifier ::= IdStartChar IdChar*
+Identifier ::= '_'* IdStartChar IdChar*
  
-IdStartChar ::= [A-Z] | '_' | [a-z] | LowerCase | UpperCase
+IdStartChar ::= [A-Z] | [a-z] | LowerCase | UpperCase
 
 IdChar ::= IdStartChar | DecimalDigit
 
 DecimalNumber ::=
-    [-+]? DecimalDigit+ ( '_' DecimalDigit+ )* ( '.' DecimalDigit+ ( '_' DecimalDigit+ )* )? ( e [-+]? DecimalDigit+ ( '_' DecimalDigit+ )* )
+    [-+]? '_'* DecimalDigit DecimalDigitPlus* ( '.' DecimalDigitPlus* )? ( e [-+]? '_'* DecimalDigit DecimalDigitPlus* )?
 
 HexNumber ::=
-    [-+]? '0x' HexDigit+ ( '_' HexDigit+ )* ( '.' HexDigit+ ( '_' HexDigit+ )* )? 
+    [-+]? '0x' '_'* HexDigit HexDigitPlus* ( '.' HexDigitPlus* )? 
     
 BinaryNumber ::=
-    [-+]? '0b' BinaryDigit+ ( '_' BinaryDigit+ )* ( '.' BinaryDigit+ ( '_' BinaryDigit+ )* )? 
+    [-+]? '0b' '_'* BinaryDigit BinaryDigitPlus* ( '.' BinaryDigitplus* )? 
     
 RadixNumber ::=
-    [-+]? ([2-9]|[12][0-9]|[3][0-6]) 'r' RadixDigit ( '_' RadixDigit+ )* ( '.' RadixDigit+ ( '_' RadixDigit+ )* )? 
+    [-+]? ([2-9]|[12][0-9]|[3][0-6]) 'r' '_'* RadixDigit RadixDigitPlus* ( '.' RadixDigitPlus* )? 
 
 String ::=
     '"' DoubleQuotedCharacter* '"' |
@@ -33,13 +33,17 @@ PrintableCharacter ::=
 
 HTMLEntity ::= [A-Za-z]+
 
-DecimalDigit ::= [_0-9]
+DecimalDigit ::= [0-9]
+DecimalDigitPlus ::= [_] | DecimalDigit
 
-HexDigit ::= [_0-9A-F]
+HexDigit ::= [0-9A-F]
+HexDigitPlus ::= [_] | HexDigit
 
-BinaryDigit ::= [_01]
+BinaryDigit ::= [01]
+BinaryDigitPlus ::= [_] | BinaryDigit
 
-RadixDigit ::= [_0-9A-Z]
+RadixDigit ::= [0-9A-Z]
+RadixDigitPlus ::= [_] | RadixDigit
 
 LowerCase ::= [https://www.compart.com/en/unicode/category/Ll] 
 
