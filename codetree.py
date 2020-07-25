@@ -75,6 +75,17 @@ class IdCodelet( Codelet ):
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, name=self._name, reftype=self._reftype, **self._kwargs )
 
+class IfCodelet( Codelet ):
+
+	KIND = "if"
+
+	def __init__( self, *, testactions, elseaction, **kwargs ):
+		super().__init__( **kwargs )
+		self._testActions = testactions
+		self._elseAction = elseaction
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, testactions=self._testActions, elseaction=self.elseAction )
 
 class BindingCodelet( Codelet ):
 

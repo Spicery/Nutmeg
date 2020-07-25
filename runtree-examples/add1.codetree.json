@@ -1,0 +1,42 @@
+{
+    "comment": "A function that adds 1 to the single input",
+    "kind": "binding",
+    "lhs": {
+        "kind": "id",
+        "name": "add1",
+        "reftype": "var",
+        "scope": "global"
+    },
+    "rhs": {
+        "kind": "function",
+        "nlocals": 1,
+        "nargs": 1,
+        "parameters": {
+            "kind": "id",
+            "name": "n",
+            "reftype": "var",
+            "scope": "local",
+            "slot": 1
+        },
+        "body": {
+            "kind": "syscall",
+            "name": "+",
+            "arguments": {
+                "kind": "seq",
+                "body": [
+                    {
+                        "kind": "id",
+                        "name": "n",
+                        "reftype": "get",
+                        "scope": "local",
+                        "slot": 1
+                    },
+                    {
+                        "kind": "int",
+                        "value": "1"
+                    }                   
+                ]
+            }
+        }
+    }
+}
