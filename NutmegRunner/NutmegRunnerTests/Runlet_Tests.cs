@@ -30,7 +30,7 @@ namespace NutmegRunnerTests {
             Assert.True( fr.ThenPart is ReturnRunlet );
             Assert.True( fr.ElsePart is JumpRunlet );
             //  Act1
-            je.UpdateLink( new HaltRunlet() );
+            je.UpdateLink( new HaltRunlet( false ) );
             //  Assert1
             Assert.True( fr.ThenPart is ReturnRunlet );
             Assert.True( fr.ElsePart is HaltRunlet );

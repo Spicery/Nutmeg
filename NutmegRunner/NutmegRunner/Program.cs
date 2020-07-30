@@ -10,6 +10,7 @@ namespace NutmegRunner {
         string _bundleFile;
         string _entryPoint = "program";
         bool _debug = false;
+        bool _print = false;
 
         /// <summary>
         /// This constructor is responsible for parsing the arguments into instance variables.
@@ -31,28 +32,48 @@ namespace NutmegRunner {
         }
 
         private void ProcessRunnerOptions( LinkedList<string> args ) {
-            while (args.Count > 0 && args.First.Value.StartsWith( "--" )) {
+            while (args.Count > 0 && args.First.Value.Length >= 2 && args.First.Value.StartsWith( "-" )) {
                 var option = args.First.Value;
                 args.RemoveFirst();
                 var n = option.IndexOf( '=' );
-                string parameter = null;
-                if (n != -1) {
-                    parameter = option.Substring( n + 1 );
-                    option = option.Substring( 0, n );
-                }
-                switch (option) {
-                    case "--entry-point":
-                        if (parameter != null) {
-                            this._entryPoint = parameter;
+                if (option.StartsWith( "--" )) {
+                    //  Long option processing.
+                    string parameter = null;
+                    if (n != -1) {
+                        parameter = option.Substring( n + 1 );
+                        option = option.Substring( 0, n );
+                    }
+                    switch (option) {
+                        case "--entry-point":
+                            if (parameter != null) {
+                                this._entryPoint = parameter;
+                            } else {
+                                throw new UsageNutmegException();
+                            }
+                            break;
+                        case "--print":
+                            this._print = true;
+                            break;
+                        case "--debug":
+                            this._debug = true;
+                            break;
+                        default:
+                            throw new NutmegException( $"Unrecognised option: {option}" ).Culprit( "Option", option );
+                    }
+                } else {
+                    //  Short option processing: works by expanding into long options.
+                    var compactOption = option.Substring( 1 );
+                    while (compactOption.Length > 0) {
+                        if (compactOption.StartsWith( "p" )) {
+                            args.AddBefore( args.First, "--print" );
+                            compactOption = compactOption.Substring( 1 );
+                        } else if (compactOption.StartsWith( "d" )) {
+                            args.AddBefore( args.First, "--debug" );
+                            compactOption = compactOption.Substring( 1 );
                         } else {
-                            throw new UsageNutmegException();
+                            throw new NutmegException( $"Cannot parse compact command-line option: {compactOption}" ).Culprit( "Option", option );
                         }
-                        break;
-                    case "--debug":
-                        this._debug = true;
-                        break;
-                    default:
-                        throw new NutmegException( "Unrecognised option" ).Culprit( "Option", option );
+                    }
                 }
             }
         }
@@ -102,7 +123,7 @@ namespace NutmegRunner {
                         }
                     }
                 }
-                runtimeEngine.Start( this._entryPoint, useEvaluate: false );
+                runtimeEngine.Start( this._entryPoint, useEvaluate: false, usePrint: this._print );
             } catch (NutmegException nme) {
                 Console.Error.WriteLine( $"MISHAP: {nme.Message}" );
                 foreach (var culprit in nme.Culprits) {

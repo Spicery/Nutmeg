@@ -24,6 +24,38 @@ namespace NutmegRunner {
 
     }
 
+    public class HalfOpenRangeSystemFunction : SystemFunction {
+
+        public HalfOpenRangeSystemFunction( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long y = (long)runtimeEngine.Pop();
+            long x = (long)runtimeEngine.Pop();
+            for (long i = x; i < y; i++) {
+                runtimeEngine.Push( i );
+            }
+            runtimeEngine.UnlockValueStack();
+            return this.Next;
+        }
+
+    }
+
+    public class ClosedRangeSystemFunction : SystemFunction {
+
+        public ClosedRangeSystemFunction( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long y = (long)runtimeEngine.Pop();
+            long x = (long)runtimeEngine.Pop();
+            for (long i = x; i <= y; i++) {
+                runtimeEngine.Push( i );
+            }
+            runtimeEngine.UnlockValueStack();
+            return this.Next;
+        }
+
+    }
+
     public class AddSystemFunction : SystemFunction {
 
         public AddSystemFunction( Runlet next ) : base( next ) { }
@@ -100,6 +132,8 @@ namespace NutmegRunner {
         static readonly Dictionary<string, SystemFunctionMaker> SYSTEM_FUNCTION_TABLE =
             new LookupTableBuilder()
             .Add( "println", r => new PrintlnSystemFunction( r ) )
+            .Add( "..<", r => new HalfOpenRangeSystemFunction( r ) )
+            .Add( "...", r => new ClosedRangeSystemFunction( r ) )
             .Add( "+", r => new AddSystemFunction( r ) )
             .Add( "sum", r => new SumSystemFunction( r ) )
             .Add( "-", r => new SubtractSystemFunction( r ) )

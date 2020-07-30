@@ -108,8 +108,12 @@ namespace NutmegRunner {
             return (Boolean)this._valueStack.Pop();
         }
 
-        public object PeekOrElse(object orElse = null) {
+        public object PeekOrElse( object orElse = null ) {
             return this._valueStack.PeekOrElse( orElse: orElse );
+        }
+
+        public object PeekItemOrElse( int n, object orElse = null ) {
+            return this._valueStack.PeekItemOrElse( n, orElse: orElse );
         }
 
         public int ValueStackLength() {
@@ -130,17 +134,38 @@ namespace NutmegRunner {
             return (Runlet)this._callStack.Pop();
         }
 
-        public void Start( string idName, bool useEvaluate ) {
-            Runlet codelet = (Runlet)(this._dictionary.Get( idName ).Value );
-            StartFromCodelet( codelet, useEvaluate );
+        public void Start( string idName, bool useEvaluate, bool usePrint ) {
+            switch ( this._dictionary.Get( idName ).Value ) {
+                case Runlet codelet:
+                    this.StartFromCodelet( codelet, useEvaluate, usePrint );
+                    break;
+                case object obj:
+                    this.StartFromConstant( usePrint, obj );
+                    break;
+            }
+
         }
 
-        public void StartFromCodelet( Runlet codelet, bool useEvaluate ) {
+        private void StartFromConstant( bool usePrint, object obj ) {
+            TextWriter stdErr = Console.Error;
+            try {
+                if (Debug) stdErr.WriteLine( $"Pushing constant ..." );
+                this.Push( obj );
+                new HaltRunlet( usePrint ).ExecuteRunlet( this );
+            } catch (NormalExitNutmegException) {
+                //  Normal exit.
+            } finally {
+                if (Debug) stdErr.WriteLine( $"Bye, bye ..." );
+            }
+        }
+
+
+        public void StartFromCodelet( Runlet codelet, bool useEvaluate, bool usePrint ) {
             TextWriter stdErr = Console.Error;
             if (codelet is FunctionRunlet fwc) {
                 if (Debug) stdErr.WriteLine( $"Running codelet ..." );
                 try {
-                    Runlet currentInstruction = new LockRunlet( new CallQRunlet( fwc, new HaltRunlet() ) );
+                    Runlet currentInstruction = new LockRunlet( new CallQRunlet( fwc, new HaltRunlet( usePrint ) ) );
                     if (Debug) {
                         while (true) {
                             Console.WriteLine( $"Instruction: {currentInstruction}" );
@@ -173,7 +198,7 @@ namespace NutmegRunner {
         }
 
         public void Initialise( string key, Codelet value ) {
-            var halt = new HaltRunlet();
+            var halt = new HaltRunlet( false );
             var unlock = new UnlockRunlet( halt );
             var pop = new PopGlobalRunlet( this._dictionary.Get( key ), unlock );
             var init = value.Weave( pop, this._dictionary );

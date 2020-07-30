@@ -72,7 +72,21 @@ namespace NutmegRunner {
     }
 
     public class HaltRunlet : Runlet {
+
+        bool _usePrint;
+
+        public HaltRunlet( bool usePrint ) {
+            this._usePrint = usePrint;
+        }
+
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            if ( this._usePrint ) {
+                var N = runtimeEngine.ValueStackLength();
+                Console.WriteLine( N != 1 ? $"There are {N} items returned" : "There is 1 item returned" );
+                for ( int i = 0; i < N; i++ ) {
+                    Console.WriteLine( $"{i + 1}: {runtimeEngine.PeekItemOrElse(i)}" );
+                }
+            }
             throw new NormalExitNutmegException();
         }
     }
