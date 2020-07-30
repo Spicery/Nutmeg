@@ -120,8 +120,11 @@ namespace NutmegRunner {
 
         public Dictionary<string, SystemFunctionMaker> Table { get; } = new Dictionary<string, SystemFunctionMaker>();
 
-        public LookupTableBuilder Add( string sysname, SystemFunctionMaker f ) {
+        public LookupTableBuilder Add( string sysname, SystemFunctionMaker f, params string[] synonyms ) {
             this.Table.Add( sysname, f );
+            foreach ( var name in synonyms ) {
+                this.Table.Add( name, f );
+            }
             return this;
         }
 
@@ -132,12 +135,12 @@ namespace NutmegRunner {
         static readonly Dictionary<string, SystemFunctionMaker> SYSTEM_FUNCTION_TABLE =
             new LookupTableBuilder()
             .Add( "println", r => new PrintlnSystemFunction( r ) )
-            .Add( "..<", r => new HalfOpenRangeSystemFunction( r ) )
-            .Add( "...", r => new ClosedRangeSystemFunction( r ) )
-            .Add( "+", r => new AddSystemFunction( r ) )
+            .Add( "..<", r => new HalfOpenRangeSystemFunction( r ), "halfOpenRange" )
+            .Add( "...", r => new ClosedRangeSystemFunction( r ), "closedRange" )
+            .Add( "+", r => new AddSystemFunction( r ), "add" )
             .Add( "sum", r => new SumSystemFunction( r ) )
-            .Add( "-", r => new SubtractSystemFunction( r ) )
-            .Add( "<=", r => new LTESystemFunction( r ) )
+            .Add( "-", r => new SubtractSystemFunction( r ), "sub" )
+            .Add( "<=", r => new LTESystemFunction( r ), "lessThanOrEqualTo" )
             .Table;
 
         public static SystemFunctionMaker Find( string name ) {
