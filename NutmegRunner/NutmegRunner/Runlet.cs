@@ -83,8 +83,9 @@ namespace NutmegRunner {
             if ( this._usePrint ) {
                 var N = runtimeEngine.ValueStackLength();
                 Console.WriteLine( N != 1 ? $"There are {N} items returned" : "There is 1 item returned" );
+                var N1 = N - 1;
                 for ( int i = 0; i < N; i++ ) {
-                    Console.WriteLine( $"{i + 1}: {runtimeEngine.PeekItemOrElse(i)}" );
+                    Console.WriteLine( $"{i + 1}: {runtimeEngine.PeekItemOrElse(N1 - i)}" );
                 }
             }
             throw new NormalExitNutmegException();
