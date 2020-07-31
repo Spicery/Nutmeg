@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace NutmegRunner {
@@ -19,6 +20,72 @@ namespace NutmegRunner {
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             Console.WriteLine( $"{runtimeEngine.Pop()}" );
+            return this.Next;
+        }
+
+    }
+
+    public class ShowMeSystemFunction : SystemFunction {
+
+        public ShowMeSystemFunction( Runlet next ) : base( next ) { }
+
+        static public void ShowMe( object item ) {
+            switch ( item ) {
+                case IList<object> list:
+                    Console.Write( "[" );
+                    var first = true;
+                    foreach (var i in list) {
+                        if ( ! first ) {
+                            Console.Write( "," );
+                        }
+                        ShowMe( i );
+                        first = false;
+                    }
+                    Console.Write( "]" );
+                    break;
+                case string s:
+                    //  TODO - escape quotes etc
+                    Console.Write( $"\"{s}\"" );
+                    break;
+                default:
+                    Console.Write( $"{item}" );
+                    break;
+            }
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            ShowMe( runtimeEngine.Pop() );
+            Console.WriteLine();
+            return this.Next;
+        }
+
+    }
+
+    public class HalfOpenRangeListSystemFunction : SystemFunction {
+
+        public HalfOpenRangeListSystemFunction( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long y = (long)runtimeEngine.Pop();
+            long x = (long)runtimeEngine.Pop();
+            var list = new HalfOpenRangeList( x, y );
+            runtimeEngine.Push( list );
+            runtimeEngine.UnlockValueStack();
+            return this.Next;
+        }
+
+    }
+
+    public class ClosedRangeListSystemFunction : SystemFunction {
+
+        public ClosedRangeListSystemFunction( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long y = (long)runtimeEngine.Pop();
+            long x = (long)runtimeEngine.Pop();
+            var list = new HalfOpenRangeList( x, y + 1 );
+            runtimeEngine.Push( list );
+            runtimeEngine.UnlockValueStack();
             return this.Next;
         }
 
@@ -135,8 +202,11 @@ namespace NutmegRunner {
         static readonly Dictionary<string, SystemFunctionMaker> SYSTEM_FUNCTION_TABLE =
             new LookupTableBuilder()
             .Add( "println", r => new PrintlnSystemFunction( r ) )
+            .Add( "showMe", r => new ShowMeSystemFunction( r ) )
             .Add( "..<", r => new HalfOpenRangeSystemFunction( r ), "halfOpenRange" )
             .Add( "...", r => new ClosedRangeSystemFunction( r ), "closedRange" )
+            .Add( "[x..<y]", r => new HalfOpenRangeListSystemFunction( r ), "halfOpenRangeList" )
+            .Add( "[x...y]", r => new ClosedRangeListSystemFunction( r ), "closedRangeList" )
             .Add( "+", r => new AddSystemFunction( r ), "add" )
             .Add( "sum", r => new SumSystemFunction( r ) )
             .Add( "-", r => new SubtractSystemFunction( r ), "sub" )
