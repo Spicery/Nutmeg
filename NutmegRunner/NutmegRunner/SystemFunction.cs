@@ -31,7 +31,10 @@ namespace NutmegRunner {
 
         static public void ShowMe( object item ) {
             switch ( item ) {
-                case IList<object> list:
+                case HalfOpenRangeList horl:
+                    Console.Write( $"[{horl.Low}..<{horl.High}]" );
+                    break;
+                case IReadOnlyList<object> list:
                     Console.Write( "[" );
                     var first = true;
                     foreach (var i in list) {

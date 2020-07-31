@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace NutmegRunner {
 
-    public class HalfOpenRangeListEnumerator : IEnumerator<long> {
+    public class HalfOpenRangeListEnumerator : IEnumerator<object> {
 
         long sofar;
         readonly long lo;
@@ -15,7 +15,7 @@ namespace NutmegRunner {
             this.hi = hi;
         }
 
-        public long Current { get; private set; }
+        public object Current { get; private set; }
 
         object IEnumerator.Current => this.Current;
 
@@ -25,7 +25,7 @@ namespace NutmegRunner {
         public bool MoveNext() {
             if (this.sofar < this.hi) {
                 this.Current = this.sofar++;
-                return this.sofar < this.hi;
+                return true;
             } else {
                 return false;
             }
@@ -39,7 +39,7 @@ namespace NutmegRunner {
     }
 
 
-    public class HalfOpenRangeList : IReadOnlyList<long> {
+    public class HalfOpenRangeList : IReadOnlyList<object> {
 
         private readonly long lo;
         private readonly long hi;
@@ -49,7 +49,11 @@ namespace NutmegRunner {
             this.hi = y;
         }
 
-        public long this[int index] {
+        public long Low => this.lo;
+
+        public long High => this.hi;
+
+        public object this[int index] {
             get => 0 <= index && index< this.hi? this.lo + index : throw new NutmegException( "Out of range" );
             set => throw new System.NotImplementedException();
         }
@@ -70,13 +74,13 @@ namespace NutmegRunner {
             return this.lo <= item && item < this.hi;
         }
 
-        public void CopyTo( long[] array, int arrayIndex ) {
+        public void CopyTo( object[] array, int arrayIndex ) {
             for (long i = this.lo; i < this.hi; i++) {
                 array[arrayIndex + i] = i;
             }
         }
 
-        public IEnumerator<long> GetEnumerator() {
+        public IEnumerator<object> GetEnumerator() {
             return new HalfOpenRangeListEnumerator(this.lo, this.hi);
         }
 
@@ -102,6 +106,10 @@ namespace NutmegRunner {
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
+            return this.GetEnumerator();
+        }
+
+        IEnumerator<object> IEnumerable<object>.GetEnumerator() {
             return this.GetEnumerator();
         }
     }
