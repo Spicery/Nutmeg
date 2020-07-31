@@ -87,7 +87,6 @@ namespace NutmegRunner {
                 for ( int i = 0; i < N; i++ ) {
                     var count = i + 1;
                     var item = runtimeEngine.PeekItemOrElse( N1 - i );
-                    Console.WriteLine( $"{count}: {item}" );
                     Console.Write( $"{count}: " );
                     ShowMeSystemFunction.ShowMe( item );
                     Console.WriteLine();
