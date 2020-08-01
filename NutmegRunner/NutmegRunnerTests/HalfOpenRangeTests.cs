@@ -12,7 +12,7 @@ namespace NutmegRunnerTests {
             //  Act
             //  Assert
             Assert.Empty( r );
-            Assert.Equal( 0, r.Count );
+            Assert.True( 0 == r.Count ); // Have to use True and not Equal as an bad warning gets in the way.
             Assert.ThrowsAny<NutmegException>( () => r[0] );
             Assert.Equal( -1L, r.IndexOf( 6L ) );
         }
