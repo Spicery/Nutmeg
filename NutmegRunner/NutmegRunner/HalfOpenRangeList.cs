@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace NutmegRunner {
@@ -46,7 +47,7 @@ namespace NutmegRunner {
 
         public HalfOpenRangeList( long x, long y ) {
             this.lo = x;
-            this.hi = y;
+            this.hi = Math.Max( x, y );
         }
 
         public long Low => this.lo;
@@ -62,13 +63,13 @@ namespace NutmegRunner {
 
         public bool IsReadOnly => true;
 
-        public void Add( long item ) {
-            throw new System.NotImplementedException();
-        }
+        //public void Add( long item ) {
+        //    throw new System.NotImplementedException();
+        //}
 
-        public void Clear() {
-            throw new System.NotImplementedException();
-        }
+        //public void Clear() {
+        //    throw new System.NotImplementedException();
+        //}
 
         public bool Contains( long item ) {
             return this.lo <= item && item < this.hi;
@@ -93,17 +94,17 @@ namespace NutmegRunner {
             }
         }
 
-        public void Insert( int index, long item ) {
-            throw new System.NotImplementedException();
-        }
+        //public void Insert( int index, long item ) {
+        //    throw new System.NotImplementedException();
+        //}
 
-        public bool Remove( long item ) {
-            throw new System.NotImplementedException();
-        }
+        //public bool Remove( long item ) {
+        //    throw new System.NotImplementedException();
+        //}
 
-        public void RemoveAt( int index ) {
-            throw new System.NotImplementedException();
-        }
+        //public void RemoveAt( int index ) {
+        //    throw new System.NotImplementedException();
+        //}
 
         IEnumerator IEnumerable.GetEnumerator() {
             return this.GetEnumerator();

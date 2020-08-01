@@ -208,7 +208,10 @@ namespace NutmegRunner {
             }
         }
 
-
+        public List<object> PopAllAndUnlock()
+        {
+            return this._valueStack.PopAllAndUnlock();
+        }
     }
 
 }

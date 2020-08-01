@@ -18,6 +18,8 @@ namespace NutmegRunner {
         public void Unlock();
         public int LockCount();
 
+        public List<object> PopAllAndUnlock();
+
         public T this[int n] { get; set; }
     }
 
@@ -157,6 +159,18 @@ namespace NutmegRunner {
             }
         }
 
+        public List<object> PopAllAndUnlock()
+        {
+            var all = new List<object>();
+            var n = this.Size();
+            for ( int i = 0; i < n; i++ ) {
+                all.Add( this.items[this.layer + i] );
+            }
+            this.top = this.layer;
+            this.Unlock();
+            return all;
+        }
+
     }
 
     public class UncheckedLayeredStack<T> : ILayeredStack<T> {
@@ -281,6 +295,17 @@ namespace NutmegRunner {
             set {
                 this.items[this.layer + n] = value;
             }
+        }
+
+        public List<object> PopAllAndUnlock() {
+            var all = new List<object>();
+            var n = this.Size();
+            for (int i = 0; i < n; i++) {
+                all.Add( this.items[this.layer + i] );
+            }
+            this.top = this.layer;
+            this.Unlock();
+            return all;
         }
 
     }

@@ -19,7 +19,16 @@ namespace NutmegRunner {
         public PrintlnSystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            Console.WriteLine( $"{runtimeEngine.Pop()}" );
+            var sep = " ";
+            var first = true;
+            foreach (var item in runtimeEngine.PopAllAndUnlock()) {
+                if ( ! first ) {
+                    Console.Write( sep );
+                }
+                Console.Write( $"{item}" );
+                first = false;
+            }
+            Console.WriteLine();
             return this.Next;
         }
 
