@@ -1,4 +1,4 @@
-# println( ARGS... ) -> ()
+# println
 
 > `println{OPTIONS}( ITEMS... ) -> ()`
 > - sep=_separator_
