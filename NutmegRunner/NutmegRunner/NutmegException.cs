@@ -43,6 +43,9 @@ namespace NutmegRunner {
     public class UnimplementedNutmegException : NutmegException {
         public UnimplementedNutmegException() : base( "Unimplemented" ) {
         }
+
+        public UnimplementedNutmegException( string message ) : base( message ) {
+        }
     }
 
     public class NormalExitNutmegException : NutmegException {

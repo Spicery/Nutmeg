@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace NutmegRunner {
@@ -11,17 +10,40 @@ namespace NutmegRunner {
         }
 
         public Runlet Next { get; set; }
-      
+
+        public override IEnumerable<Runlet> Neighbors() {
+            return new List<Runlet> { Next };
+        }
+
     }
 
-    public class PrintlnSystemFunction : SystemFunction {
+    public abstract class FixedAritySystemFunction : SystemFunction {
+
+        public FixedAritySystemFunction( Runlet next ) : base( next ) {
+        }
+
+        public abstract int Nargs { get; }
+
+    }
+
+
+    public abstract class VariadicSystemFunction : SystemFunction {
+
+        public VariadicSystemFunction( Runlet next ) : base( next ) {
+        }
+
+    }
+
+
+
+    public class PrintlnSystemFunction : VariadicSystemFunction {
 
         public PrintlnSystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             var sep = " ";
             var first = true;
-            foreach (var item in runtimeEngine.PopAllAndUnlock()) {
+            foreach (var item in runtimeEngine.PopAll()) {
                 if ( ! first ) {
                     Console.Write( sep );
                 }
@@ -34,9 +56,11 @@ namespace NutmegRunner {
 
     }
 
-    public class ShowMeSystemFunction : SystemFunction {
+    public class ShowMeSystemFunction : FixedAritySystemFunction {
 
         public ShowMeSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 1;
 
         static public void ShowMe( object item ) {
             switch ( item ) {
@@ -66,90 +90,115 @@ namespace NutmegRunner {
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            ShowMe( runtimeEngine.Pop() );
+            ShowMe( runtimeEngine.PopValue() );
             Console.WriteLine();
             return this.Next;
         }
 
     }
 
-    public class HalfOpenRangeListSystemFunction : SystemFunction {
+    public class StreamSystemFunction : FixedAritySystemFunction {
+
+        public StreamSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 1;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            object x = runtimeEngine.PopValue();
+            switch (x) {
+                case IEnumerable<object> e:
+                    runtimeEngine.PushValue( e.GetEnumerator() );
+                    break;
+                default:
+                    throw new NutmegException( $"Cannot stream this object: {x}" );
+            }
+            return this.Next;
+        }
+
+    }
+
+    public class HalfOpenRangeListSystemFunction : FixedAritySystemFunction {
 
         public HalfOpenRangeListSystemFunction( Runlet next ) : base( next ) { }
 
+        public override int Nargs => 2;
+
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            long y = (long)runtimeEngine.Pop();
-            long x = (long)runtimeEngine.Pop();
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
             var list = new HalfOpenRangeList( x, y );
-            runtimeEngine.Push( list );
-            runtimeEngine.UnlockValueStack();
+            runtimeEngine.PushValue( list );
             return this.Next;
         }
 
     }
 
-    public class ClosedRangeListSystemFunction : SystemFunction {
+    public class ClosedRangeListSystemFunction : FixedAritySystemFunction {
 
         public ClosedRangeListSystemFunction( Runlet next ) : base( next ) { }
 
+        public override int Nargs => 2;
+
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            long y = (long)runtimeEngine.Pop();
-            long x = (long)runtimeEngine.Pop();
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
             var list = new HalfOpenRangeList( x, y + 1 );
-            runtimeEngine.Push( list );
-            runtimeEngine.UnlockValueStack();
+            runtimeEngine.PushValue( list );
             return this.Next;
         }
 
     }
 
-    public class HalfOpenRangeSystemFunction : SystemFunction {
+    public class HalfOpenRangeSystemFunction : FixedAritySystemFunction {
 
         public HalfOpenRangeSystemFunction( Runlet next ) : base( next ) { }
 
+        public override int Nargs => 2;
+
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            long y = (long)runtimeEngine.Pop();
-            long x = (long)runtimeEngine.Pop();
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
             for (long i = x; i < y; i++) {
-                runtimeEngine.Push( i );
+                runtimeEngine.PushValue( i );
             }
-            runtimeEngine.UnlockValueStack();
             return this.Next;
         }
 
     }
 
-    public class ClosedRangeSystemFunction : SystemFunction {
+    public class ClosedRangeSystemFunction : FixedAritySystemFunction {
 
         public ClosedRangeSystemFunction( Runlet next ) : base( next ) { }
 
+        public override int Nargs => 2;
+
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            long y = (long)runtimeEngine.Pop();
-            long x = (long)runtimeEngine.Pop();
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
             for (long i = x; i <= y; i++) {
-                runtimeEngine.Push( i );
+                runtimeEngine.PushValue( i );
             }
-            runtimeEngine.UnlockValueStack();
             return this.Next;
         }
 
     }
 
-    public class AddSystemFunction : SystemFunction {
+    public class AddSystemFunction : FixedAritySystemFunction {
 
         public AddSystemFunction( Runlet next ) : base( next ) { }
 
+        public override int Nargs => 2;
+
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            long y = (long)runtimeEngine.Pop();
-            long x = (long)runtimeEngine.Pop();
-            runtimeEngine.Push( x + y );
-            runtimeEngine.UnlockValueStack();
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
+            runtimeEngine.PushValue( x + y );
             return this.Next;
         }
 
     }
 
-    public class SumSystemFunction : SystemFunction {
+    public class SumSystemFunction : VariadicSystemFunction {
 
         public SumSystemFunction( Runlet next ) : base( next ) { }
 
@@ -158,36 +207,37 @@ namespace NutmegRunner {
             while ( runtimeEngine.TryPop( out var d ) ) {
                 n += (long)d;
             }
-            runtimeEngine.Push( n );
-            runtimeEngine.UnlockValueStack();
+            runtimeEngine.PushValue( n );
             return this.Next;
         }
 
     }
 
-    public class SubtractSystemFunction : SystemFunction {
+    public class SubtractSystemFunction : FixedAritySystemFunction {
 
         public SubtractSystemFunction( Runlet next ) : base( next ) { }
 
+        public override int Nargs => 2;
+
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            long y = (long)runtimeEngine.Pop();
-            long x = (long)runtimeEngine.Pop();
-            runtimeEngine.Push( x - y );
-            runtimeEngine.UnlockValueStack();
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
+            runtimeEngine.PushValue( x - y );
             return this.Next;
         }
 
     }
 
-    public class LTESystemFunction : SystemFunction {
+    public class LTESystemFunction : FixedAritySystemFunction {
 
         public LTESystemFunction( Runlet next ) : base( next ) { }
 
+        public override int Nargs => 2;
+
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            long y = (long)runtimeEngine.Pop();
-            long x = (long)runtimeEngine.Pop();
-            runtimeEngine.Push( x <= y );
-            runtimeEngine.UnlockValueStack();
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
+            runtimeEngine.PushValue( x <= y );
             return this.Next;
         }
 

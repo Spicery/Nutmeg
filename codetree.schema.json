@@ -26,9 +26,27 @@
                 }
             ]
         },
+        "QUERY": {
+            "type": "object",
+            "properties": {
+                "kind": { "const": "in" },
+                "in.var": { "$ref": "#/definitions/PATTERN" },
+                "in.expr": { "$ref": "#/definitions/EXPRESSION" }
+            },
+            "required": [ "kind", "in.var", "in.expr" ]
+        },
         "EXPRESSION": {
             "oneOf": [
                 { "$ref": "#/definitions/BINDING" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": { "const": "for" },
+                        "query": { "$ref": "#/definitions/QUERY" },
+                        "body": { "$ref": "#/definitions/EXPRESSION" }
+                    },
+                    "required": [ "kind", "query", "body" ]
+                },
                 {
                     "type": "object",
                     "properties": {

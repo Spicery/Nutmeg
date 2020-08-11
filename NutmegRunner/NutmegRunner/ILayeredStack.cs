@@ -77,6 +77,13 @@ namespace NutmegRunner {
             }
         }
 
+        public void Drop() {
+            if (top <= 0) {
+                throw new NutmegException( "Trying to pop empty stack" );
+            }
+            top -= 1;
+        }
+
         public bool IsEmpty() {
             return this.top == this.layer;
         }
@@ -159,15 +166,19 @@ namespace NutmegRunner {
             }
         }
 
-        public List<object> PopAllAndUnlock()
-        {
+        public List<object> PopAllAndUnlock() {
+            var all = this.PopAll();
+            this.Unlock();
+            return all;
+        }
+
+        public List<object> PopAll() {
             var all = new List<object>();
             var n = this.Size();
-            for ( int i = 0; i < n; i++ ) {
+            for (int i = 0; i < n; i++) {
                 all.Add( this.items[this.layer + i] );
             }
             this.top = this.layer;
-            this.Unlock();
             return all;
         }
 
@@ -211,6 +222,10 @@ namespace NutmegRunner {
             } catch (IndexOutOfRangeException) {
                 throw new NutmegException( "Trying to pop empty stack" );
             }
+        }
+
+        public void Drop() {
+            this.top -= 1;
         }
 
         public bool IsEmpty() {

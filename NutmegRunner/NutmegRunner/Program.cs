@@ -10,6 +10,7 @@ namespace NutmegRunner {
         string _bundleFile;
         string _entryPoint = "program";
         bool _debug = false;
+        string _graphviz = null;
         bool _print = false;
 
         /// <summary>
@@ -32,8 +33,13 @@ namespace NutmegRunner {
         }
 
         private void ProcessRunnerOptions( LinkedList<string> args ) {
+            //Console.WriteLine( $"Show Options" );
+            //foreach (var arg in args) {
+            //    Console.WriteLine( $"arg = {arg}" );
+            //}
             while (args.Count > 0 && args.First.Value.Length >= 2 && args.First.Value.StartsWith( "-" )) {
                 var option = args.First.Value;
+                //Console.WriteLine( $"option = {option}" );
                 args.RemoveFirst();
                 var n = option.IndexOf( '=' );
                 if (option.StartsWith( "--" )) {
@@ -56,6 +62,9 @@ namespace NutmegRunner {
                             break;
                         case "--debug":
                             this._debug = true;
+                            break;
+                        case "--graphviz":
+                            this._graphviz = parameter;
                             break;
                         default:
                             throw new NutmegException( $"Unrecognised option: {option}" ).Culprit( "Option", option );
@@ -123,7 +132,11 @@ namespace NutmegRunner {
                         }
                     }
                 }
-                runtimeEngine.Start( this._entryPoint, useEvaluate: false, usePrint: this._print );
+                if (this._graphviz != null ) {
+                    runtimeEngine.GraphViz( this._graphviz );
+                } else { 
+                    runtimeEngine.Start( this._entryPoint, useEvaluate: false, usePrint: this._print );
+                }
             } catch (NutmegException nme) {
                 Console.Error.WriteLine( $"MISHAP: {nme.Message}" );
                 foreach (var culprit in nme.Culprits) {

@@ -1,0 +1,35 @@
+{
+    "kind": "function",
+    "nlocals": 2,
+    "nargs": 0,
+    "parameters": { "kind": "seq", "body": [] },
+    "body": {
+        "kind": "for",
+        "query": {
+            "kind": "in",
+            "in.var" : {
+                "kind": "id",
+                "reftype": "var",
+                "name": "i",
+                "slot": 0
+            },
+            "in.stream.slot": 1,
+            "in.expr": {
+                "kind": "syscall",
+                "name": "halfOpenRangeList",
+                "arguments": {
+                    "kind": "seq",
+                    "body": [
+                        { "kind": "int", "value": "0" },
+                        { "kind": "int", "value": "5" }
+                    ]
+                }
+            }
+        },
+        "body": {
+            "kind": "syscall",
+            "name": "println",
+            "arguments": { "kind": "id", "name": "i", "reftype": "get", "slot": 0 }
+        }
+    }
+}

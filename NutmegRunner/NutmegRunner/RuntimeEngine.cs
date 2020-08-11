@@ -67,22 +67,50 @@ namespace NutmegRunner {
             this._valueStack.Unlock();
         }
 
+
+        public void Unlock1ValueStack() {
+            if (this._valueStack.Size() == 1) {
+                this._valueStack.Unlock();
+            } else {
+                throw new NutmegException( "Wrong number of items on stack" );
+            }
+        }
+
+        public object GetSlot( int slot ) {
+            return this._callStack[slot];
+        }
+
         public void PushSlot( int slot ) {
             this._valueStack.Push( this._callStack[slot] );
         }
 
-        public void Push( object value ) {
+        public void PopSlot( int slot ) {
+            this._callStack[slot] = this._valueStack.Pop();
+        }
+
+        public void PushValue( object value ) {
             this._valueStack.Push( value );
         }
 
-        public object Pop() {
+        public object PopValue() {
             return this._valueStack.Pop();
         }
 
-        public object Pop1() {
-            if ( this._valueStack.Size() == 1 ) {
+        public object PopValue1() {
+            if (this._valueStack.Size() == 1) {
                 return this._valueStack.Pop();
-            } else if ( this._valueStack.IsEmpty() ) {
+            } else if (this._valueStack.IsEmpty()) {
+                throw new NutmegException( "Required value is missing" ).Hint( "Exactly one value needed but none supplied" );
+            } else {
+                throw new NutmegException( "Too many values" ).Hint( "Exactly one value needed but too many are supplied" );
+            }
+        }
+
+
+        public void PopValue1IntoSlot( int slot ) {
+            if (this._valueStack.Size() == 1) {
+                this._callStack[slot] = this._valueStack.Pop();
+            } else if (this._valueStack.IsEmpty()) {
                 throw new NutmegException( "Required value is missing" ).Hint( "Exactly one value needed but none supplied" );
             } else {
                 throw new NutmegException( "Too many values" ).Hint( "Exactly one value needed but too many are supplied" );
@@ -131,6 +159,7 @@ namespace NutmegRunner {
         public Runlet Return() {
             this._valueStack.Unlock();
             this._callStack.ClearAndUnlock();
+            this._callStack.Drop();
             return (Runlet)this._callStack.Pop();
         }
 
@@ -146,11 +175,15 @@ namespace NutmegRunner {
 
         }
 
+        public void GraphViz( string idName ) {
+            new RunletToGraphVizConverter().GraphViz( idName, ( Runlet)this._dictionary.Get( idName ).Value );
+        }
+
         private void StartFromConstant( bool usePrint, object obj ) {
             TextWriter stdErr = Console.Error;
             try {
                 if (Debug) stdErr.WriteLine( $"Pushing constant ..." );
-                this.Push( obj );
+                this.PushValue( obj );
                 new HaltRunlet( usePrint ).ExecuteRunlet( this );
             } catch (NormalExitNutmegException) {
                 //  Normal exit.
@@ -160,9 +193,9 @@ namespace NutmegRunner {
         }
 
 
-        public void StartFromCodelet( Runlet codelet, bool useEvaluate, bool usePrint ) {
+        public void StartFromCodelet( Runlet runlet, bool useEvaluate, bool usePrint ) {
             TextWriter stdErr = Console.Error;
-            if (codelet is FunctionRunlet fwc) {
+            if (runlet is FunctionRunlet fwc) {
                 if (Debug) stdErr.WriteLine( $"Running codelet ..." );
                 try {
                     Runlet currentInstruction = new LockRunlet( new CallQRunlet( fwc, new HaltRunlet( usePrint ) ) );
@@ -186,8 +219,9 @@ namespace NutmegRunner {
             }
         }
 
-        public void PushReturnAddress( Runlet next ) {
+        public void PushReturnAddress( Runlet next, bool alt ) {
             this._callStack.Push( next );
+            this._callStack.Push( alt );
         }
 
         public void ShowFrames() {
@@ -208,9 +242,12 @@ namespace NutmegRunner {
             }
         }
 
-        public List<object> PopAllAndUnlock()
-        {
+        public List<object> PopAllAndUnlock() {
             return this._valueStack.PopAllAndUnlock();
+        }
+
+        public List<object> PopAll() {
+            return this._valueStack.PopAll();
         }
     }
 
