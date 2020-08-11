@@ -6,5 +6,5 @@ all:
 ENTRYPOINT?=program
 .PHONEY: run
 run:
-	dotnet NutmegRunner/NutmegRunner/bin/Debug/netcoreapp3.1/NutmegRunner.dll --debug --entry-point=$(ENTRYPOINT) bundle-examples/simple.bundle
+	dotnet NutmegRunner/NutmegRunner/bin/Debug/netcoreapp3.1/NutmegRunner.dll --debug --entry-point=$(ENTRYPOINT) examples/bundler/simple.bundle
 
