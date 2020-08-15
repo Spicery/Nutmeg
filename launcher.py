@@ -17,7 +17,7 @@ class Parser:
 	"""
 
 	def parse( self, src ):
-		with open( 'codetree-examples/binding.codetree.json', 'r' ) as placeholdersrc:
+		with open( 'examples/parser/binding.parser.json', 'r' ) as placeholdersrc:
 			return codetree.deserialise( placeholdersrc )
 
 
