@@ -3,9 +3,10 @@
 
 # Configuration -c can be Debug or Release
 # -r is the target system. 
+RID?=osx-x64
 .PHONEY: publish
 publish:
-	dotnet publish -c Debug -r osx.10.10-x64 
+	dotnet publish -c Debug -r $(RID)
 
 .PHONEY: build
 build:

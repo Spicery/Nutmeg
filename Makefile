@@ -8,6 +8,9 @@ PREFIX=/opt/nutmeg
 INSTALL_DIR=$(PREFIX)/libexec/nutmeg
 EXEC_DIR=/usr/local/bin
 
+# osx-x64 linux-x64 win-x64
+RID?=osx-x64
+
 ENTRYPOINT?=program
 .PHONEY: run
 run:
@@ -59,7 +62,7 @@ install-compiler:
 .PHONEY: install-runner
 install-runner:
 	mkdir -p $(INSTALL_DIR)/runner
-	( cd NutmegRunner/bin/Debug/netcoreapp3.1/osx.10.10-x64/publish; tar cf - . ) | ( cd $(INSTALL_DIR)/runner; tar xf - )
+	( cd NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd $(INSTALL_DIR)/runner; tar xf - )
 
 .PHONEY: uninstall
 uninstall:
