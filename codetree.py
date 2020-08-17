@@ -4,6 +4,7 @@
 
 import json
 import abc
+from str2bool import str2bool
 
 class Codelet( abc.ABC ):
 	"""
@@ -56,13 +57,21 @@ class StringCodelet( ConstantCodelet ):
 
 
 class IntCodelet( ConstantCodelet ):
-
 	KIND = "int"
 
 	def __init__( self, *, value, radix=10, **kwargs ):
 		super().__init__( **kwargs )
 		self._value = int( value, radix )
-	
+
+
+class BoolCodelet( ConstantCodelet ):
+	KIND = "bool"
+
+	def __init__( self, *, value, **kwargs ):
+		super().__init__( **kwargs )
+		self._value = str2bool( value )
+
+
 class IdCodelet( Codelet ):
 
 	KIND = "id"
@@ -79,13 +88,16 @@ class IfCodelet( Codelet ):
 
 	KIND = "if"
 
-	def __init__( self, *, testactions, elseaction, **kwargs ):
+	# Slightly awkward because the constructor for an if-codelet uses a Python
+	# reserved word (else) as a keyword-argument.
+	def __init__( self, *, test, then, **kwargs ):
+		self._else = kwargs.pop( 'else', None )
 		super().__init__( **kwargs )
-		self._testActions = testactions
-		self._elseAction = elseaction
+		self._test = test
+		self._then = then
 
 	def encodeAsJSON( self, encoder ):
-		return dict( kind=self.KIND, testactions=self._testActions, elseaction=self.elseAction )
+		return dict( kind=self.KIND, test=self._test, then=self._then )
 
 class BindingCodelet( Codelet ):
 
