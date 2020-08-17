@@ -75,23 +75,24 @@ _build/compiler/nutmeg:
 build-runner:
 	make -C NutmegRunner
 
-# Builds the installer into _build/installer.zip folder. This requires the system to be built
+# Builds the installer into _build/nutmeg-installer.zip folder. This requires the system to be built
 # using `make build` first.
 .PHONEY: mkinstaller
 mkinstaller:
-	# Add the nutmeg & nutmegc scripts into _build/installer/bin.
-	mkdir -p _build/installer/bin
-	printf '#!/bin/bash\nexec $(INSTALL_DIR)/compiler/nutmeg $$*\n' > _build/installer/bin/nutmeg
-	printf '#!/bin/bash\nexec $(INSTALL_DIR)/compiler/nutmeg compile $$*\n' > _build/installer/bin/nutmegc
-	# Add the compiler and runner into _build/installer/libexec/nutmeg/.
-	mkdir -p _build/installer/libexec/nutmeg
-	( cd _build; tar cf - compiler ) | ( cd _build/installer/libexec/nutmeg; tar xf - )
-	mkdir -p _build/installer/libexec/nutmeg/runner
-	( cd NutmegRunner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd _build/installer/libexec/nutmeg/runner; tar xf - )
+	# Add the nutmeg & nutmegc scripts into _build/nutmeg-installer/bin.
+	mkdir -p _build/nutmeg-installer/bin
+	printf '#!/bin/bash\nexec $(INSTALL_DIR)/compiler/nutmeg $$*\n' > _build/nutmeg-installer/bin/nutmeg
+	printf '#!/bin/bash\nexec $(INSTALL_DIR)/compiler/nutmeg compile $$*\n' > _build/nutmeg-installer/bin/nutmegc
+	# Add the compiler and runner into _build/nutmeg-installer/libexec/nutmeg/.
+	mkdir -p _build/nutmeg-installer/libexec/nutmeg
+	( cd _build; tar cf - compiler ) | ( cd _build/nutmeg-installer/libexec/nutmeg; tar xf - )
+	mkdir -p _build/nutmeg-installer/libexec/nutmeg/runner
+	( cd NutmegRunner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd _build/nutmeg-installer/libexec/nutmeg/runner; tar xf - )
 	# Add the installer.bsh script.
-	python3 scripts/mkinstaller.py --install_dir=$(INSTALL_DIR) --exec_dir=$(EXEC_DIR) > _build/installer/install.bsh
+	python3 scripts/mkinstaller.py --install_dir=$(INSTALL_DIR) --exec_dir=$(EXEC_DIR) > _build/nutmeg-installer/install.bsh
 	# And zip it all up.
-	( cd _build/installer; zip -r ../installer.zip . )
+	( cd _build; zip -r nutmeg-installer.zip nutmeg-installer )
+	( cd _build; tar cf - nutmeg-installer ) | gzip > _build/nutmeg-installer.tgz
 
 # Do a local installation, building first if needed.
 .PHONEY: install
