@@ -4,11 +4,11 @@ all: help
 .PHONEY: help
 help:
 	# Valid targets are:
-	# 	make clean - cleans out build files and artefacts (uses dotnet clean, so doesn't fully work)
+	#	make clean - cleans out build files and artefacts (uses dotnet clean, so doesn't fully work)
 	#	make build - builds the compiler and runner
-	#   make mkinstaller - creates a *.zip file suitable for installation on Linux/MacOS, use after `make build`
+	#	make mkinstaller - creates a *.zip file suitable for installation on Linux/MacOS, use after `make build`
 	#	make install - installs locally, use after `make build`
-	#   make jumpstart - install all the necessary tools for devs to get started
+	#	make jumpstart - install all the necessary tools for devs to get started
 	#	make run ENTRYPOINT=$(ENTRYPOINT) - start the interpreter on one of the supplied examples
 
 PREFIX=/opt/nutmeg
