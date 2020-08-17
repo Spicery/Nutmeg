@@ -5,11 +5,15 @@
 # -r is the target system. 
 RID?=osx-x64
 .PHONEY: publish
-publish:
+publish: NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish/NutmegRunner.dll
+
+NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish/NutmegRunner.dll: NutmegRunner/*.cs
 	dotnet publish -c Debug -r $(RID)
 
 .PHONEY: build
-build:
+build: NutmegRunner/bin/Debug/netcoreapp3.1/NutmegRunner.dll
+
+NutmegRunner/bin/Debug/netcoreapp3.1/NutmegRunner.dll: NutmegRunner/*.cs
 	dotnet build
 
 .PHONEY: clean
