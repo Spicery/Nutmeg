@@ -5,10 +5,13 @@ import argparse
 
 TEMPLATE = """#!/bin/bash
 /bin/rm -rf $(INSTALL_DIR)-old
-if [ -d "$(INSTALL_DIR)" ]; mv $(INSTALL_DIR) $(INSTALL_DIR)-old; fi
-( /usr/bin/tar cf - libexec/nutmeg ) | ( cd $(INSTALL_DIR); /usr/bin/tar xf - )
+if [ -d "$(INSTALL_DIR)" ]; then mv $(INSTALL_DIR) $(INSTALL_DIR)-old; fi
+mkdir -p $(INSTALL_DIR)
+( cd libexec/nutmeg; /usr/bin/tar cf - . ) | ( cd $(INSTALL_DIR); /usr/bin/tar xf - )
 cp bin/nutmeg $(EXEC_DIR)
-cp bin/nutmegc $(EXEC_DIR)"""
+chmod a+x $(EXEC_DIR)/nutmeg
+cp bin/nutmegc $(EXEC_DIR)
+chmod a+x $(EXEC_DIR)/nutmegc"""
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser( prog='mkinstaller' )

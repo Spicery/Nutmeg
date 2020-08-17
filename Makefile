@@ -21,9 +21,9 @@ RID?=osx-x64
 # Linux-oriented jumpstart. Run with sudo. Will install a bunch of packages and .NET 3.1.
 .PHONEY: jumpstart
 jumpstart:
-	#	Add the Python SDK.
+	#	Add UNIX tools and the Python SDK.
 	apt-get update
-	apt-get install -y build-essential python3 wget zip python-pip 
+	apt-get install -y build-essential python3 wget zip python3-pip 
 	pip3 install cx-freeze
 	# 	Now add the .NET SDK.
 	wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
@@ -31,7 +31,7 @@ jumpstart:
 	apt-get install -y apt-transport-https
 	apt-get update
 	# Use the noninteractive flag to stop being prompted for timezone.
-	apt-get install -y dotnet-sdk-3.1
+	DEBIAN_FRONTEND=noninteractive apt-get install -y dotnet-sdk-3.1
 
 # This is purely a dev convenience, capturing the complicated dotnet command needed.
 ENTRYPOINT?=program
@@ -78,7 +78,7 @@ build-runner:
 # Builds the installer into _build/nutmeg-installer.zip folder. This requires the system to be built
 # using `make build` first.
 .PHONEY: mkinstaller
-mkinstaller:
+mkinstaller: build
 	# Add the nutmeg & nutmegc scripts into _build/nutmeg-installer/bin.
 	mkdir -p _build/nutmeg-installer/bin
 	printf '#!/bin/bash\nexec $(INSTALL_DIR)/compiler/nutmeg $$*\n' > _build/nutmeg-installer/bin/nutmeg
@@ -90,6 +90,7 @@ mkinstaller:
 	( cd NutmegRunner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd _build/nutmeg-installer/libexec/nutmeg/runner; tar xf - )
 	# Add the installer.bsh script.
 	python3 scripts/mkinstaller.py --install_dir=$(INSTALL_DIR) --exec_dir=$(EXEC_DIR) > _build/nutmeg-installer/install.bsh
+	chmod a+x _build/nutmeg-installer/install.bsh
 	# And zip it all up.
 	( cd _build; zip -r nutmeg-installer.zip nutmeg-installer )
 	( cd _build; tar cf - nutmeg-installer ) | gzip > _build/nutmeg-installer.tgz
