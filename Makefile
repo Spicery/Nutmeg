@@ -24,7 +24,7 @@ jumpstart:
 	#	Add UNIX tools and the Python SDK.
 	apt-get update
 	apt-get install -y build-essential python3 wget zip python3-pip 
-	pip3 install cx-freeze str2bool
+	pip3 install str2bool pyinstaller
 	# 	Now add the .NET SDK.
 	wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
 	dpkg -i packages-microsoft-prod.deb
@@ -63,10 +63,11 @@ build:
 
 # This actually builds a lot of files but we use the executable to indicate a successful build
 .PHONEY: build-compiler
-build-compiler: _build/compiler/nutmeg
+build-compiler: _build/compiler/nutmeg/nutmeg
 
 _build/compiler/nutmeg:
-	cxfreeze launcher.py -O --silent --target-dir=_build/compiler --target-name=nutmeg
+	#cxfreeze launcher.py -O --silent --target-dir=_build/compiler --target-name=nutmeg
+	pyinstaller --noconfirm --workpath=_working --distpath=_build/compiler --name=nutmeg launcher.py
 
 # Builds into NutmegRunner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish
 # Where $(RID) is the target architecture to build for. For a list of archhitectures
@@ -84,8 +85,8 @@ mkinstaller: build
 	printf '#!/bin/bash\nexec $(INSTALL_DIR)/compiler/nutmeg $$*\n' > _build/nutmeg-installer/bin/nutmeg
 	printf '#!/bin/bash\nexec $(INSTALL_DIR)/compiler/nutmeg compile $$*\n' > _build/nutmeg-installer/bin/nutmegc
 	# Add the compiler and runner into _build/nutmeg-installer/libexec/nutmeg/.
-	mkdir -p _build/nutmeg-installer/libexec/nutmeg
-	( cd _build; tar cf - compiler ) | ( cd _build/nutmeg-installer/libexec/nutmeg; tar xf - )
+	mkdir -p _build/nutmeg-installer/libexec/nutmeg/compiler
+	( cd _build/compiler/nutmeg; tar cf - . ) | ( cd _build/nutmeg-installer/libexec/nutmeg/compiler; tar xf - )
 	mkdir -p _build/nutmeg-installer/libexec/nutmeg/runner
 	( cd NutmegRunner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd _build/nutmeg-installer/libexec/nutmeg/runner; tar xf - )
 	# Add the installer.bsh script.

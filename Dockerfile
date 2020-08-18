@@ -15,7 +15,7 @@ RUN unzip 11_build_and_install.zip
 #WORKDIR Nutmeg-integration
 WORKDIR Nutmeg-0.1-11_build_and_install
 RUN apt-get install -y python3-pip
-RUN pip3 install cx-freeze str2bool
+RUN pip3 install str2bool pyinstaller
 RUN make build RID=linux-x64
 RUN make install RID=linux-x64
 RUN ls /usr/local/bin 

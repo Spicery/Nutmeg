@@ -133,3 +133,5 @@ dmypy.json
 /.idea/
 /.vscode
 /_build/
+/_dist/
+/_working/
