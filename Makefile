@@ -24,7 +24,7 @@ jumpstart:
 	#	Add UNIX tools and the Python SDK.
 	apt-get update
 	apt-get install -y build-essential python3 wget zip python3-pip 
-	pip3 install cx-freeze
+	pip3 install cx-freeze str2bool
 	# 	Now add the .NET SDK.
 	wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
 	dpkg -i packages-microsoft-prod.deb
@@ -92,7 +92,7 @@ mkinstaller: build
 	python3 scripts/mkinstaller.py --install_dir=$(INSTALL_DIR) --exec_dir=$(EXEC_DIR) > _build/nutmeg-installer/install.bsh
 	chmod a+x _build/nutmeg-installer/install.bsh
 	# And zip it all up.
-	( cd _build; zip -r nutmeg-installer.zip nutmeg-installer )
+	( cd _build; zip -qr nutmeg-installer.zip nutmeg-installer )
 	( cd _build; tar cf - nutmeg-installer ) | gzip > _build/nutmeg-installer.tgz
 
 # Do a local installation, building first if needed.
