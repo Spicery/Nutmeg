@@ -10,10 +10,12 @@ Binding ::=
 
 Pattern ::= 
     LiteralConstant |
-    Identifier | 
+    Modifier? Identifier | 
     '(' Pattern? ')' |
     Pattern '(' Pattern ')' |
     Pattern ( ',' Pattern )
+
+Modifer ::= 'var' | 'val' | 'const'
 
 Expression ::= 
     LiteralConstant |
