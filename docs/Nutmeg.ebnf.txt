@@ -1,4 +1,4 @@
-/* Prototype Grammar for Nutmeg */
+/* Prototype Grammar for Nutmeg - developed with the help of https://bottlecaps.de/rr/ui */
 
 Statements ::= Statement ( ';' Statement )* ';'?
 
@@ -6,7 +6,7 @@ Statement ::= Expression | Binding
 
 Binding ::= 
     Pattern ':=' Expression |
-    'def' Identifier '(' Pattern ')' ('=>>'|':') Statements ('enddef'|'end')
+    ('def'|'function'|'finesse') Identifier '(' Pattern ')' ('=>>'|':') Statements ('enddef'|'end')
 
 Pattern ::= 
     LiteralConstant |
@@ -47,7 +47,7 @@ Queries ::=
 Query ::= 
     Expression |
     Binding |
-    Identifier 'in' Expression |
+    Pattern 'in' Expression |
     '(' Queries ')'
 
 InfixOperator ::= ',' | '+' | '*' | '-' | '/' | '//' | 'and' | 'or' | '..' | '...' | '.' Identifier
