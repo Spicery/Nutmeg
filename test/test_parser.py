@@ -35,6 +35,6 @@ def test_string_literals():
     assert parser.tokenize('"string with double quotes"') == [
         Token(type="STRING", value='"string with double quotes"')
     ]
-    # assert parser.tokenize("string within a 'string'") == [
-    #     Token(type="STRING", value="string within a 'string'")
-    # ]
+    assert parser.tokenize("\"string within a 'string'\"") == [
+        Token(type="STRING", value="\"string within a 'string'\"")
+    ]
