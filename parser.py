@@ -8,11 +8,13 @@ import re
 import sys
 from collections import namedtuple
 
+import token_specification
+
 Token = namedtuple("Token", ["type", "value"])
 
 
 def tokenize(text):
-    token_spec = flatten(load_token_specification("token_specification.json"))
+    token_spec = flatten(token_specification.tokens)
     regex_pattern = compile_regex(token_spec)
 
     tokens = []
@@ -23,35 +25,24 @@ def tokenize(text):
     return tokens
 
 
-def load_token_specification(filename):
-    """
-    Load token specification in valid JSON from filename.
-    Return a two-dimensional dictionary in form "<category>": {"<token name>" : "<regex pattern>"}.
-    """
-    with open(os.path.join(sys.path[0], filename), "r") as json_file:
-        token_specification = json.load(json_file)
-
-    return token_specification
-
-
-def flatten(token_specification):
+def flatten(token_dictionary):
     """
     Take a two-dimensional dictionary in form "<category>": {"<token name>" : "<regex pattern>"}.
     Return a one-dimensional dictionary in form {"<token name>": "<regex pattern>"}.
     """
-    flat_token_specification = {}
+    flat_token_dictionary = {}
 
-    for key, val in token_specification.items():
+    for key, val in token_dictionary.items():
         if isinstance(val, dict):
             val = [val]
         if isinstance(val, list):
             for subdict in val:
                 deeper = flatten(subdict).items()
-                flat_token_specification.update({key2: val2 for key2, val2 in deeper})
+                flat_token_dictionary.update({key2: val2 for key2, val2 in deeper})
         else:
-            flat_token_specification[key] = val
+            flat_token_dictionary[key] = val
 
-    return flat_token_specification
+    return flat_token_dictionary
 
 
 def compile_regex(flat_token_specification):
