@@ -83,7 +83,7 @@ class Parser:
     # Grammar rules
 
     def identifier(self):
-        "TODO -- unsure of the EBNF here? "
+        "Identifier ::= [https://www.w3.org/TR/xml-names/#NT-NCName]"
         if self._accept("ID"):
             return {"kind": "id", "name": self.tok.value}
 
