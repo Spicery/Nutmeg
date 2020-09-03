@@ -1,4 +1,5 @@
 tokens = {
+    "identifiers": {"ID": r"(?i)(?P<ID>^([a-z])\w*)", "DISCARD": r"(?P<DISCARD>)^_\w*"},
     "literals": {
         "NUM": r"(?P<NUM>\d+)",
         "STRING": r"(?P<STRING>\".*\"|'.*')",
