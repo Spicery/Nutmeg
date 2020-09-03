@@ -79,3 +79,40 @@ class ExpressionEvaluator:
         "Consume next token if it matches toktype or raise SyntaxError"
         if not self._accept(toktype):
             raise SyntaxError("Expected " + toktype)
+
+    # Grammar rules
+    def expr(self):
+        "expression ::= term { ('+'|'-') term }"
+        exprval = self.term()
+        while self._accept("PLUS") or self._accept("MINUS"):
+            op = self.tok.type
+            right = self.term()
+            if op == "PLUS":
+                exprval += right
+            elif op == "MINUS":
+                exprval -= right
+        return exprval
+
+    def term(self):
+        "term ::= factor { ('*'|'/') factor}"
+        termval = self.factor()
+        while self._accept("TIMES") or self._accept("DIVIDE"):
+            op = self.tok.type
+            right = self.factor()
+            if op == "TIMES":
+                termval *= right
+            elif op == "DIVIDE":
+                termval /= right
+        return termval
+
+    def factor(self):
+        "factor ::= NUM | (expr)"
+
+        if self._accept("NUM"):
+            return int(self.tok.value)
+        elif self._accept("LPAREN"):
+            exprval = self.expr()
+            self._expect("RPAREN")
+            return exprval
+        else:
+            raise SyntaxError("Expected NUMBER or LPAREN")
