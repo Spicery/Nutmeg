@@ -50,3 +50,11 @@ def test_generates_identifier_tokens():
         expected_output=[Token(type="ID", value="x")],
     )
 
+
+def test_parses_identifier():
+    assert parser.Parser().parse("x") == json.dumps({"kind": "id", "name": "x"})
+
+
+def test_parses_int():
+    assert parser.Parser().parse("99") == json.dumps({"kind": "int", "value": "99"})
+
