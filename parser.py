@@ -47,7 +47,7 @@ def generate_tokens(regex_pattern, text):
             yield tok
 
 
-class ExpressionEvaluator:
+class Parser:
     """
     docstring
     """
@@ -61,7 +61,7 @@ class ExpressionEvaluator:
         self.nexttok = None  # Next symbol tokenized
         self._advance()  # Load first lookahead token
 
-        return self.expr()
+        return self.identifier()
 
     def _advance(self):
         "Advance one token ahead"
@@ -81,6 +81,12 @@ class ExpressionEvaluator:
             raise SyntaxError("Expected " + toktype)
 
     # Grammar rules
+
+    def identifier(self):
+        "TODO -- unsure of the EBNF here? "
+        if self._accept("ID"):
+            return {"kind": "id", "name": self.tok.value}
+
     def expr(self):
         "expression ::= term { ('+'|'-') term }"
         exprval = self.term()
