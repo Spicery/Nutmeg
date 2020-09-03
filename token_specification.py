@@ -9,7 +9,7 @@ tokens = {
         "ASSIGNMENT": r"(?P<ASSIGN><-)",
         "UPDATE_ELEMENT": r"(?P<UPDATE_ELEMENT><--)",
         "COPY_AND_SET": r"(?P<COPY_AND_SET><==)",
-        "PLUS": r"(?P<PLUS>/+)",
+        "PLUS": r"(?P<PLUS>\+)",
         "MINUS": r"(?P<MINUS>-)",
         "TIMES": r"(?P<TIMES>\*)",
         "DIVIDE": r"(?P<DIVIDE>/)",
