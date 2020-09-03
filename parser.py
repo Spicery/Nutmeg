@@ -49,7 +49,13 @@ def generate_tokens(regex_pattern, text):
 
 class Parser:
     """
-    docstring
+    Recursive descent parser borrowed heavily from 
+    https://www.oreilly.com/library/view/python-cookbook-3rd/9781449357337/.
+    
+    Each method implements a single grammar rule. Use the ._accept() method 
+    to test and accept the current lookahead token. Use the ._expect() method 
+    to exactly match and discard the next token on on the input (or raise a 
+    SyntaxError if it doesn't match).
     """
 
     def __init__(self):
