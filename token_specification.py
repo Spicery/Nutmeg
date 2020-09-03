@@ -1,7 +1,7 @@
 tokens = {
-    "identifiers": {"ID": r"(?i)(?P<ID>^([a-z])\w*)", "DISCARD": r"(?P<DISCARD>)^_\w*"},
-    "literals": {
-        "NUM": r"(?P<NUM>\d+)",
+    "identifier": {"id": r"(?i)(?P<id>^([a-z])\w*)", "discard": r"(?P<discard>)^_\w*"},
+    "literal_constant": {
+        "int": r"(?P<int>^(\+|-)?\d+$)",
         "STRING": r"(?P<STRING>\".*\"|'.*')",
         "WHITESPACE": r"(?P<WS>\s+)",
     },

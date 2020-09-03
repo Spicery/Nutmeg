@@ -61,7 +61,7 @@ class Parser:
         self.nexttok = None  # Next symbol tokenized
         self._advance()  # Load first lookahead token
 
-        return self.identifier()
+        return self.expression()
 
     def _advance(self):
         "Advance one token ahead"
@@ -82,43 +82,31 @@ class Parser:
 
     # Grammar rules
 
-    def identifier(self):
-        "Identifier ::= [https://www.w3.org/TR/xml-names/#NT-NCName]"
-        if self._accept("ID"):
-            return {"kind": "id", "name": self.tok.value}
-
-    def expr(self):
-        "expression ::= term { ('+'|'-') term }"
-        exprval = self.term()
-        while self._accept("PLUS") or self._accept("MINUS"):
-            op = self.tok.type
-            right = self.term()
-            if op == "PLUS":
-                exprval += right
-            elif op == "MINUS":
-                exprval -= right
+    def expression(self):
+        """
+        Expression ::= 
+        LiteralConstant |
+        Identifier | TODO
+        '(' Expression? ')' | TODO
+        Expression '(' Expression ')' | TODO
+        Expression InfixOperator Expression | TODO
+        LetExpression | TODO
+        IfExpression | TODO
+        SwitchExpression | TODO
+        LoopExpression | TODO
+        LambdaExpression TODO
+        """
+        exprval = self.literal_constant() or self.identifier()
         return exprval
 
-    def term(self):
-        "term ::= factor { ('*'|'/') factor}"
-        termval = self.factor()
-        while self._accept("TIMES") or self._accept("DIVIDE"):
-            op = self.tok.type
-            right = self.factor()
-            if op == "TIMES":
-                termval *= right
-            elif op == "DIVIDE":
-                termval /= right
-        return termval
+    def identifier(self):
+        "Identifier ::= [https://www.w3.org/TR/xml-names/#NT-NCName]"
+        if self._accept("id"):
+            return json.dumps({"kind": "id", "name": self.tok.value})
+        elif self._accept("discard"):
+            return json.dumps({"kind": "discard", "name": self.tok.value})
 
-    def factor(self):
-        "factor ::= NUM | (expr)"
-
-        if self._accept("NUM"):
-            return int(self.tok.value)
-        elif self._accept("LPAREN"):
-            exprval = self.expr()
-            self._expect("RPAREN")
-            return exprval
-        else:
-            raise SyntaxError("Expected NUMBER or LPAREN")
+    def literal_constant(self):
+        "LiteralConstant ::= String | Number | Boolean | Null"
+        if self._accept("int"):
+            return json.dumps({"kind": "int", "value": str(int(self.tok.value))})
