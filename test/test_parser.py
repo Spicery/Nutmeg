@@ -55,6 +55,10 @@ def test_parses_identifier():
     assert parser.Parser().parse("x") == json.dumps({"kind": "id", "name": "x"})
 
 
+def test_parses_discard():
+    assert parser.Parser().parse("_x") == json.dumps({"kind": "discard", "name": "_x"})
+
+
 def test_parses_unsigned_int():
     assert parser.Parser().parse("99") == json.dumps({"kind": "int", "value": "99"})
 

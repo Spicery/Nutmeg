@@ -96,8 +96,8 @@ class Parser:
         LoopExpression | TODO
         LambdaExpression TODO
         """
-        exprval = self.literal_constant() or self.identifier()
-        return exprval
+        expr = self.literal_constant() or self.identifier()
+        return expr
 
     def identifier(self):
         "Identifier ::= [https://www.w3.org/TR/xml-names/#NT-NCName]"
