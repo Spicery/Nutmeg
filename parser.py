@@ -64,7 +64,7 @@ class ExpressionEvaluator:
         return self.expr()
 
     def _advance(self):
-        "Advange one token ahead"
+        "Advance one token ahead"
         self.tok, self.nexttok = self.nexttok, next(self.tokens, None)
 
     def _accept(self, toktype):
