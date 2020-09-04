@@ -78,3 +78,14 @@ def test_parses_signed_neg_int():
         "kind": "int",
         "value": -99,
     }
+
+
+def test_parses_identifier_plus_int():
+    assert json.loads(parser.Parser().parse("x + 99").serialise()) == {
+        "kind": "syscall",
+        "name": "+",
+        "arguments": {
+            "kind": "seq",
+            "body": [{"kind": "id", "name": "x"}, {"kind": "int", "value": "99"}],
+        },
+    }
