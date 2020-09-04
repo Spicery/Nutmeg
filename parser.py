@@ -118,4 +118,4 @@ class Parser:
     def literal_constant(self):
         "LiteralConstant ::= String TODO | Number | Boolean TODO | Null TODO"
         if self._accept("int"):
-            return codetree.IntCodelet(kind="int", value=str(int(self.tok.value)))
+            return codetree.IntCodelet(kind="int", value=self.tok.value)
