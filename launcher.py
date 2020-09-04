@@ -34,7 +34,7 @@ class ParseLauncher(Launcher):
         """
         input = self._args.input.read()
         codetree = Parser().parse(input)
-        codetree.serialise(self._args.output)
+        codetree.write(self._args.output)
 
 
 class ResolveLauncher(Launcher):
