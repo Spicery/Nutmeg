@@ -9,6 +9,7 @@ import sys
 from collections import namedtuple
 
 import token_specification
+import codetree
 
 Token = namedtuple("Token", ["type", "value"])
 
@@ -108,11 +109,13 @@ class Parser:
     def identifier(self):
         "Identifier ::= [https://www.w3.org/TR/xml-names/#NT-NCName]"
         if self._accept("id"):
-            return json.dumps({"kind": "id", "name": self.tok.value})
+            return codetree.IdCodelet(kind="id", name=self.tok.value, reftype="var")
         elif self._accept("discard"):
-            return json.dumps({"kind": "discard", "name": self.tok.value})
+            return codetree.IdCodelet(
+                kind="discard", name=self.tok.value, reftype="var"
+            )
 
     def literal_constant(self):
-        "LiteralConstant ::= String | Number | Boolean | Null"
+        "LiteralConstant ::= String TODO | Number | Boolean TODO | Null TODO"
         if self._accept("int"):
-            return json.dumps({"kind": "int", "value": str(int(self.tok.value))})
+            return codetree.IntCodelet(kind="int", name=str(int(self.tok.value)))
