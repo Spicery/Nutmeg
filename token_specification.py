@@ -1,5 +1,5 @@
 tokens = {
-    "identifier": {"id": r"(?i)(?P<id>^([a-z])\w*)", "discard": r"(?P<discard>)^_\w*"},
+    "identifier": {"id": r"(?i)(?P<id>^([a-z])\w*)"},
     "literal_constant": {
         "int": r"(?P<int>^(\+|-)?\d+$)",
         "STRING": r"(?P<STRING>\".*\"|'.*')",
