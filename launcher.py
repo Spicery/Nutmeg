@@ -2,6 +2,7 @@ import argparse
 import io
 import sys
 import codetree
+from resolver import Resolver
 
 ###############################################################################
 # Components 
@@ -19,6 +20,7 @@ class Parser:
 	def parse( self, src ):
 		with open( 'codetree-examples/binding.codetree.json', 'r' ) as placeholdersrc:
 			return codetree.deserialise( placeholdersrc )
+
 
 
 ###############################################################################
@@ -46,8 +48,9 @@ class ParseLauncher( Launcher ):
 
 
 class ResolveLauncher( Launcher ):
-	"""Placeholder"""
-	pass
+	def launch( self ):
+		tree = Resolver().resolveFile( self._args.input )
+		tree.serialise( self._args.output )
 
 
 class OptimiseLauncher( Launcher ):

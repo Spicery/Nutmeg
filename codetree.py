@@ -4,7 +4,38 @@
 
 import json
 import abc
+from abc import ABC
+
 from str2bool import str2bool
+
+class CodeletVisitor( abc.ABC ):
+
+	def visitCodelet( self, code_let, *args, **kwargs ):
+		raise Exception( 'Unable to handle visitor' )
+
+	def visitConstantCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitStringCodelet( self, code_let, *args, **kwargs ):
+		return self.visitConstantCodelet( code_let, *args, **kwargs )
+
+	def visitIntCodelet( self, code_let, *args, **kwargs ):
+		print( 'visitIntCodelet ARGS', args )
+		return self.visitConstantCodelet( code_let, *args, **kwargs )
+
+	def visitBoolCodelet( self, code_let, *args, **kwargs ):
+		return self.visitConstantCodelet( code_let, *args, **kwargs )
+
+	def visitIdCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitIfCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitBindingCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+
 
 class Codelet( abc.ABC ):
 	"""
@@ -35,8 +66,15 @@ class Codelet( abc.ABC ):
 	def encodeAsJSON( self, encoder ):
 		raise Exception( 'Not defined' )
 
+	@abc.abstractmethod
+	def subExpressions( self ):
+		raise Exception( 'Not defined' )
 
-class ConstantCodelet( Codelet ):
+	@abc.abstractmethod
+	def visit( self, visitor, *args, **kwargs ):
+		raise Exception( 'Not defined' )
+
+class ConstantCodelet( Codelet, ABC ):
 	"""
 	An abstract class for all codelets that represent literal constants.
 	"""
@@ -45,6 +83,9 @@ class ConstantCodelet( Codelet ):
 
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, value=self._value, **self._kwargs )
+
+	def subExpressions( self ):
+		return ()
 
 
 class StringCodelet( ConstantCodelet ):
@@ -55,6 +96,9 @@ class StringCodelet( ConstantCodelet ):
 		super().__init__( **kwargs )
 		self._value = value
 
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitStringCodelet( self, *args, **kwargs )
+
 
 class IntCodelet( ConstantCodelet ):
 	KIND = "int"
@@ -62,6 +106,10 @@ class IntCodelet( ConstantCodelet ):
 	def __init__( self, *, value, radix=10, **kwargs ):
 		super().__init__( **kwargs )
 		self._value = int( value, radix )
+
+	def visit( self, visitor, *args, **kwargs ):
+		print( 'IntCodelet ARGS', args )
+		return visitor.visitIntCodelet( self, *args, **kwargs )
 
 
 class BoolCodelet( ConstantCodelet ):
@@ -71,18 +119,53 @@ class BoolCodelet( ConstantCodelet ):
 		super().__init__( **kwargs )
 		self._value = str2bool( value )
 
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitBoolCodelet( self, *args, **kwargs )
+
 
 class IdCodelet( Codelet ):
 
 	KIND = "id"
 
 	def __init__( self, *, name, reftype, **kwargs ):
+		self._scope = kwargs.pop( 'scope', None )
+		self._label = kwargs.pop( 'label', None )
 		super().__init__( **kwargs )
 		self._name = name
 		self._reftype = reftype
 
+	def name( self ):
+		return self._name
+
+	def scope( self ):
+		return self._scope
+
+	def refype( self ):
+		return self._reftype
+
 	def encodeAsJSON( self, encoder ):
-		return dict( kind=self.KIND, name=self._name, reftype=self._reftype, **self._kwargs )
+		d = dict( kind=self.KIND, name=self._name, reftype=self._reftype, **self._kwargs )
+		if self._scope:
+			d[ 'scope' ] = self._scope
+		if self._label:
+			d[ 'label' ] = self._label
+		return d
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitIdCodelet( self, *args, **kwargs )
+
+	def setAsGlobal( self ):
+		self._scope = "global"
+
+	def setAsLocal( self, **kwargs ):
+		self._scope = "local"
+
+	def declareAsLocal( self, *, label, **kwargs ):
+		self._scope = "local"
+		self._label = label
+
+	def subExpressions( self ):
+		return ()
 
 class IfCodelet( Codelet ):
 
@@ -99,6 +182,13 @@ class IfCodelet( Codelet ):
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, test=self._test, then=self._then )
 
+	def subExpressions( self ):
+		return self._test, self._then, self._else
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitIfCodelet( self, *args, **kwargs )
+
+
 class BindingCodelet( Codelet ):
 
 	KIND = "binding"
@@ -108,8 +198,21 @@ class BindingCodelet( Codelet ):
 		self._lhs = lhs
 		self._rhs = rhs
 
+	def lhs( self ):
+		return self._lhs
+
+	def rhs( self ):
+		return self._rhs
+
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, lhs=self._lhs, rhs=self._rhs, **self._kwargs )
+
+	def subExpressions( self ):
+		return ( self._rhs, )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitBindingCodelet( self, *args, **kwargs )
+
 
 ### Serialisation #############################################################
 
@@ -166,6 +269,6 @@ def deserialise( src ):
 
 ###---###
 
-
-if __name__ == "__main__":
-	B = json.load( open( 'codetree-examples/binding.codetree.json', 'r' ), object_hook=codeTreeJSONHook)
+#
+# if __name__ == "__main__":
+# 	B = json.load( open( 'codetree-examples/binding.codetree.json', 'r' ), object_hook=codeTreeJSONHook)

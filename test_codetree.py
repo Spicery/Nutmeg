@@ -12,3 +12,4 @@ def test_deserialise():
     assert isinstance( data._then, codetree.StringCodelet )
     assert isinstance( data._else, codetree.StringCodelet )
 
+
