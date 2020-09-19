@@ -14,13 +14,12 @@ class Codelet( abc.ABC ):
 
 	KIND_PROPERTY = "kind"
 
-	def __init__( self, **kwargs ):
+	def __init__( self, kind=None, **kwargs ):
 		"""
 		The keyword-arguments are going to be supplied from the deserialisd
 		JSON, so the keywords will match the object-fields from the JSON,
 		although the values will be codelets and not plain-JSON objects.
 		"""
-		del kwargs[Codelet.KIND_PROPERTY]
 		self._kwargs = kwargs
 
 	def serialise( self, dst ):

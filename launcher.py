@@ -3,6 +3,9 @@ import io
 import sys
 import codetree
 
+import nutmeg_extensions
+import dot_txt_parser
+
 ###############################################################################
 # Components 
 ###############################################################################
@@ -15,10 +18,9 @@ class Parser:
 	A placeholder class that does something a little
 	like the real parser.
 	"""
-
 	def parse( self, src ):
-		with open( 'codetree-examples/binding.codetree.json', 'r' ) as placeholdersrc:
-			return codetree.deserialise( placeholdersrc )
+		( match, parser ) = nutmeg_extensions.findMatchingParser( src.name )
+		return parser( src, match )
 
 
 ###############################################################################
@@ -41,8 +43,8 @@ class ParseLauncher( Launcher ):
 		This is a dummy function to show how the launcher and the basic
 		functionality will relate to each other.
 		"""
-		codetree = Parser().parse( self._args.input )
-		codetree.serialise( self._args.output )
+		for codetree in Parser().parse( self._args.input ):
+			codetree.serialise( self._args.output )
 
 
 class ResolveLauncher( Launcher ):
