@@ -15,9 +15,9 @@
 
 
 token_spec = {
-    "identifier": {"id": r"(?i)(?P<id>^([a-z])\w*)"},
+    "identifier": {"ID": r"(?i)(?P<ID>^([a-z])\w*)"},
     "literal_constants": {
-        "int": r"(?P<int>^(\+|-)?\d+$)",
+        "INT": r"(?P<INT>^(\+|-)?\d+$)",
         "STRING": r"(?P<STRING>\".*\"|'.*')",
         "WHITESPACE": r"(?P<WS>\s+)",
     },

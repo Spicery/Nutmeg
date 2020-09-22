@@ -20,22 +20,9 @@ def help_test_token_generator(input, expected_output):
 
 def test_generates_integer_tokens():
     test_cases = [
-        ("42", [Token(type="int", value="42")]),
-        ("1805", [Token(type="int", value="1805")]),
-        ("9999999999999999999999", [Token(type="int", value="9999999999999999999999")]),
-    ]
-
-    for input, expected_output in test_cases:
-        help_test_token_generator(
-            input=input, expected_output=expected_output,
-        )
-
-
-def test_generates_integer_tokens():
-    test_cases = [
-        ("42", [Token(type="int", value="42")]),
-        ("1805", [Token(type="int", value="1805")]),
-        ("9999999999999999999999", [Token(type="int", value="9999999999999999999999")]),
+        ("42", [Token(type="INT", value="42")]),
+        ("1805", [Token(type="INT", value="1805")]),
+        ("9999999999999999999999", [Token(type="INT", value="9999999999999999999999")]),
     ]
 
     for input, expected_output in test_cases:
