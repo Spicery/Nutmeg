@@ -4,8 +4,8 @@ import json
 from tokenizer import Token, Tokenizer
 
 
-def help_test_token_generator(regex, input, expected_output):
-    generator = Tokenizer.generate_tokens(re.compile(regex), input)
+def help_test_token_generator(input, expected_output):
+    generator = Tokenizer().generate_tokens(text=input)
     range_index = 0
 
     for actual in generator:
@@ -18,32 +18,27 @@ def help_test_token_generator(regex, input, expected_output):
     assert range_index == len(expected_output), "Too few values returned from range"
 
 
-def test_compiles_regex():
-    assert type(Tokenizer.compile_regex({"BIND": "(?P<BIND>:=)"})) == re.Pattern
+def test_generates_integer_tokens():
+    test_cases = [
+        ("42", [Token(type="int", value="42")]),
+        ("1805", [Token(type="int", value="1805")]),
+        ("9999999999999999999999", [Token(type="int", value="9999999999999999999999")]),
+    ]
+
+    for input, expected_output in test_cases:
+        help_test_token_generator(
+            input=input, expected_output=expected_output,
+        )
 
 
-def test_generates_number_tokens():
-    help_test_token_generator(
-        r"(?P<NUM>\d+)", input="42", expected_output=[Token(type="NUM", value="42")],
-    )
+def test_generates_integer_tokens():
+    test_cases = [
+        ("42", [Token(type="int", value="42")]),
+        ("1805", [Token(type="int", value="1805")]),
+        ("9999999999999999999999", [Token(type="int", value="9999999999999999999999")]),
+    ]
 
-    generator = Tokenizer.generate_tokens(re.compile(r"(?P<NUM>\d+)"), "42")
-    expected_values = [Token(type="NUM", value="42")]
-
-    range_index = 0
-    for actual in generator:
-        assert range_index + 1 <= len(
-            expected_values
-        ), "Too many values returned from range"
-        assert expected_values[range_index] == actual
-        range_index += 1
-
-    assert range_index == len(expected_values), "Too few values returned from range"
-
-
-def test_generates_identifier_tokens():
-    help_test_token_generator(
-        r"(?i)(?P<ID>^([a-z])\w*)",
-        input="x",
-        expected_output=[Token(type="ID", value="x")],
-    )
+    for input, expected_output in test_cases:
+        help_test_token_generator(
+            input=input, expected_output=expected_output,
+        )
