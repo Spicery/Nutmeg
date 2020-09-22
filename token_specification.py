@@ -1,6 +1,22 @@
-tokens = {
+# token_spec is the specification for Nutmeg's tokens
+#
+# token_spec is used by Tokenizer to generate a stream of tokens in form
+# e.g. Token(type="int", value="42")
+#
+# Each key is a category of the syntax: "literal_constants", "operators" etc.
+# Categories are for ease of human reading only: they have no functional utility
+# and can be changed.
+#
+# Each value is a dictionary of the token type and its matching regex
+# pattern: { <*token type*>: r"*matching regex pattern*" }.
+#
+# The named capturing group within each regex pattern (e.g. "?P<int>")
+# is required for Tokenizer to match regex pattern with token type.
+
+
+token_spec = {
     "identifier": {"id": r"(?i)(?P<id>^([a-z])\w*)"},
-    "literal_constant": {
+    "literal_constants": {
         "int": r"(?P<int>^(\+|-)?\d+$)",
         "STRING": r"(?P<STRING>\".*\"|'.*')",
         "WHITESPACE": r"(?P<WS>\s+)",
