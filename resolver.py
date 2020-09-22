@@ -56,7 +56,7 @@ class LexicalScope( Scope ):
         label = newLabel()
         info = dict( label=label, reftype=id_let.reftype() )
         self._locals[ nm ] = info
-        id_let.declareAsLocal( *self._info )
+        id_let.declareAsLocal( label )
 
 class Resolver( codetree.CodeletVisitor ):
 
@@ -68,18 +68,28 @@ class Resolver( codetree.CodeletVisitor ):
         tree.visit( self, GlobalScope() )
 
     def visitCodelet( self, code_let, scopes ):
-        """By default leave the tree alone"""
+        """
+        By default leave the tree alone.
+        """
         pass
 
     def visitIdCodelet( self, code_let, scopes ):
+        """
+        Fix up variables e.g.  x
+        """
         nm = code_let.name()
         scopes.lookup( nm ).addInfo( code_let )
 
     def visitBindingCodelet( self, code_let, scopes ):
+        """
+        Fix up bindings e.g.  x := EXPR
+        """
         lhs = code_let.lhs()
         assert lhs.KIND == "id"
         scopes.declare( lhs )
         rhs = code_let.rhs()
+        rhs.visit( self, scopes )
+
 
 
 

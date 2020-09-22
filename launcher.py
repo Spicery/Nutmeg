@@ -108,6 +108,8 @@ if __name__ == "__main__":
 
 	mode_resolve = subparsers.add_parser('resolve', help='Annotates a tree with scope information')
 	mode_resolve.set_defaults( mode=ResolveLauncher )
+	mode_resolve.add_argument( '--input', type=argparse.FileType('r'), default=sys.stdin )
+	mode_resolve.add_argument( '--output', type=argparse.FileType('w'), default=sys.stdout )
 
 	mode_optimise = subparsers.add_parser('optimise', help='Transforms a tree to improve performance')
 	mode_optimise.set_defaults( mode=OptimiseLauncher )

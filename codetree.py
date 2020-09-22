@@ -4,7 +4,7 @@
 
 import json
 import abc
-from abc import ABC
+from abc import ABC, abstractmethod, abstractproperty
 
 from str2bool import str2bool
 
@@ -32,6 +32,9 @@ class CodeletVisitor( abc.ABC ):
 	def visitIfCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
+	def visitSeqCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
 	def visitBindingCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
@@ -51,7 +54,8 @@ class Codelet( abc.ABC ):
 		JSON, so the keywords will match the object-fields from the JSON,
 		although the values will be codelets and not plain-JSON objects.
 		"""
-		del kwargs[Codelet.KIND_PROPERTY]
+		if Codelet.KIND_PROPERTY in kwargs:
+			del kwargs[Codelet.KIND_PROPERTY]
 		self._kwargs = kwargs
 
 	def serialise( self, dst ):
@@ -81,8 +85,11 @@ class ConstantCodelet( Codelet, ABC ):
 
 	KIND = None
 
+	def valueAsString( self ):
+		return str( self._value )
+
 	def encodeAsJSON( self, encoder ):
-		return dict( kind=self.KIND, value=self._value, **self._kwargs )
+		return dict( kind=self.KIND, value=self.valueAsString(), **self._kwargs )
 
 	def subExpressions( self ):
 		return ()
@@ -92,9 +99,15 @@ class StringCodelet( ConstantCodelet ):
 
 	KIND = "string"
 
-	def __init__( self, *, value, **kwargs ):
+	def __init__( self, *args, value = "", **kwargs ):
 		super().__init__( **kwargs )
-		self._value = value
+		if args:
+			if len(args) == 1:
+				self._value = str(args[0])
+			else:
+				raise Exception( 'Too many arguments for StringCodelet' )
+		else:
+			self._value = str(value)
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitStringCodelet( self, *args, **kwargs )
@@ -103,9 +116,15 @@ class StringCodelet( ConstantCodelet ):
 class IntCodelet( ConstantCodelet ):
 	KIND = "int"
 
-	def __init__( self, *, value, radix=10, **kwargs ):
+	def __init__( self, *args, value = 0, radix=10, **kwargs ):
 		super().__init__( **kwargs )
-		self._value = int( value, radix )
+		if args:
+			if len(args) == 1:
+				self._value = int(args[0])
+			else:
+				raise Exception( 'Too many arguments for StringCodelet' )
+		else:
+			self._value = int( value, radix )
 
 	def visit( self, visitor, *args, **kwargs ):
 		print( 'IntCodelet ARGS', args )
@@ -115,9 +134,18 @@ class IntCodelet( ConstantCodelet ):
 class BoolCodelet( ConstantCodelet ):
 	KIND = "bool"
 
-	def __init__( self, *, value, **kwargs ):
+	def __init__( self, *args, value = False, **kwargs ):
 		super().__init__( **kwargs )
-		self._value = str2bool( value )
+		if args:
+			if len(args) == 1:
+				self._value = bool(args[0])
+			else:
+				raise Exception( 'Too many arguments for StringCodelet' )
+		else:
+			self._value = str2bool( value )
+
+	def valueAsString( self ):
+		return 'true' if self._value else 'false'
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitBoolCodelet( self, *args, **kwargs )
@@ -187,6 +215,23 @@ class IfCodelet( Codelet ):
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitIfCodelet( self, *args, **kwargs )
+
+class SeqCodelet( Codelet ):
+
+	KIND = "seq"
+	def __init__( self, *args, body = [], **kwargs ):
+		super().__init__( **kwargs )
+		self._body = [ *args, *body ]
+		
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, body=self._body )
+
+	def subExpressions( self ):
+		return tuple( self._body )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitSeqCodelet( self, *args, **kwargs )
+	
 
 
 class BindingCodelet( Codelet ):
