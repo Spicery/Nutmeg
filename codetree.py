@@ -158,6 +158,8 @@ class IdCodelet( Codelet ):
 	def __init__( self, *, name, reftype, **kwargs ):
 		self._scope = kwargs.pop( 'scope', None )
 		self._label = kwargs.pop( 'label', None )
+		self._nonassignable = kwargs.pop( 'nonassignable', None )
+		self._immutable = kwargs.pop( 'immutable', None )
 		super().__init__( **kwargs )
 		self._name = name
 		self._reftype = reftype
@@ -171,12 +173,22 @@ class IdCodelet( Codelet ):
 	def refype( self ):
 		return self._reftype
 
+	def nonassignable( self ):
+		return self._nonassignable
+
+	def immutable( self ):
+		return self._immutable
+
 	def encodeAsJSON( self, encoder ):
 		d = dict( kind=self.KIND, name=self._name, reftype=self._reftype, **self._kwargs )
 		if self._scope:
 			d[ 'scope' ] = self._scope
 		if self._label:
 			d[ 'label' ] = self._label
+		if self._nonassignable is not None:
+			d[ 'nonassignable' ] = self._nonassignable
+		if self._immutable is not None:
+			d[ 'immutable' ] = self._immutable
 		return d
 
 	def visit( self, visitor, *args, **kwargs ):
@@ -207,8 +219,19 @@ class IfCodelet( Codelet ):
 		self._test = test
 		self._then = then
 
+	def testPart( self ):
+		return self._test
+
+	def thenPart( self ):
+		return self._then
+
+	def elsePart( self ):
+		return self._else
+
 	def encodeAsJSON( self, encoder ):
-		return dict( kind=self.KIND, test=self._test, then=self._then )
+		d = dict( kind=self.KIND, test=self._test, then=self._then )
+		d[ 'else' ] = self._else
+		return d
 
 	def subExpressions( self ):
 		return self._test, self._then, self._else

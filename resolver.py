@@ -47,10 +47,12 @@ class LexicalScope( Scope ):
             return self._previous.lookup( name )
 
     def addInfo( self, code_let ):
+        # print( 'setAsLocal' )
         code_let.setAsLocal( **self._locals[ code_let.name() ] )
 
     def declare( self, id_let ):
         nm = id_let.name()
+        # print( 'declare', nm)
         if nm in self._locals:
             raise Exception( f'Trying to re-declare the same variable: {nm}' )
         label = newLabel()
@@ -90,6 +92,51 @@ class Resolver( codetree.CodeletVisitor ):
         rhs = code_let.rhs()
         rhs.visit( self, scopes )
 
+    def visitIfCodelet( self, if_codelet, scopes ):
+        """
+        Fix up if-expression e.g. if t then x else y endif
+        """
+        if_codelet.thenPart().visit( self, scopes )
+        if_codelet.thenPart().visit( self, LexicalScope( previous = scopes ) )
+        if_codelet.elsePart().visit( self, LexicalScope( previous = scopes ) )
 
+# x := 99
+# if x then
+#     x := 'heh heh'
+# else:
+#     y := 'ooops'
+# end
+
+if __name__ == "__main__":
+    import sys, io, json
+    example = {
+        "kind": "seq",
+        "body": [
+            {
+                "kind": "binding",
+                "lhs": { "kind": "id", "reftype": "val", "name": "x" },
+                "rhs": { "kind": "int", "value": "99" }
+            },
+            { 
+                "kind": "if",
+                "test": { "kind": "id", "name": "x", "reftype": "get" },
+                "then": {
+                    "kind": "binding",
+                    "lhs": { "kind": "id", "reftype": "val", "name": "x" },
+                    "rhs": { "kind": "string", "value": "heh heh" }
+                },
+                "else": {
+                    "kind": "binding",
+                    "lhs": { "kind": "id", "reftype": "val", "name": "y" },
+                    "rhs": { "kind": "string", "value": "ooops" }
+                }
+            } 
+        ]
+    }
+    example_tree = codetree.deserialise( io.StringIO( json.dumps( example ) ) )
+    Resolver().resolveCodeTree( example_tree._body[1] )
+    example_tree.serialise( sys.stdout )
+
+   
 
 
