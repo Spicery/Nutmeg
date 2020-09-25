@@ -1,42 +1,27 @@
-# token_spec is the specification for Nutmeg's tokens
-#
-# token_spec is used by Tokenizer to generate a stream of tokens in form
-# e.g. Token(type="int", value="42")
-#
-# Each key is a category of the syntax: "literal_constants", "operators" etc.
-# Categories are for ease of human reading only: they have no functional utility
-# and can be changed.
-#
-# Each value is a dictionary of the token type and its matching regex
-# pattern: { <*token type*>: r"*matching regex pattern*" }.
-#
-# The named capturing group within each regex pattern (e.g. "?P<int>")
-# is required for Tokenizer to match regex pattern with token type.
-
 import re
 import abc
-import codetree
 
 class Token( abc.ABC ):
 
     def __init__( self, value ):
         self._value = value
 
-    def __str__( self ):
-        return f'<{type(self).__name__} {self._value}>'
-
     def __eq__( self, other ):
+        """TODO: Only needed for unit tests - must be a better way"""
         return isinstance( other, type(self) ) and self._value == other._value
 
-    def precedence( self ):
-        return 0
+    def __str__( self ):
+        return f'<{type( self ).__name__} {self._value}>'
 
-    def value( self ):
-        return self._value
+    def precedence( self ):
+        return None
 
     @abc.abstractmethod
     def category( self ):
         pass
+
+    def value( self ):
+        return self._value
 
     def isPrefixer( self ):
         return True
@@ -44,10 +29,14 @@ class Token( abc.ABC ):
     def isPostfixer( self ):
         return False
 
+    def checkCategory( self, c ):
+        if c != self.category():
+            raise Exception( f'Unexpected token in input: {self.value()}' )
+
 
 class BasicToken( Token ):
     """
-    TODO: scaffolding class
+    TODO: scaffolding class, remove later.
     """
 
     def  __init__( self, value, toktype ):
@@ -77,14 +66,12 @@ class IdToken( Token ):
     def precedence( self ):
         return self._prec
 
-    def isPostfixer( self ):
-        return self._prec > 0
-
     def category( self ):
         return type(self)
 
-    def toCodeTree( self ):
-        return codetree.IdCodelet( name=self._value, reftype="get" )
+    def isPostfixer( self ):
+        return self._prec
+
 
 class IntToken( Token ):
 
@@ -95,12 +82,58 @@ class IntToken( Token ):
     def category( self ):
         return type(self)
 
+class PunctuationToken( Token ):
+
+    def  __init__( self, value, idname ):
+        super().__init__( value )
+        self._idname = idname
+
+    @staticmethod
+    def make( tokentype, match ):
+        return PunctuationToken( match.group( match.lastgroup ), tokentype.idname() )
+
+    def isPrefixer( self ):
+        return False
+
+    def category( self ):
+        return self._idname
+
+
+class SyntaxToken( Token ):
+
+    def  __init__( self, value, prec, prefix ):
+        super().__init__( value )
+        self._prec = prec
+        self._prefix = prefix
+
+    @staticmethod
+    def make( toktype, match ):
+        return SyntaxToken( match.group( match.lastgroup ), toktype.precedence(), toktype.prefix() )
+
+    def __eq__( self, other ):
+        # TODO: Remove after sorting out the tests
+        return (
+            isinstance( other, type(self) ) and
+            self._prec == other._prec and
+            self._prefix == other._prefix
+        )
+
+    def category( self ):
+        return self._value
+
+    def isPostfixer( self ):
+        return self._prec > 0
+
+    def isPrefixer( self ):
+        return self._prefix
+
 class TokenType:
 
-    def __init__( self, regex_str, prec = 0, make = None ):
+    def __init__( self, regex_str, make = None, prec = 0, prefix = True ):
         self._regex_str = regex_str
         self._make = make
         self._prec = prec
+        self._prefix = prefix
         m = re.match( r'(?:(?!\(\?P<).)*\(\?P<(\w+)>', self._regex_str )
         if m:
             self._idname = m.group( 1 )
@@ -115,6 +148,9 @@ class TokenType:
 
     def precedence( self ):
         return self._prec
+
+    def prefix( self ):
+        return self._prefix
 
     def newToken( self, match ):
         if self._make:
@@ -143,14 +179,14 @@ token_spec = {
         TokenType( r"(?P<UPDATE_ELEMENT><--)" ),
         TokenType( r"(?P<COPY_AND_SET><==)" ),
         TokenType( r"(?P<PLUS>\+)", prec=100, make=IdToken.make ),
-        TokenType( r"(?P<MINUS>-)" ),
-        TokenType( r"(?P<TIMES>\*)" ),
-        TokenType( r"(?P<DIVIDE>/)" ),
+        TokenType( r"(?P<MINUS>-)", prec=100, make=IdToken.make ),
+        TokenType( r"(?P<TIMES>\*)", prec=90, make=IdToken.make ),
+        TokenType( r"(?P<DIVIDE>/)", prec=90, make=IdToken.make ),
 
         # separators
         TokenType( r"(?P<TERMINATE_STATEMENT>;)" ),
-        TokenType( r"(?P<LPAREN>\()" ),
-        TokenType( r"(?P<RPAREN>\))" ),
+        TokenType( r"(?P<LPAREN>\()", make=SyntaxToken.make ),
+        TokenType( r"(?P<RPAREN>\))", make=PunctuationToken.make ),
 
         # keywords"
         TokenType( r"(?P<DEC_VARIABLE>var)" ),
