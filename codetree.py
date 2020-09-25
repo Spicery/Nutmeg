@@ -72,6 +72,12 @@ class Codelet( abc.ABC ):
 	def encodeAsJSON( self, encoder ):
 		raise Exception( 'Not defined' )
 
+	def toJSON( self ):
+		import io
+		stream = io.StringIO()
+		self.serialise( stream )
+		return json.loads( stream.getvalue() )
+
 	@abc.abstractmethod
 	def subExpressions( self ):
 		raise Exception( 'Not defined' )

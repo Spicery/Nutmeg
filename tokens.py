@@ -101,14 +101,15 @@ class PunctuationToken( Token ):
 
 class SyntaxToken( Token ):
 
-    def  __init__( self, value, prec, prefix ):
+    def  __init__( self, value, prec, prefix, idname ):
         super().__init__( value )
         self._prec = prec
         self._prefix = prefix
+        self._idname = idname
 
     @staticmethod
     def make( toktype, match ):
-        return SyntaxToken( match.group( match.lastgroup ), toktype.precedence(), toktype.prefix() )
+        return SyntaxToken( match.group( match.lastgroup ), toktype.precedence(), toktype.prefix(), toktype.idname() )
 
     def __eq__( self, other ):
         # TODO: Remove after sorting out the tests
@@ -119,7 +120,7 @@ class SyntaxToken( Token ):
         )
 
     def category( self ):
-        return self._value
+        return self._idname
 
     def isPostfixer( self ):
         return self._prec > 0
