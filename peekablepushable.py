@@ -32,6 +32,13 @@ class PeekablePushable:
         except StopIteration:
             return orElse
 
+    def isEmpty( self ):
+        try:
+            self.peek()
+            return False
+        except StopIteration:
+            return True
+
     def __next__(self):
         if self.stored:
             return self.stored.pop()

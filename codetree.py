@@ -20,13 +20,15 @@ class CodeletVisitor( abc.ABC ):
 		return self.visitConstantCodelet( code_let, *args, **kwargs )
 
 	def visitIntCodelet( self, code_let, *args, **kwargs ):
-		print( 'visitIntCodelet ARGS', args )
 		return self.visitConstantCodelet( code_let, *args, **kwargs )
 
 	def visitBoolCodelet( self, code_let, *args, **kwargs ):
 		return self.visitConstantCodelet( code_let, *args, **kwargs )
 
 	def visitIdCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitSyscallCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
 	def visitIfCodelet( self, code_let, *args, **kwargs ):
@@ -194,6 +196,24 @@ class IdCodelet( Codelet ):
 
 	def subExpressions( self ):
 		return ()
+
+class SyscallCodelet( Codelet ):
+
+	KIND="syscall"
+
+	def __init__( self, *, name, arguments, **kwargs ):
+		super().__init__( **kwargs )
+		self._name = name
+		self._arguments = arguments
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, name=self._name, arguments=self._arguments, **self._kwargs )
+
+	def subExpressions( self ):
+		return tuple( self._arguments )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitSyscallCodelet( self, *args, **kwargs )
 
 class IfCodelet( Codelet ):
 

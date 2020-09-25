@@ -1,8 +1,6 @@
 import argparse
-import io
 import sys
-import codetree
-from parser import Parser
+from parser import parseFromFileObject
 
 ###############################################################################
 # Components
@@ -11,7 +9,6 @@ from parser import Parser
 # There will be a class for each component - and they will all be moved
 # to their own modules.
 
-# Parser factored out to parser.py
 
 ###############################################################################
 # Classes that implement the command-line functionality for each component
@@ -27,14 +24,14 @@ class Launcher:
 
 
 class ParseLauncher(Launcher):
+
     def launch(self):
         """
         This is a dummy function to show how the launcher and the basic
         functionality will relate to each other.
         """
-        input = self._args.input.read()
-        codetree = Parser().parse(input)
-        codetree.write(self._args.output)
+        for codelet in parseFromFileObject( self._args.input ):
+            codelet.serialise(self._args.output)
 
 
 class ResolveLauncher(Launcher):
@@ -69,12 +66,7 @@ class RunLauncher(Launcher):
 
     pass
 
-
-###############################################################################
-# The command-line option parser
-###############################################################################
-
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         prog="nutmeg",
         description="""
@@ -122,3 +114,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     args.mode(args).launch()
+
+
+###############################################################################
+# The command-line option parser
+###############################################################################
+
+if __name__ == "__main__":
+    main()
