@@ -13,30 +13,25 @@ def scan_nested_comment( text, position ):
     # We start having snipped off an opening long-comment, so depth = 1.
     depth = 1
     while depth > 0:
-        # print( 'depth', depth )
         while True:
             m = comment_block_middle.match( text, position )
             if not m:
-                # print( 'no more middle' )
                 break
-            # print( 'found a middle' )
             position = m.end()
         m = comment_block_end.match( text, position )
         if m:
             position = m.end()
             depth -= 1
-            # print( 'depth - 1; depth =', depth )
         else:
             m = comment_block_start.match( text, position )
             if m:
                 position = m.end()
                 depth += 1
-                # print( 'depth + 1; depth =', depth )
             else:
                 raise Exception( 'Multi-line comment not terminated properly' )
     return position
 
-def scanner( text : str ):
+def tokenizer( text : str ):
     """
     Simple scanner for working on input supplied as a string.
     """
@@ -57,6 +52,7 @@ def scanner( text : str ):
             raise Exception( f'Cannot tokenise past this point: {msg}')
 
 if __name__ == "__main__":
+    # This is some ad hoc test code.
     for t in scanner(
 """
 So lets try to "tokenise" this ### With an end of line comment.

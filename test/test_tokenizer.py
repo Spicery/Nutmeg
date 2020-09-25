@@ -1,10 +1,11 @@
 import re
 import json
 
-from tokenizer import Token, Tokenizer
+from tokens import BasicToken
+from tokenizer import tokenizer
 
 def tokenize( text ):
-    return [ *Tokenizer()( text ) ]
+    return [ *tokenizer( text ) ]
 
 def help_test( *testcases ):
     for testcase in testcases:
@@ -12,12 +13,12 @@ def help_test( *testcases ):
 
 def test_generates_integer_tokens():
     help_test(
-        ("42", [Token(type="INT", value="42")]),
-        ("1805", [Token(type="INT", value="1805")]),
-        ("9999999999999999999999", [Token(type="INT", value="9999999999999999999999")]),
+        ("42", [BasicToken("42", "INT")]),
+        ("1805", [BasicToken("1805", "INT")]),
+        ("9999999999999999999999", [BasicToken("9999999999999999999999", "INT")]),
     )
 
 def test_token_separation():
     help_test(
-        ( "x + 3", [Token(type="ID", value="x"), Token(type="PLUS", value="+"), Token(type="INT", value="3")] )
+        ( "x + 3", [BasicToken("x", "ID"), BasicToken("+", "PLUS"), BasicToken("3", "INT")] )
     )

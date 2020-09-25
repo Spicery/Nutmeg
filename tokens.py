@@ -30,6 +30,10 @@ class BasicToken( Token ):
         super().__init__( value )
         self._toktype = toktype
 
+    def __eq__( self, other ):
+        return isinstance( other, BasicToken ) and self._value == other._value and self._toktype == other._toktype
+
+
 
 class TokenType:
 
@@ -57,8 +61,6 @@ class TokenType:
 
 def indexTokens( *token_types ):
     return { tt.idname(): tt for tt in token_types }
-
-# re.compile(r"(?P<MULTILINE_COMMENT>\#\#\((?:(?!##[()]).)*(?:\g<MULTILINE_COMMENT>(?:(?!##[()]).)*)*\#\#\))", re.DOTALL)
 
 token_spec = {
     tt.idname(): tt for tt in [
@@ -102,8 +104,6 @@ token_spec = {
 
     ]
 }
-
-
 
 
 token_spec_regex = re.compile( "|".join( [ tt.regex_str() for tt in token_spec.values() ] ), re.DOTALL )
