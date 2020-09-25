@@ -135,3 +135,4 @@ dmypy.json
 /_build/
 /_dist/
 /_working/
+/attic/
