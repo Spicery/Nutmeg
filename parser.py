@@ -59,7 +59,14 @@ class TableDrivenParser:
 ### Set up the tables
 ################################################################################
 
+def parenPrefixMiniParser( parser, token, source ):
+    e = parser.readExpr( float('inf'), source )
+    token = next( source )
+    token.checkCategory( "RPAREN" )
+    return e
+
 PREFIX_TABLE = {
+    "(": parenPrefixMiniParser,
     tokens.BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
     tokens.IdToken: lambda parser, token, source: codetree.IdCodelet( name=token.value(), reftype="get" ),
     tokens.IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() ),
