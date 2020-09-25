@@ -53,7 +53,7 @@ def tokenizer( text : str ):
 
 if __name__ == "__main__":
     # This is some ad hoc test code.
-    for t in scanner(
+    for t in tokenizer(
 """
 So lets try to "tokenise" this ### With an end of line comment.
 Then a 
