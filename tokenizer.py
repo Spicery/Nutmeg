@@ -1,7 +1,7 @@
 import re
 from collections import namedtuple
 
-from token_specification import \
+from tokens import \
     token_spec, \
     token_spec_regex, \
     comment_block_start, \
