@@ -20,13 +20,15 @@ class CodeletVisitor( abc.ABC ):
 		return self.visitConstantCodelet( code_let, *args, **kwargs )
 
 	def visitIntCodelet( self, code_let, *args, **kwargs ):
-		print( 'visitIntCodelet ARGS', args )
 		return self.visitConstantCodelet( code_let, *args, **kwargs )
 
 	def visitBoolCodelet( self, code_let, *args, **kwargs ):
 		return self.visitConstantCodelet( code_let, *args, **kwargs )
 
 	def visitIdCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitSyscallCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
 	def visitIfCodelet( self, code_let, *args, **kwargs ):
@@ -69,6 +71,12 @@ class Codelet( abc.ABC ):
 	@abc.abstractmethod
 	def encodeAsJSON( self, encoder ):
 		raise Exception( 'Not defined' )
+
+	def toJSON( self ):
+		import io
+		stream = io.StringIO()
+		self.serialise( stream )
+		return json.loads( stream.getvalue() )
 
 	@abc.abstractmethod
 	def subExpressions( self ):
@@ -207,6 +215,24 @@ class IdCodelet( Codelet ):
 	def subExpressions( self ):
 		return ()
 
+class SyscallCodelet( Codelet ):
+
+	KIND="syscall"
+
+	def __init__( self, *, name, arguments, **kwargs ):
+		super().__init__( **kwargs )
+		self._name = name
+		self._arguments = arguments
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, name=self._name, arguments=self._arguments, **self._kwargs )
+
+	def subExpressions( self ):
+		return tuple( self._arguments )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitSyscallCodelet( self, *args, **kwargs )
+
 class IfCodelet( Codelet ):
 
 	KIND = "if"
@@ -232,6 +258,30 @@ class IfCodelet( Codelet ):
 		d = dict( kind=self.KIND, test=self._test, then=self._then )
 		d[ 'else' ] = self._else
 		return d
+
+	def subExpressions( self ):
+		return self._test, self._then, self._else
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitIfCodelet( self, *args, **kwargs )
+
+class SeqCodelet( Codelet ):
+
+	KIND = "seq"
+	def __init__( self, *args, body = [], **kwargs ):
+		super().__init__( **kwargs )
+		self._body = [ *args, *body ]
+		
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, body=self._body )
+
+	def subExpressions( self ):
+		return tuple( self._body )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitSeqCodelet( self, *args, **kwargs )
+	
+
 
 	def subExpressions( self ):
 		return self._test, self._then, self._else
