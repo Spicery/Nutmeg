@@ -30,11 +30,8 @@ class Launcher:
 class ParseLauncher(Launcher):
 
     def launch(self):
-        """
-        This is a dummy function to show how the launcher and the basic
-        functionality will relate to each other.
-        """
         fname = self._args.input.name
+        # Note that stdin and stdout are to be treated as Nutmeg code.
         effective_fname = '.nutmeg' if fname == '<stdin>' or fname == '<stdout>' else fname
         (match, parser) = nutmeg_extensions.findMatchingParser( effective_fname  )
         for codelet in parser( self._args.input, match ):
