@@ -29,7 +29,7 @@ def test_resolveLiteral():
     # Act
     resolver.Resolver().resolveCodeTree( codelet )
     # Assert
-    lkekjevjhbdevbhjdev
+    # TODO: Got here - to be completed.
 
 def test_resolveBinding():
     # Arrange
