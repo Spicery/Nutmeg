@@ -1,21 +1,25 @@
 import argparse
 import sys
-from parser import parseFromFileObject
+
+import nutmeg_extensions
+
+### WARNING: The next two imports do indeed do something useful - via decorators.
+import dot_txt_parser
+import dot_nutmeg_parser
 
 ###############################################################################
 # Components
 ###############################################################################
 
 # There will be a class for each component - and they will all be moved
-# to their own modules.
-
+# to their own modules. 
 
 ###############################################################################
 # Classes that implement the command-line functionality for each component
 ###############################################################################
 
-
 class Launcher:
+
     def __init__(self, args):
         self._args = args
 
@@ -26,35 +30,31 @@ class Launcher:
 class ParseLauncher(Launcher):
 
     def launch(self):
-        """
-        This is a dummy function to show how the launcher and the basic
-        functionality will relate to each other.
-        """
-        for codelet in parseFromFileObject( self._args.input ):
-            codelet.serialise(self._args.output)
+        fname = self._args.input.name
+        # Note that stdin and stdout are to be treated as Nutmeg code.
+        effective_fname = '.nutmeg' if fname == '<stdin>' or fname == '<stdout>' else fname
+        (match, parser) = nutmeg_extensions.findMatchingParser( effective_fname  )
+        for codelet in parser( self._args.input, match ):
+            codelet.serialise( self._args.output )
 
 
 class ResolveLauncher(Launcher):
     """Placeholder"""
-
     pass
 
 
 class OptimiseLauncher(Launcher):
     """Placeholder"""
-
     pass
 
 
 class GenCodeLauncher(Launcher):
     """Placeholder"""
-
     pass
 
 
 class CompileLauncher(Launcher):
     """Placeholder"""
-
     pass
 
 
@@ -63,8 +63,11 @@ class RunLauncher(Launcher):
     We expect this will fork-and-exec into the C# monolithic runtime-engine 
     after preparing the arguments. 
     """
-
     pass
+
+###############################################################################
+# Main entry point - parses the options and launches the right phase.
+###############################################################################
 
 def main():
     parser = argparse.ArgumentParser(
@@ -116,9 +119,9 @@ def main():
     args.mode(args).launch()
 
 
-###############################################################################
-# The command-line option parser
-###############################################################################
+################################################################################
+# This is the top-level entry point for the whole Nutmeg system.
+################################################################################
 
 if __name__ == "__main__":
     main()
