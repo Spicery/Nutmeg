@@ -304,14 +304,15 @@ def makeDeserialisationTable():
 	Scans the class hierarchy under CodeTree to find all the leaf classes
 	and then adds them to a mapping from kinds to constructors.
 	"""
-	mapping_table = {}
-	list = [ Codelet ]
-	while list:
-		codetree_class = list.pop()
+	mapping_table = {}			# This is the table we are trying to complete.
+	L = [ Codelet ]				# Use as a quick and dirty stack.
+	while L:
+		codetree_class = L.pop()
 		subclasses = codetree_class.__subclasses__()
 		if subclasses:
-			list.extend( subclasses )
+			L.extend( subclasses )
 		else:
+			# Found a leaf class, so add to mapping.
 			mapping_table[ codetree_class.KIND ] = codetree_class
 	return mapping_table
 
@@ -319,11 +320,11 @@ def makeDeserialisationTable():
 DESERIALISATION_TABLE = makeDeserialisationTable()
 
 def codeTreeJSONHook( jdict ):
-	'''
+	"""
 	This is an extension method for Python's json deserialiser. It detects
 	items that are of the right kind and calls the matching constructor
 	on using the JSON object to supply the keyword-parameters.
-	'''
+    """
 	if Codelet.KIND_PROPERTY in jdict:
 		e = jdict[Codelet.KIND_PROPERTY ]
 		return DESERIALISATION_TABLE[e]( **jdict )
