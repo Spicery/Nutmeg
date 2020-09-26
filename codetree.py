@@ -335,9 +335,3 @@ def deserialise( src ):
 	Reads a text stream in JSON format into a nutmeg-tree.
 	"""
 	return json.load( src, object_hook=codeTreeJSONHook )
-
-###---###
-
-#
-# if __name__ == "__main__":
-# 	B = json.load( open( 'codetree-examples/binding.codetree.json', 'r' ), object_hook=codeTreeJSONHook)
