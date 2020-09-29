@@ -89,6 +89,10 @@ class Codelet( abc.ABC ):
 	def visit( self, visitor, *args, **kwargs ):
 		raise Exception( 'Not defined' )
 
+	def declarationMode( self ):
+		for m in self.members():
+			m.declarationMode()
+
 
 class ConstantCodelet( Codelet, ABC ):
 	"""
@@ -225,6 +229,10 @@ class IdCodelet( Codelet ):
 	# def subExpressions( self ):
 	# 	return ()
 
+	def declarationMode( self ):
+		if self._reftype == "get":
+			self._reftype = "val"
+
 
 class SyscallCodelet( Codelet ):
 
@@ -255,6 +263,12 @@ class CallCodelet( Codelet ):
 		super().__init__( **kwargs )
 		self._function = function
 		self._arguments = arguments
+
+	def function( self ):
+		return self._function
+
+	def arguments( self ):
+		return self._arguments
 
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, function=self._function, arguments=self._arguments, **self._kwargs )
@@ -312,9 +326,6 @@ class SeqCodelet( Codelet ):
 
 	def members( self ):
 		yield from self._body
-
-	# def subExpressions( self ):
-	# 	return tuple( self._body )
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitSeqCodelet( self, *args, **kwargs )

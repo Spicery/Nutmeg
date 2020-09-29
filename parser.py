@@ -58,6 +58,37 @@ class TableDrivenParser:
             sofar = self.runPostfixMiniParser( p, sofar, token, source )
         return sofar
 
+    @staticmethod
+    def isntArgs( expr ):
+        if isinstance( expr, codetree.IdCodelet ):
+            return None
+        elif isinstance( expr, codetree.SeqCodelet ):
+            for i in expr.members():
+                issue = TableDrivenParser.isntArgs( i )
+                if issue:
+                    return issue
+            return None
+        else:
+            return f'Non-simple argument ({type(expr)})'
+
+    @staticmethod
+    def isntFuncArgs( expr ):
+        if not isinstance( expr, codetree.CallCodelet ):
+            return "Missing function call"
+        func = expr.function()
+        if not isinstance( func, codetree.IdCodelet ):
+            return "Not a call of a simple variable"
+        args = expr.arguments()
+        return TableDrivenParser.isntArgs( expr.arguments() )
+
+    def readFuncArgs( self, source ):
+        funcargs = self.readExpr( math.inf, source )
+        issue = TableDrivenParser.isntFuncArgs( funcargs )
+        if issue:
+            raise Exception( f'Invalid expression for function definition ({issue})' )
+        else:
+            return funcargs
+
     def readStatements( self, source ):
         body = []
         while not source.isEmpty():
@@ -106,14 +137,18 @@ def lparenPrefixMiniParser( parser, token, source ):
         mustRead( source, "RPAREN" )
         return e
 
+
 def defPrefixMiniParser( parser, token, source ):
-    f = parser.readExpr( math.inf, source )
+    funcArgs = parser.readFuncArgs( source )
+    funcArgs.declarationMode()
     mustRead( source, 'END_PARAMETERS', 'END_PHRASE' )
     b = parser.readExpr( math.inf, source )           # Should be statements, not an expr.
     mustRead( source, 'END_DEC_FUNCTION_1', 'END' )
     # TODO: horribly wrong!
-    id = codetree.IdCodelet( name=f._function.name(), reftype="const" )
-    func = codetree.FunctionCodelet( parameters=f._arguments, body=b)
+    func = funcArgs.function()
+    args = funcArgs.arguments()
+    id = codetree.IdCodelet( name=func.name(), reftype="val" )
+    func = codetree.FunctionCodelet( parameters=args, body=b)
     return codetree.BindingCodelet( lhs=id, rhs=func )
 
 PREFIX_TABLE = {
