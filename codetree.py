@@ -226,9 +226,6 @@ class IdCodelet( Codelet ):
 		self._nonassignable = nonassignable
 		self._immutable = immutable
 
-	# def subExpressions( self ):
-	# 	return ()
-
 	def declarationMode( self ):
 		if self._reftype == "get":
 			self._reftype = "val"
@@ -248,9 +245,6 @@ class SyscallCodelet( Codelet ):
 
 	def members( self ):
 		yield from self._arguments
-
-	# def subExpressions( self ):
-	# 	return tuple( self._arguments )
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitSyscallCodelet( self, *args, **kwargs )
@@ -307,9 +301,6 @@ class IfCodelet( Codelet ):
 		d[ 'else' ] = self._else
 		return d
 
-	# def subExpressions( self ):
-	# 	return self._test, self._then, self._else
-
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitIfCodelet( self, *args, **kwargs )
 
@@ -349,9 +340,6 @@ class BindingCodelet( Codelet ):
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, lhs=self._lhs, rhs=self._rhs, **self._kwargs )
 
-	# def subExpressions( self ):
-	# 	return ( self._rhs, )
-
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitBindingCodelet( self, *args, **kwargs )
 
@@ -375,7 +363,7 @@ class FunctionCodelet( Codelet ):
 		return dict( kind=self.KIND, parameters=self._parameters, body=self._body, **self._kwargs )
 
 	def visit( self, visitor, *args, **kwargs ):
-		return visitor.visitFuctionCodelet( self, *args, **kwargs )
+		return visitor.visitFunctionCodelet( self, *args, **kwargs )
 
 
 ### Serialisation #############################################################
