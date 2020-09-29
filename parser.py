@@ -10,7 +10,8 @@ import math
 
 class TableDrivenParser:
     """
-    Table-driven recursive descent parser
+    Table-driven recursive descent parser. We use the category of the token
+    to look up in tables what we should do next.
     """
 
     def __init__( self, prefix_table, postfix_table ):
@@ -46,6 +47,7 @@ class TableDrivenParser:
             return None
         sofar = self.tryRunPrefixMiniParser( token, source )
         if not sofar:
+            source.push( token )
             return None
         while True:
             token = source.peekOrElse()
@@ -97,9 +99,12 @@ class TableDrivenParser:
                 body.append( e )
             else:
                 break
-            if not self.tryReadExpr( source, 'TERMINATE_STATEMENT' ):
+            if not tryRead( source, 'TERMINATE_STATEMENT' ):
                 break
-        return codetree.SeqCodelet( body=body )
+        if len( body ) == 1:
+            return body[0]
+        else:
+            return codetree.SeqCodelet( body=body )
 
     def parseFromFileObject(self, file_object):
         return self.parseFromString( file_object.read() )
@@ -108,11 +113,6 @@ class TableDrivenParser:
         source = PeekablePushable( tokenizer( text ) )
         while not source.isEmpty():
             yield self.readExpr( math.inf, source )
-
-
-################################################################################
-### Set up the tables
-################################################################################
 
 def mustRead( source, *categories ):
     token = source.popOrElse()
@@ -129,6 +129,11 @@ def tryRead( source, *categories ):
         source.pop()
     return ok
 
+
+################################################################################
+### Set up the tables
+################################################################################
+
 def lparenPrefixMiniParser( parser, token, source ):
     if tryRead( source, 'RPAREN' ):
         return codetree.SeqCodelet()
@@ -137,12 +142,11 @@ def lparenPrefixMiniParser( parser, token, source ):
         mustRead( source, "RPAREN" )
         return e
 
-
 def defPrefixMiniParser( parser, token, source ):
     funcArgs = parser.readFuncArgs( source )
     funcArgs.declarationMode()
     mustRead( source, 'END_PARAMETERS', 'END_PHRASE' )
-    b = parser.readExpr( math.inf, source )           # Should be statements, not an expr.
+    b = parser.readStatements( source )
     mustRead( source, 'END_DEC_FUNCTION_1', 'END' )
     # TODO: horribly wrong!
     func = funcArgs.function()
