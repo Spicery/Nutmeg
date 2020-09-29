@@ -41,6 +41,7 @@ class LexicalScope( Scope ):
         self._locals = {}
 
     def lookup( self, name ):
+        """Returns the scope that the name appears in"""
         if name in self._locals:
             return self
         else:
@@ -50,17 +51,32 @@ class LexicalScope( Scope ):
         # print( 'setAsLocal' )
         code_let.setAsLocal( **self._locals[ code_let.name() ] )
 
-    def declare( self, id_let ):
-        nm = id_let.name()
+    def declare( self, id_codelet ):
+        nm = id_codelet.name()
         # print( 'declare', nm)
         if nm in self._locals:
             raise Exception( f'Trying to re-declare the same variable: {nm}' )
         label = newLabel()
-        info = dict( label=label, reftype=id_let.reftype() )
+        reftype = id_codelet.reftype()
+        nonassignable = reftype == "val" or reftype == "const"
+        immutable = reftype == "const"
+        info = dict( label = label, nonassignable = nonassignable, immutable = immutable )
         self._locals[ nm ] = info
-        id_let.declareAsLocal( label )
+        id_codelet.declareAsLocal( **info )
 
 class Resolver( codetree.CodeletVisitor ):
+    """
+    The resolver has to find every variable in every expression and update it.
+    To do this right it needs to track every scope correctly. Here's the
+    list of codelets we have implemented so far:
+        [x] constants, no action required
+        [x] id, action depends on reftype (get/set/var/val/const/new)
+        [x] sequences, just iterate over the members
+        [x] syscall, just iterate over the arguments
+        [x] if, iterate over the test/then/else parts
+        [x] binding, iterate over the lhs & rhs
+        [ ] function
+    """
 
     def resolveFile( self, file ):
         tree = codetree.deserialise( file )
@@ -69,28 +85,39 @@ class Resolver( codetree.CodeletVisitor ):
     def resolveCodeTree( self, tree ):
         tree.visit( self, GlobalScope() )
 
-    def visitCodelet( self, code_let, scopes ):
+    def visitCodelet( self, codelet, scopes ):
         """
         By default leave the tree alone.
         """
         pass
 
-    def visitIdCodelet( self, code_let, scopes ):
+    def visitIdCodelet( self, id_codelet, scopes ):
         """
         Fix up variables e.g.  x
         """
-        nm = code_let.name()
-        scopes.lookup( nm ).addInfo( code_let )
+        reftype = id_codelet.reftype()
+        if reftype == "get" or reftype == "set":
+            nm = id_codelet.name()
+            scopes.lookup( nm ).addInfo( id_codelet )
+        elif reftype == "var" or reftype == "val" or reftype == "const" or reftype == "new":
+            scopes.declare( id_codelet )
+        else:
+            raise Exception( f'Unexpected reftype (Internal error?): {reftype}')
 
-    def visitBindingCodelet( self, code_let, scopes ):
+    def visitSeqCodelet( self, codelet, scopes ):
+        for c in codelet.members():
+            c.visit( self, scopes )
+
+    def visitSyscallCodelet( self, codelet, scopes ):
+        for c in codelet.members():
+            c.visit( self, scopes )
+
+    def visitBindingCodelet( self, binding_codelet, scopes ):
         """
         Fix up bindings e.g.  x := EXPR
         """
-        lhs = code_let.lhs()
-        assert lhs.KIND == "id"
-        scopes.declare( lhs )
-        rhs = code_let.rhs()
-        rhs.visit( self, scopes )
+        binding_codelet.lhs().visit( self, scopes )
+        binding_codelet.rhs().visit( self, scopes )
 
     def visitIfCodelet( self, if_codelet, scopes ):
         """

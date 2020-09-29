@@ -119,6 +119,9 @@ class SyntaxToken( Token ):
             self._prefix == other._prefix
         )
 
+    def precedence( self ):
+        return self._prec
+
     def category( self ):
         return self._idname
 
@@ -162,9 +165,6 @@ class TokenType:
 
 token_spec = {
     tt.idname(): tt for tt in [
-        # identifier
-        TokenType( r"(?i)(?P<ID>([a-z_])\w*)", make=IdToken.make ),
-
         # literal_constants
         TokenType( r"(?P<INT>(\+|-)?\d+)", make=IntToken.make ),
         TokenType( r'(?P<S_STRING>(?!""")"[^\n"]*")' ),
@@ -183,23 +183,31 @@ token_spec = {
         TokenType( r"(?P<MINUS>-)", prec=100, make=IdToken.make ),
         TokenType( r"(?P<TIMES>\*)", prec=90, make=IdToken.make ),
         TokenType( r"(?P<DIVIDE>/)", prec=90, make=IdToken.make ),
+        TokenType( r"(?P<SEQ>,)", prec=1000, prefix=False, make=SyntaxToken.make ),
 
         # separators
-        TokenType( r"(?P<TERMINATE_STATEMENT>;)" ),
-        TokenType( r"(?P<LPAREN>\()", make=SyntaxToken.make ),
+        TokenType( r"(?P<TERMINATE_STATEMENT>;)", make=PunctuationToken.make ),
+        TokenType( r"(?P<END_PHRASE>:)", make=PunctuationToken.make ),
+        TokenType( r"(?P<END_PARAMETERS>=>>)", make=PunctuationToken.make ),
+        TokenType( r"(?P<LPAREN>\()", prec=10, prefix=True, make=SyntaxToken.make ),
         TokenType( r"(?P<RPAREN>\))", make=PunctuationToken.make ),
+        TokenType( r"(?P<END_DEC_FUNCTION_1>enddef)", make=SyntaxToken.make ),
+        TokenType( r"(?P<END_DEC_FUNCTION_2>endfunction)", make=SyntaxToken.make ),
+        TokenType( r"(?P<END>end)", make=PunctuationToken.make ),                           # MUST come after all other end... token types.
 
         # keywords"
         TokenType( r"(?P<DEC_VARIABLE>var)" ),
         TokenType( r"(?P<DEC_NONASSIGNABLE>val)" ),
         TokenType( r"(?P<DEC_IMMUTABLE>const)" ),
-        TokenType( r"(?P<DEC_FUNCTION_1>def)" ),
+        TokenType( r"(?P<DEC_FUNCTION_1>def)", make=SyntaxToken.make ),
         TokenType( r"(?P<DEC_FUNCTION_2>function)" ),
 
         # comments
         TokenType( r"(?P<COMMENT_LINE>###)[^\n]*\n" ),
         TokenType( r"(?P<COMMENT_BLOCK_START>\#\#\()" ),
 
+        # identifier
+        TokenType( r"(?i)(?P<ID>([a-z_])\w*)", make=IdToken.make ),                         # Must come after all other keywords.
     ]
 }
 

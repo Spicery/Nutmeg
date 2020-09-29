@@ -43,3 +43,19 @@ class PeekablePushable:
         if self.stored:
             return self.stored.pop()
         return next(self.source)
+
+    def pop( self ):
+        if self.stored:
+            return self.stored.pop()
+        return next(self.source)
+
+    def popOrElse( self, orElse=None ):
+        if self.stored:
+            return self.stored.pop()
+        try:
+            return next(self.source)
+        except StopIteration:
+            return orElse
+
+
+

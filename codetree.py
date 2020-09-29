@@ -31,6 +31,9 @@ class CodeletVisitor( abc.ABC ):
 	def visitSyscallCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
+	def visitCallCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
 	def visitIfCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
@@ -40,6 +43,8 @@ class CodeletVisitor( abc.ABC ):
 	def visitBindingCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
+	def visitFunctionCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
 
 
 class Codelet( abc.ABC ):
@@ -76,13 +81,14 @@ class Codelet( abc.ABC ):
 		self.serialise( stream )
 		return json.loads( stream.getvalue() )
 
-	@abc.abstractmethod
-	def subExpressions( self ):
-		raise Exception( 'Not defined' )
+	# @abc.abstractmethod
+	# def subExpressions( self ):
+	# 	raise Exception( 'Not defined' )
 
 	@abc.abstractmethod
 	def visit( self, visitor, *args, **kwargs ):
 		raise Exception( 'Not defined' )
+
 
 class ConstantCodelet( Codelet, ABC ):
 	"""
@@ -97,8 +103,8 @@ class ConstantCodelet( Codelet, ABC ):
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, value=self.valueAsString(), **self._kwargs )
 
-	def subExpressions( self ):
-		return ()
+	# def subExpressions( self ):
+	# 	return ()
 
 
 class StringCodelet( ConstantCodelet ):
@@ -176,7 +182,7 @@ class IdCodelet( Codelet ):
 	def scope( self ):
 		return self._scope
 
-	def refype( self ):
+	def reftype( self ):
 		return self._reftype
 
 	def nonassignable( self ):
@@ -203,15 +209,22 @@ class IdCodelet( Codelet ):
 	def setAsGlobal( self ):
 		self._scope = "global"
 
-	def setAsLocal( self, **kwargs ):
-		self._scope = "local"
-
-	def declareAsLocal( self, *, label, **kwargs ):
+	def setAsLocal( self, * , label, nonassignable, immutable, **kwargs ):
 		self._scope = "local"
 		self._label = label
+		self._nonassignable = nonassignable
+		self._immutable = immutable
 
-	def subExpressions( self ):
-		return ()
+	def declareAsLocal( self, *, label, nonassignable, immutable, **kwargs ):
+		self._scope = "local"
+		self._reftype = "new"
+		self._label = label
+		self._nonassignable = nonassignable
+		self._immutable = immutable
+
+	# def subExpressions( self ):
+	# 	return ()
+
 
 class SyscallCodelet( Codelet ):
 
@@ -225,11 +238,34 @@ class SyscallCodelet( Codelet ):
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, name=self._name, arguments=self._arguments, **self._kwargs )
 
-	def subExpressions( self ):
-		return tuple( self._arguments )
+	def members( self ):
+		yield from self._arguments
+
+	# def subExpressions( self ):
+	# 	return tuple( self._arguments )
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitSyscallCodelet( self, *args, **kwargs )
+
+class CallCodelet( Codelet ):
+
+	KIND="call"
+
+	def __init__( self, *, function, arguments, **kwargs ):
+		super().__init__( **kwargs )
+		self._function = function
+		self._arguments = arguments
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, function=self._function, arguments=self._arguments, **self._kwargs )
+
+	def members( self ):
+		yield self._function
+		yield self._arguments
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitCallCodelet( self, *args, **kwargs )
+
 
 class IfCodelet( Codelet ):
 
@@ -257,11 +293,12 @@ class IfCodelet( Codelet ):
 		d[ 'else' ] = self._else
 		return d
 
-	def subExpressions( self ):
-		return self._test, self._then, self._else
+	# def subExpressions( self ):
+	# 	return self._test, self._then, self._else
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitIfCodelet( self, *args, **kwargs )
+
 
 class SeqCodelet( Codelet ):
 
@@ -273,36 +310,14 @@ class SeqCodelet( Codelet ):
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, body=self._body )
 
-	def subExpressions( self ):
-		return tuple( self._body )
+	def members( self ):
+		yield from self._body
+
+	# def subExpressions( self ):
+	# 	return tuple( self._body )
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitSeqCodelet( self, *args, **kwargs )
-	
-
-
-	def subExpressions( self ):
-		return self._test, self._then, self._else
-
-	def visit( self, visitor, *args, **kwargs ):
-		return visitor.visitIfCodelet( self, *args, **kwargs )
-
-class SeqCodelet( Codelet ):
-
-	KIND = "seq"
-	def __init__( self, *args, body = [], **kwargs ):
-		super().__init__( **kwargs )
-		self._body = [ *args, *body ]
-		
-	def encodeAsJSON( self, encoder ):
-		return dict( kind=self.KIND, body=self._body )
-
-	def subExpressions( self ):
-		return tuple( self._body )
-
-	def visit( self, visitor, *args, **kwargs ):
-		return visitor.visitSeqCodelet( self, *args, **kwargs )
-	
 
 
 class BindingCodelet( Codelet ):
@@ -323,11 +338,33 @@ class BindingCodelet( Codelet ):
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, lhs=self._lhs, rhs=self._rhs, **self._kwargs )
 
-	def subExpressions( self ):
-		return ( self._rhs, )
+	# def subExpressions( self ):
+	# 	return ( self._rhs, )
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitBindingCodelet( self, *args, **kwargs )
+
+
+class FunctionCodelet( Codelet ):
+
+	KIND = "function"
+
+	def __init__( self, *, parameters, body, **kwargs ):
+		super().__init__( **kwargs )
+		self._parameters = parameters
+		self._body = body
+
+	def parameters( self ):
+		return self._parameters
+
+	def body( self ):
+		return self._body
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, parameters=self._parameters, body=self._body, **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitFuctionCodelet( self, *args, **kwargs )
 
 
 ### Serialisation #############################################################

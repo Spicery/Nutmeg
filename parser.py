@@ -6,6 +6,7 @@ import codetree
 import tokens
 from tokenizer import tokenizer
 from peekablepushable import PeekablePushable
+import math
 
 class TableDrivenParser:
     """
@@ -16,35 +17,58 @@ class TableDrivenParser:
         self._prefix_table = prefix_table
         self._postfix_table = postfix_table
 
-    def runPrefixMiniParser( self, token, source ):
+    def tryRunPrefixMiniParser( self, token, source ):
         try:
             minip = self._prefix_table[ token.category() ]
             return minip( self, token, source )
         except KeyError:
-            return token.toCodeTree()
+            return None
 
     def runPostfixMiniParser( self, prec, lhs, token, source ):
         try:
             minip = self._postfix_table[ token.category() ]
             return minip( self, prec, lhs, token, source )
         except KeyError:
-            raise Exception( 'Dunno what to do with this one' )
+            raise Exception( f'Unexpected token in infix/postfix position {token}')
 
     def readExpr( self, prec, source ):
-        token = source.peekOrElse()
-        if token:
-            next( source )
-            sofar = self.runPrefixMiniParser( token, source )
-            while True:
-                token = source.peekOrElse()
-                if not token or not token.isPostfixer(): break
-                p = token.precedence()
-                if not p <= prec: break
-                next(source)
-                sofar = self.runPostfixMiniParser( p, sofar, token, source )
-            return sofar
-        else:
+        e = self.tryReadExpr( prec, source )
+        if e:
+            return e
+        elif source.isEmpty():
             raise Exception( 'Unexpected end of input' )
+        else:
+            raise Exception( f'Unexpected token {source.pop()}')
+
+    def tryReadExpr( self, prec, source ):
+        token = source.popOrElse()
+        if not token:
+            return None
+        sofar = self.tryRunPrefixMiniParser( token, source )
+        if not sofar:
+            return None
+        while True:
+            token = source.peekOrElse()
+            # print( 'PEEK', token, token and token.isPostfixer() )
+            if not token or not token.isPostfixer(): break
+            p = token.precedence()
+            # print( 'PREC', p )
+            if not p or not p <= prec: break
+            source.pop()
+            sofar = self.runPostfixMiniParser( p, sofar, token, source )
+        return sofar
+
+    def readStatements( self, source ):
+        body = []
+        while not source.isEmpty():
+            e = self.tryReadExpr( math.inf, source )
+            if e:
+                body.append( e )
+            else:
+                break
+            if not self.tryReadExpr( source, 'TERMINATE_STATEMENT' ):
+                break
+        return codetree.SeqCodelet( body=body )
 
     def parseFromFileObject(self, file_object):
         return self.parseFromString( file_object.read() )
@@ -52,24 +76,52 @@ class TableDrivenParser:
     def parseFromString( self, text ):
         source = PeekablePushable( tokenizer( text ) )
         while not source.isEmpty():
-            yield self.readExpr( float('inf'), source )
+            yield self.readExpr( math.inf, source )
 
 
 ################################################################################
 ### Set up the tables
 ################################################################################
 
-def parenPrefixMiniParser( parser, token, source ):
-    e = parser.readExpr( float('inf'), source )
-    token = next( source )
-    token.checkCategory( "RPAREN" )
-    return e
+def mustRead( source, *categories ):
+    token = source.popOrElse()
+    if token:
+        if token.category() not in categories:
+            raise Exception( f'Unexpected token: {token}, wanted {str(categories)}' )
+    else:
+        raise Exception( 'Unexpected end of file' )
+
+def tryRead( source, *categories ):
+    token = source.peekOrElse()
+    ok = token and token.category() in categories
+    if ok:
+        source.pop()
+    return ok
+
+def lparenPrefixMiniParser( parser, token, source ):
+    if tryRead( source, 'RPAREN' ):
+        return codetree.SeqCodelet()
+    else:
+        e = parser.readExpr( math.inf, source )
+        mustRead( source, "RPAREN" )
+        return e
+
+def defPrefixMiniParser( parser, token, source ):
+    f = parser.readExpr( math.inf, source )
+    mustRead( source, 'END_PARAMETERS', 'END_PHRASE' )
+    b = parser.readExpr( math.inf, source )           # Should be statements, not an expr.
+    mustRead( source, 'END_DEC_FUNCTION_1', 'END' )
+    # TODO: horribly wrong!
+    id = codetree.IdCodelet( name=f._function.name(), reftype="const" )
+    func = codetree.FunctionCodelet( parameters=f._arguments, body=b)
+    return codetree.BindingCodelet( lhs=id, rhs=func )
 
 PREFIX_TABLE = {
-    "LPAREN": parenPrefixMiniParser,
+    "LPAREN": lparenPrefixMiniParser,
+    "DEC_FUNCTION_1": defPrefixMiniParser,
     tokens.BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
     tokens.IdToken: lambda parser, token, source: codetree.IdCodelet( name=token.value(), reftype="get" ),
-    tokens.IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() ),
+    tokens.IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() )
 }
 
 def idPostfixMiniParser( parser, p, lhs, token, source ):
@@ -79,7 +131,28 @@ def idPostfixMiniParser( parser, p, lhs, token, source ):
         arguments=codetree.SeqCodelet( lhs, rhs )
     )
 
+def commaPostfixMiniParser( parser, p, lhs, token, source ):
+    sofar = [ lhs ]
+    while True:
+        rhs = parser.readExpr( p, source )
+        sofar.append( rhs )
+        if tryRead( source, token.category() ):
+            next( source )
+        else:
+            break
+    return codetree.SeqCodelet( *sofar )
+
+def lparenPostfixMiniParser( parser, p, lhs, token, source ):
+    if tryRead(source, 'RPAREN'):
+        return codetree.CallCodelet( function=lhs, arguments=codetree.SeqCodelet() )
+    else:
+        rhs = parser.readExpr( math.inf, source )
+        mustRead( source, "RPAREN" )
+        return codetree.CallCodelet( function=lhs, arguments=rhs )
+
 POSTFIX_TABLE = {
+    "SEQ": commaPostfixMiniParser,
+    "LPAREN": lparenPostfixMiniParser,
     tokens.IdToken: idPostfixMiniParser
 }
 
