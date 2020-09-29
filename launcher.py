@@ -43,9 +43,9 @@ class ParseLauncher(Launcher):
 
 
 class ResolveLauncher( Launcher ):
-	def launch( self ):
-		tree = Resolver().resolveFile( self._args.input )
-		tree.serialise( self._args.output )
+    def launch( self ):
+        tree = Resolver().resolveFile( self._args.input )
+        tree.serialise( self._args.output )
 
 class OptimiseLauncher(Launcher):
     """Placeholder"""
@@ -101,6 +101,8 @@ def main():
         "resolve", help="Annotates a tree with scope information"
     )
     mode_resolve.set_defaults(mode=ResolveLauncher)
+    mode_resolve.add_argument("--input", type=argparse.FileType("r"), default=sys.stdin)
+    mode_resolve.add_argument("--output", type=argparse.FileType("w"), default=sys.stdout)
 
     mode_optimise = subparsers.add_parser(
         "optimise", help="Transforms a tree to improve performance"
