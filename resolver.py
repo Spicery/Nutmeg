@@ -19,13 +19,14 @@ class Scope( abc.ABC ):
 class GlobalScope( Scope ):
 
     def lookup( self, name ):
+        """Returns the scope that the name appears in, by definition this is the outermost scope"""
         return self
 
     def addInfo( self, code_let ):
         code_let.setAsGlobal()
 
-    def declare( self, id_let ):
-        pass
+    def declare( self, id_codelet ):
+        id_codelet.setAsGlobal()
 
 LABEL = 0
 def newLabel():
@@ -48,7 +49,7 @@ class LexicalScope( Scope ):
             return self._previous.lookup( name )
 
     def addInfo( self, code_let ):
-        # print( 'setAsLocal' )
+        # print( 'setAsLocal', code_let.name() )
         code_let.setAsLocal( **self._locals[ code_let.name() ] )
 
     def declare( self, id_codelet ):
@@ -66,6 +67,10 @@ class LexicalScope( Scope ):
 
 class Resolver( codetree.CodeletVisitor ):
     """
+    Important note: the Resolver pass is an in-place update rather than
+    a copy-transform. This is fairly typical for algorithms that simply
+    annotate a tree without changing the structure.
+
     The resolver has to find every variable in every expression and update it.
     To do this right it needs to track every scope correctly. Here's the
     list of codelets we have implemented so far:
@@ -75,25 +80,33 @@ class Resolver( codetree.CodeletVisitor ):
         [x] syscall, just iterate over the arguments
         [x] if, iterate over the test/then/else parts
         [x] binding, iterate over the lhs & rhs
-        [ ] function
+        [x] function
     """
 
     def resolveFile( self, file ):
+        """
+        resolveFile deserialises a file and then resolves it. This is only
+        useful when the resolve phase is being used standalone.
+        """
         tree = codetree.deserialise( file )
-        return self.resolveCodeTree( tree )
+        self.resolveCodeTree( tree )
+        return tree
 
     def resolveCodeTree( self, tree ):
+        """
+        resolveCodeTree updates a code-tree in place.
+        """
         tree.visit( self, GlobalScope() )
 
     def visitCodelet( self, codelet, scopes ):
         """
-        By default leave the tree alone.
+        By default we leave the tree alone and perform no updates.
         """
         pass
 
     def visitIdCodelet( self, id_codelet, scopes ):
         """
-        Fix up variables e.g.  x
+        Fix up variables e.g. x
         """
         reftype = id_codelet.reftype()
         if reftype == "get" or reftype == "set":
@@ -116,6 +129,7 @@ class Resolver( codetree.CodeletVisitor ):
         """
         Fix up bindings e.g.  x := EXPR
         """
+        # print( 'binding', binding_codelet.lhs().name())
         binding_codelet.lhs().visit( self, scopes )
         binding_codelet.rhs().visit( self, scopes )
 
@@ -127,42 +141,10 @@ class Resolver( codetree.CodeletVisitor ):
         if_codelet.thenPart().visit( self, LexicalScope( previous = scopes ) )
         if_codelet.elsePart().visit( self, LexicalScope( previous = scopes ) )
 
-# x := 99
-# if x then
-#     x := 'heh heh'
-# else:
-#     y := 'ooops'
-# end
-
-if __name__ == "__main__":
-    import sys, io, json
-    example = {
-        "kind": "seq",
-        "body": [
-            {
-                "kind": "binding",
-                "lhs": { "kind": "id", "reftype": "val", "name": "x" },
-                "rhs": { "kind": "int", "value": "99" }
-            },
-            { 
-                "kind": "if",
-                "test": { "kind": "id", "name": "x", "reftype": "get" },
-                "then": {
-                    "kind": "binding",
-                    "lhs": { "kind": "id", "reftype": "val", "name": "x" },
-                    "rhs": { "kind": "string", "value": "heh heh" }
-                },
-                "else": {
-                    "kind": "binding",
-                    "lhs": { "kind": "id", "reftype": "val", "name": "y" },
-                    "rhs": { "kind": "string", "value": "ooops" }
-                }
-            } 
-        ]
-    }
-    example_tree = codetree.deserialise( io.StringIO( json.dumps( example ) ) )
-    Resolver().resolveCodeTree( example_tree._body[1] )
-    example_tree.serialise( sys.stdout )
+    def visitFunctionCodelet( self, fun_codelet, scopes ):
+        new_scopes = LexicalScope( previous = scopes )
+        fun_codelet.parameters().visit( self, new_scopes )
+        fun_codelet.body().visit( self, new_scopes )
 
    
 
