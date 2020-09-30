@@ -49,12 +49,10 @@ class LexicalScope( Scope ):
             return self._previous.lookup( name )
 
     def addInfo( self, code_let ):
-        # print( 'setAsLocal', code_let.name() )
         code_let.setAsLocal( **self._locals[ code_let.name() ] )
 
     def declare( self, id_codelet ):
         nm = id_codelet.name()
-        # print( 'declare', nm)
         if nm in self._locals:
             raise Exception( f'Trying to re-declare the same variable: {nm}' )
         label = newLabel()
@@ -129,7 +127,6 @@ class Resolver( codetree.CodeletVisitor ):
         """
         Fix up bindings e.g.  x := EXPR
         """
-        # print( 'binding', binding_codelet.lhs().name())
         binding_codelet.lhs().visit( self, scopes )
         binding_codelet.rhs().visit( self, scopes )
 
@@ -137,7 +134,7 @@ class Resolver( codetree.CodeletVisitor ):
         """
         Fix up if-expression e.g. if t then x else y endif
         """
-        if_codelet.thenPart().visit( self, scopes )
+        if_codelet.testPart().visit( self, scopes )
         if_codelet.thenPart().visit( self, LexicalScope( previous = scopes ) )
         if_codelet.elsePart().visit( self, LexicalScope( previous = scopes ) )
 
