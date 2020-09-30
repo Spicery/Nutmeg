@@ -2,6 +2,7 @@
 # CodeTree - the representation of a nutmeg program
 ###############################################################################
 
+import io
 import json
 import abc
 from abc import ABC, abstractmethod, abstractproperty
@@ -194,6 +195,9 @@ class IdCodelet( Codelet ):
 
 	def immutable( self ):
 		return self._immutable
+
+	def label( self ):
+		return self._label
 
 	def encodeAsJSON( self, encoder ):
 		d = dict( kind=self.KIND, name=self._name, reftype=self._reftype, **self._kwargs )
@@ -419,3 +423,13 @@ def deserialise( src ):
 	Reads a text stream in JSON format into a nutmeg-tree.
 	"""
 	return json.load( src, object_hook=codeTreeJSONHook )
+
+def CodeTreeFromJSONFileObject( src ):
+	return deserialise( src )
+
+def CodeTreeFromJSONString( jstring ):
+	return CodeTreeFromJSONFileObject( io.StringIO( jstring ) )
+
+def CodeTreeFromJSONObject( jobject ):
+	# TODO: Is there a better way? Surely there is??
+	return CodeTreeFromJSONString( json.dumps( jobject ) )
