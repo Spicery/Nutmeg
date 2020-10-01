@@ -1,9 +1,6 @@
-import unittest
-import io
-import json
 import codetree
 import resolver
-import sys
+
 
 def resolveCodeTree( tree ):
     resolver.Resolver().resolveCodeTree( tree )

@@ -1,8 +1,5 @@
-import re
-import json
-
-from tokens import IntToken
 from tokenizer import tokenizer
+from tokens import IntToken
 
 def tokenize( text ):
     return [ *tokenizer( text ) ]
