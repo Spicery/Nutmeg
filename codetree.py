@@ -144,7 +144,6 @@ class IntCodelet( ConstantCodelet ):
 			self._value = int( value, radix )
 
 	def visit( self, visitor, *args, **kwargs ):
-		print( 'IntCodelet ARGS', args )
 		return visitor.visitIntCodelet( self, *args, **kwargs )
 
 
@@ -248,7 +247,7 @@ class SyscallCodelet( Codelet ):
 		return dict( kind=self.KIND, name=self._name, arguments=self._arguments, **self._kwargs )
 
 	def members( self ):
-		yield from self._arguments
+		yield self._arguments
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitSyscallCodelet( self, *args, **kwargs )
