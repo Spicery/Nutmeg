@@ -37,7 +37,7 @@ jumpstart:
 ENTRYPOINT?=program
 .PHONEY: run
 run:
-	dotnet NutmegRunner/NutmegRunner/bin/Debug/netcoreapp3.1/NutmegRunner.dll --debug --entry-point=$(ENTRYPOINT) examples/bundler/simple.bundle
+	dotnet runner/NutmegRunner/bin/Debug/netcoreapp3.1/NutmegRunner.dll --debug --entry-point=$(ENTRYPOINT) examples/bundler/simple.bundle
 
 # Cleans out the build files and other artefacts. It uses `dotnet clean` to sort out the C#
 # area but that does seem to leave a lot of caches and other build files behind. Will need to
@@ -46,14 +46,15 @@ run:
 clean:
 	make clean-compiler
 	make clean-runner
+	rm -rf _build
 
 .PHONEY: clean-compiler
 clean-compiler: 
-	rm -rf _build
+	make -C compiler clean
 
 .PHONEY: clean-runner
 clean-runner:
-	make -C NutmegRunner clean
+	make -C runner clean
 
 # Builds the compiler in the _build/compiler folder and the runner in the appropriate dotnet publish folder.
 .PHONEY: build
@@ -63,18 +64,22 @@ build:
 
 # This actually builds a lot of files but we use the executable to indicate a successful build
 .PHONEY: build-compiler
-build-compiler: _build/compiler/nutmeg/nutmeg
+build-compiler:
+	make -C compiler build
+	rm -rf _build/compiler/
+	mkdir -p _build/compiler/
+	mv compiler/_build/nutmeg _build/compiler/
 
-_build/compiler/nutmeg:
+_build/compiler/nutmeg/nutmeg:
 	#cxfreeze launcher.py -O --silent --target-dir=_build/compiler --target-name=nutmeg
-	pyinstaller --noconfirm --workpath=_working --distpath=_build/compiler --name=nutmeg launcher.py
+	( cd compiler; pyinstaller --noconfirm --workpath=_working --distpath=../_build/compiler --name=nutmeg launcher.py )
 
-# Builds into NutmegRunner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish
+# Builds into runner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish
 # Where $(RID) is the target architecture to build for. For a list of archhitectures
 # see https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
 .PHONEY: build-runner
 build-runner:
-	make -C NutmegRunner
+	make -C runner
 
 # Builds the installer into _build/nutmeg-installer.zip folder. This requires the system to be built
 # using `make build` first.
@@ -88,7 +93,7 @@ mkinstaller: build
 	mkdir -p _build/nutmeg-installer/libexec/nutmeg/compiler
 	( cd _build/compiler/nutmeg; tar cf - . ) | ( cd _build/nutmeg-installer/libexec/nutmeg/compiler; tar xf - )
 	mkdir -p _build/nutmeg-installer/libexec/nutmeg/runner
-	( cd NutmegRunner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd _build/nutmeg-installer/libexec/nutmeg/runner; tar xf - )
+	( cd runner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd _build/nutmeg-installer/libexec/nutmeg/runner; tar xf - )
 	# Add the installer.bsh script.
 	python3 scripts/mkinstaller.py --install_dir=$(INSTALL_DIR) --exec_dir=$(EXEC_DIR) > _build/nutmeg-installer/install.bsh
 	chmod a+x _build/nutmeg-installer/install.bsh
@@ -116,12 +121,13 @@ install-compiler:
 .PHONEY: install-runner
 install-runner:
 	mkdir -p $(INSTALL_DIR)/runner
-	( cd NutmegRunner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd $(INSTALL_DIR)/runner; tar xf - )
+	( cd runner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd $(INSTALL_DIR)/runner; tar xf - )
 
 # Uninstall the application locally.
 .PHONEY: uninstall
 uninstall:
 	make uninstall-compiler
+	make uninstall-runner
 	rm -f $(EXEC_DIR)/nutmeg
 	rm -f $(EXEC_DIR)/nutmegc
 
