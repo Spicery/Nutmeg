@@ -1,5 +1,4 @@
-from tokenizer import tokenizer
-from tokens import IntToken
+from tokenizer import tokenizer, IntToken
 
 def tokenize( text ):
     return [ *tokenizer( text ) ]

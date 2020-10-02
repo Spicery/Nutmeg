@@ -3,8 +3,7 @@ parser -- parser module for the Nutmeg compiler
 """
 
 import codetree
-import tokens
-from tokenizer import tokenizer
+from tokenizer import tokenizer, IdToken, BasicToken, IntToken
 from peekablepushable import PeekablePushable
 import math
 
@@ -80,7 +79,6 @@ class TableDrivenParser:
         func = expr.function()
         if not isinstance( func, codetree.IdCodelet ):
             return "Not a call of a simple variable"
-        args = expr.arguments()
         return TableDrivenParser.isntArgs( expr.arguments() )
 
     def readFuncArgs( self, source ):
@@ -158,9 +156,9 @@ def defPrefixMiniParser( parser, token, source ):
 PREFIX_TABLE = {
     "LPAREN": lparenPrefixMiniParser,
     "DEC_FUNCTION_1": defPrefixMiniParser,
-    tokens.BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
-    tokens.IdToken: lambda parser, token, source: codetree.IdCodelet( name=token.value(), reftype="get" ),
-    tokens.IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() )
+    BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
+    IdToken: lambda parser, token, source: codetree.IdCodelet( name=token.value(), reftype="get" ),
+    IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() )
 }
 
 def idPostfixMiniParser( parser, p, lhs, token, source ):
@@ -192,7 +190,7 @@ def lparenPostfixMiniParser( parser, p, lhs, token, source ):
 POSTFIX_TABLE = {
     "SEQ": commaPostfixMiniParser,
     "LPAREN": lparenPostfixMiniParser,
-    tokens.IdToken: idPostfixMiniParser
+    IdToken: idPostfixMiniParser
 }
 
 def standardParser():
