@@ -19,3 +19,7 @@ NutmegRunner/bin/Debug/netcoreapp3.1/NutmegRunner.dll: NutmegRunner/*.cs
 .PHONEY: clean
 clean:
 	dotnet clean
+
+.PHONEY: unittests
+unittests:
+	echo 'Not implemented yet'

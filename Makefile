@@ -10,6 +10,7 @@ help:
 	#	make install - installs locally, use after `make build`
 	#	make jumpstart - install all the necessary tools for devs to get started
 	#	make run ENTRYPOINT=$(ENTRYPOINT) - start the interpreter on one of the supplied examples
+	#   make test
 
 PREFIX=/opt/nutmeg
 INSTALL_DIR=$(PREFIX)/libexec/nutmeg
@@ -138,3 +139,8 @@ uninstall-compiler:
 .PHONEY: uninstall-runner
 uninstall-runner:
 	rm -rf $(INSTALL_DIR)/runner
+
+.PHONEY: unittests
+unittests:
+	make -C compiler unittests
+	make -C runner unittests

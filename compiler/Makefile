@@ -6,6 +6,7 @@ help:
 	# Valid targets are:
 	#	make clean - cleans out build files and artefacts
 	#	make build - builds the compiler
+	#   make test - runs unit tests
 
 # Cleans out the build files and other artefacts. 
 .PHONEY: clean
@@ -21,3 +22,6 @@ _build/nutmeg/nutmeg:
 	#cxfreeze launcher.py -O --silent --target-dir=_build/compiler --target-name=nutmeg
 	pyinstaller --noconfirm --workpath=_working --distpath=_build --name=nutmeg launcher.py
 
+.PHONEY: unittests
+unittests: 
+	pytest test/
