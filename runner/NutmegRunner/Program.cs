@@ -97,7 +97,7 @@ namespace NutmegRunner {
                 RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
                 using (SQLiteConnection connection = new SQLiteConnection( $"Data Source={this._bundleFile}" )) {
                     connection.Open();
-                    var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] WHERE E.[EntryPoint]=@EntryPoint", connection );
+                    var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] WHERE E.[IdName]=@EntryPoint", connection );
                     cmd.Parameters.AddWithValue( "@EntryPoint", this._entryPoint );
                     cmd.Prepare();
                     var reader = cmd.ExecuteReader();
