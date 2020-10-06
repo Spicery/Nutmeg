@@ -8,6 +8,8 @@ from tracer import traceFile
 import nutmeg_extensions
 from pathlib import Path
 import compiler
+import os
+import subprocess
 
 ### WARNING: The next two imports do indeed do something useful - via decorators.
 ### DO NOT REMOVE (unless you _really_ know what you're doing)
@@ -82,7 +84,7 @@ class CompilerLauncher(Launcher):
                 self._args.bundle = Path( self._args.files[ 0 ] )
                 self._args.files = self._args.files[ 1: ]
             else:
-                raise Exception( 'No bundle file provided' )
+                raise Exception( 'COMPILER: No bundle file provided' )
 
     def launch( self ):
         cmplr = compiler.Compiler( self._args.entry_point, self._args.bundle, tuple( map( Path, self._args.files ) )  )
@@ -90,16 +92,54 @@ class CompilerLauncher(Launcher):
 
 
 class RunLauncher(Launcher):
-    """
-    We expect this will fork-and-exec into the C# monolithic runtime-engine 
-    after preparing the arguments. 
-    """
-    pass
+
+    def __init__( self, args ):
+        super().__init__( args )
+        if self._args.bundle is None:
+            if self._args.others:
+                self._args.bundle = Path( self._args.others[ 0 ] )
+                self._args.others = self._args.others[ 1: ]
+            else:
+                raise Exception( 'RUN: No bundle file provided' )
+        if self._args.entry_point is None:
+            if self._args.others:
+                self._args.entry_point = Path( self._args.others[ 0 ] )
+                self._args.others = self._args.others[ 1: ]
+            else:
+                raise Exception( 'RUN: No entry point provided' )
+
+    def launch( self ):
+        """
+        Exec into the runner monolith
+        """
+        executable = Path( Path( os.environ[ 'NUTMEG_HOME' ] ), Path( "runner/NutmegRunner" ) )
+        command = [ executable, f"--entry-point={self._args.entry_point}", self._args.bundle ]
+        subprocess.run( command )
+        # try:
+        #     pid = os.fork()
+        # except OSError as e:
+        #     raise Exception( f"{e.strerror} [{e.errno}]" )
+        # if pid == 0:
+        #     # Child
+        #     os.execlp( "/bin/echo", executable, f"--entry-point={self._args.entry_point}", f"--bundle={self._args.bundle}" )
+        # else:
+        #     os._exit( 0 )
 
     
 ###############################################################################
 # Main entry point - parses the options and launches the right phase.
 ###############################################################################
+
+COMMANDS = {
+    "parser" : "parse",
+    "resolver": "resolve",
+    "optimizer" : "optimize",
+    "codegen" : "codegen",
+    "bundler" : "bundle",
+    "tracer" : "trace",
+    "compiler" : "compile",
+    "runner": "run"
+}
 
 def main():
     parser = argparse.ArgumentParser(
@@ -118,35 +158,35 @@ def main():
     )
 
     mode_parse = subparsers.add_parser(
-        "parse", help="Parses nutmeg source code to generate a tree"
+        COMMANDS[ "parser" ], help="Parses nutmeg source code to generate a tree"
     )
     mode_parse.set_defaults( mode=ParseLauncher )
     mode_parse.add_argument( "--input", type=argparse.FileType("r"), default=sys.stdin )
     mode_parse.add_argument( "--output", type=argparse.FileType("w"), default=sys.stdout )
 
     mode_resolve = subparsers.add_parser(
-        "resolve", help="Annotates a tree with scope information"
+        COMMANDS[ "resolver" ], help="Annotates a tree with scope information"
     )
     mode_resolve.set_defaults( mode=ResolveLauncher )
     mode_resolve.add_argument( "--input", type=argparse.FileType("r"), default=sys.stdin )
     mode_resolve.add_argument( "--output", type=argparse.FileType("w"), default=sys.stdout )
 
     mode_optimize = subparsers.add_parser(
-        "optimize", help="Transforms a tree to improve performance"
+        COMMANDS[ "optimizer" ], help="Transforms a tree to improve performance"
     )
     mode_optimize.set_defaults( mode=OptimizeLauncher )
     mode_optimize.add_argument("--input", type=argparse.FileType("r"), default=sys.stdin )
     mode_optimize.add_argument("--output", type=argparse.FileType("w"), default=sys.stdout )
 
     mode_codegen = subparsers.add_parser(
-        "codegen", help="Transforms a tree into back-end code"
+        COMMANDS[ "codegen" ], help="Transforms a tree into back-end code"
     )
     mode_codegen.set_defaults( mode=CodegenLauncher )
     mode_codegen.add_argument( "--input", type=argparse.FileType("r"), default=sys.stdin )
     mode_codegen.add_argument( "--output", type=argparse.FileType("w"), default=sys.stdout )
 
     mode_bundler = subparsers.add_parser(
-        "bundle", help="Adds trees into the bundle file"
+        COMMANDS[ "bundler" ], help="Adds trees into the bundle file"
     )
     mode_bundler.set_defaults( mode=BundlerLauncher  )
     mode_bundler.add_argument( "--input", type=argparse.FileType("r"), default=sys.stdin )
@@ -154,23 +194,32 @@ def main():
     mode_bundler.add_argument( "--entry-point", "-e", action='append' )
 
     mode_tracer = subparsers.add_parser(
-        "trace", help="Infers dependencies for entry-points"
+        COMMANDS[ "tracer" ], help="Infers dependencies for entry-points"
     )
     mode_tracer.set_defaults( mode=TracerLauncher )
     mode_tracer.add_argument( "--bundle", type=Path, required=True )
 
     mode_compile = subparsers.add_parser(
-        "compile", help="Compiles nutmeg files to produce a bundle-file"
+        COMMANDS[ "compiler" ], help="Compiles nutmeg files to produce a bundle-file"
     )
     mode_compile.set_defaults( mode=CompilerLauncher )
     mode_compile.add_argument( "--bundle", "-b", type=Path )
     mode_compile.add_argument( "--entry-point", "-e", action='append' )
     mode_compile.add_argument( 'files', nargs = argparse.REMAINDER )
 
-    mode_run = subparsers.add_parser( "run", help="Runs a bundle-file" )
+    mode_run = subparsers.add_parser( COMMANDS[ "runner" ], help="Runs a bundle-file" )
     mode_run.set_defaults( mode=RunLauncher )
+    mode_run.add_argument( "--bundle", "-b", type=Path )
+    mode_run.add_argument( "--entry-point", "-e", type=str )
+    mode_run.add_argument( 'others', nargs = argparse.REMAINDER )
 
-    args = parser.parse_args()
+    # Handle the case when the subparser command is omitted.
+    argv = sys.argv[1:]
+
+    if len( argv ) == 0 or argv[0] not in COMMANDS.values():
+        argv = [ COMMANDS[ "runner" ], *argv ]
+
+    args = parser.parse_args( args=argv )
     args.mode(args).launch()
 
 
