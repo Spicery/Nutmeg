@@ -97,7 +97,7 @@ namespace NutmegRunner {
                 RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
                 using (SQLiteConnection connection = new SQLiteConnection( $"Data Source={this._bundleFile}" )) {
                     connection.Open();
-                    var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [EntryPoints] E ON E.[Needs] = B.[IdName] WHERE E.[EntryPoint]=@EntryPoint", connection );
+                    var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] WHERE E.[EntryPoint]=@EntryPoint", connection );
                     cmd.Parameters.AddWithValue( "@EntryPoint", this._entryPoint );
                     cmd.Prepare();
                     var reader = cmd.ExecuteReader();
@@ -110,7 +110,7 @@ namespace NutmegRunner {
                         try {
                             Codelet codelet = Codelet.DeserialiseCodelet( jsonValue );
                             runtimeEngine.PreBind( idName );
-                            if (codelet is FunctionCodelet fc) {
+                            if (codelet is LambdaCodelet fc) {
                                 bindings.Add( idName, codelet );
                             } else {
                                 initialisations.Add( new KeyValuePair<string, Codelet>( idName, codelet ) );

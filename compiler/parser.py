@@ -146,11 +146,11 @@ def defPrefixMiniParser( parser, token, source ):
     mustRead( source, 'END_PARAMETERS', 'END_PHRASE' )
     b = parser.readStatements( source )
     mustRead( source, 'END_DEC_FUNCTION_1', 'END' )
-    # TODO: horribly wrong!
+    # TODO: horribly wrong! Should use a specialist reader for the call-shape.
     func = funcArgs.function()
     args = funcArgs.arguments()
     id = codetree.IdCodelet( name=func.name(), reftype="val" )
-    func = codetree.FunctionCodelet( parameters=args, body=b)
+    func = codetree.LambdaCodelet( parameters=args, body=b )
     return codetree.BindingCodelet( lhs=id, rhs=func )
 
 PREFIX_TABLE = {

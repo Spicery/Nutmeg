@@ -5,7 +5,7 @@
 import io
 import json
 import abc
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC
 
 from str2bool import str2bool
 
@@ -64,13 +64,27 @@ class Codelet( abc.ABC ):
 		"""
 		self._kwargs = kwargs
 
-	def serialise( self, dst ):
+	def serialize( self, dst ):
 		"""
 		Converts a this node into a text stream. We use a custom converter
 		which is provided later in this file.
 		"""
 		json.dump( self, dst, sort_keys=True, indent=4, cls=CodeTreeEncoder )
 		print( file=dst )
+
+	def serializeToString( self ):
+		import io
+		b = io.StringIO()
+		self.serialize( b )
+		return b.getvalue()
+
+	@abc.abstractmethod
+	def members( self ):
+		raise Exception( 'Not defined' )
+
+	@abc.abstractmethod
+	def transform( self, f ):
+		raise Exception( 'Not defined' )
 
 	@abc.abstractmethod
 	def encodeAsJSON( self, encoder ):
@@ -79,7 +93,7 @@ class Codelet( abc.ABC ):
 	def toJSON( self ):
 		import io
 		stream = io.StringIO()
-		self.serialise( stream )
+		self.serialize( stream )
 		return json.loads( stream.getvalue() )
 
 	# @abc.abstractmethod
@@ -102,14 +116,17 @@ class ConstantCodelet( Codelet, ABC ):
 
 	KIND = None
 
+	def members( self ):
+		yield from ()
+
+	def transform( self, f ):
+		return self
+
 	def valueAsString( self ):
 		return str( self._value )
 
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, value=self.valueAsString(), **self._kwargs )
-
-	# def subExpressions( self ):
-	# 	return ()
 
 
 class StringCodelet( ConstantCodelet ):
@@ -171,20 +188,33 @@ class IdCodelet( Codelet ):
 
 	KIND = "id"
 
-	def __init__( self, *, name, reftype, **kwargs ):
-		self._scope = kwargs.pop( 'scope', None )
-		self._label = kwargs.pop( 'label', None )
-		self._nonassignable = kwargs.pop( 'nonassignable', None )
-		self._immutable = kwargs.pop( 'immutable', None )
+	def __init__( self, *, name, reftype, slot=None, immutable=None, nonassignable=None, scope=None, label=None, **kwargs ):
 		super().__init__( **kwargs )
 		self._name = name
 		self._reftype = reftype
+		self._slot = slot
+		self._scope = scope
+		self._label = label
+		self._nonassignable = nonassignable
+		self._immutable = immutable
+
+	def members( self ):
+		yield from ()
+
+	def transform( self, f ):
+		return self
 
 	def name( self ):
 		return self._name
 
 	def scope( self ):
 		return self._scope
+
+	def slot( self ):
+		return self._slot
+
+	def setSlot( self, n ):
+		self._slot = n
 
 	def reftype( self ):
 		return self._reftype
@@ -208,6 +238,8 @@ class IdCodelet( Codelet ):
 			d[ 'nonassignable' ] = self._nonassignable
 		if self._immutable is not None:
 			d[ 'immutable' ] = self._immutable
+		if self._slot is not None:
+			d[ 'slot' ] = self._slot
 		return d
 
 	def visit( self, visitor, *args, **kwargs ):
@@ -249,6 +281,9 @@ class SyscallCodelet( Codelet ):
 	def members( self ):
 		yield self._arguments
 
+	def transform( self, f ):
+		return SyscallCodelet( name=self._name, arguments=f( self._arguments ), **self._kwargs )
+
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitSyscallCodelet( self, *args, **kwargs )
 
@@ -274,6 +309,9 @@ class CallCodelet( Codelet ):
 		yield self._function
 		yield self._arguments
 
+	def transform( self, f ):
+		return CallCodelet( function=f(self._function), arguments=f(self._arguments), **self._kwargs )
+
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitCallCodelet( self, *args, **kwargs )
 
@@ -289,6 +327,21 @@ class IfCodelet( Codelet ):
 		super().__init__( **kwargs )
 		self._test = test
 		self._then = then
+
+	def members( self ):
+		yield self.testPart()
+		yield self.thenPart()
+		yield self.elsePart()
+
+	def transform( self, f ):
+		return IfCodelet( 
+			test=f( self.testPart() ), 
+			then=f( self.thenPart() ), 
+			**{
+				'else': f(self.elsePart())
+			},
+			**self._kwargs
+		)
 
 	def testPart( self ):
 		return self._test
@@ -321,6 +374,12 @@ class SeqCodelet( Codelet ):
 	def members( self ):
 		yield from self._body
 
+	def body( self ):
+		return self._body
+
+	def transform( self, f ):
+		return SeqCodelet( *map( f, self._body ), **self._kwargs )
+
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitSeqCodelet( self, *args, **kwargs )
 
@@ -333,6 +392,13 @@ class BindingCodelet( Codelet ):
 		super().__init__( **kwargs )
 		self._lhs = lhs
 		self._rhs = rhs
+
+	def members( self ):
+		yield self.lhs()
+		yield self.rhs()
+
+	def transform( self, f ):
+		return BindingCodelet( lhs=f( self.lhs() ), rhs=f( self.rhs() ), **self._kwargs )
 
 	def lhs( self ):
 		return self._lhs
@@ -347,14 +413,23 @@ class BindingCodelet( Codelet ):
 		return visitor.visitBindingCodelet( self, *args, **kwargs )
 
 
-class FunctionCodelet( Codelet ):
+class LambdaCodelet( Codelet ):
 
-	KIND = "function"
+	KIND = "lambda"
 
-	def __init__( self, *, parameters, body, **kwargs ):
+	def __init__( self, *, parameters, body, nlocals = None, nargs = None, **kwargs ):
 		super().__init__( **kwargs )
 		self._parameters = parameters
 		self._body = body
+		self._nlocals = nlocals
+		self._nargs = nargs
+
+	def members( self ):
+		yield self.parameters()
+		yield self.body()
+
+	def transform( self, f ):
+		return LambdaCodelet( parameters=f( self._parameters ), body=f( self._body ), **self._kwargs )
 
 	def parameters( self ):
 		return self._parameters
@@ -362,14 +437,31 @@ class FunctionCodelet( Codelet ):
 	def body( self ):
 		return self._body
 
+	def nlocals( self ):
+		return self._nlocals
+
+	def setNlocals( self, n : int ):
+		self._nlocals = n
+
+	def nargs( self ):
+		return self._nargs
+
+	def setNargs( self, n : int ):
+		self._nargs = n
+
 	def encodeAsJSON( self, encoder ):
-		return dict( kind=self.KIND, parameters=self._parameters, body=self._body, **self._kwargs )
+		d = dict( kind=self.KIND, parameters=self._parameters, body=self._body, **self._kwargs )
+		if self._nlocals is not None:
+			d[ 'nlocals' ] = self._nlocals
+		if self._nargs is not None:
+			d[ 'nargs' ] = self._nargs
+		return d
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitFunctionCodelet( self, *args, **kwargs )
 
 
-### Serialisation #############################################################
+### Serialisation ##############################################################
 
 class CodeTreeEncoder(json.JSONEncoder):
 	"""
@@ -377,15 +469,15 @@ class CodeTreeEncoder(json.JSONEncoder):
 	These have to be written as classes that inherit from json.JSONEncoder
 	and override the 'default' method.
 	"""
-
+	
 	def default( self, obj ):
 		if isinstance( obj, Codelet ):
 			return obj.encodeAsJSON( self )
 		return json.JSONEncoder.default( self, obj )
 
-### Deserialisation ###########################################################
+### Deserialization ###########################################################
 
-def makeDeserialisationTable():
+def makeDeserializationTable():
 	"""
 	Scans the class hierarchy under CodeTree to find all the leaf classes
 	and then adds them to a mapping from kinds to constructors.
@@ -403,7 +495,7 @@ def makeDeserialisationTable():
 	return mapping_table
 
 # This is the master table for driving the deserialisation of code-trees.
-DESERIALISATION_TABLE = makeDeserialisationTable()
+DESERIALIZATION_TABLE = makeDeserializationTable()
 
 def codeTreeJSONHook( jdict ):
 	"""
@@ -413,22 +505,22 @@ def codeTreeJSONHook( jdict ):
     """
 	if Codelet.KIND_PROPERTY in jdict:
 		e = jdict[Codelet.KIND_PROPERTY ]
-		return DESERIALISATION_TABLE[e]( **jdict )
+		return DESERIALIZATION_TABLE[e ]( **jdict )
 	else:
 		return jdict
 
-def deserialise( src ):
+def __deserialize( src ):
 	"""
 	Reads a text stream in JSON format into a nutmeg-tree.
 	"""
 	return json.load( src, object_hook=codeTreeJSONHook )
 
-def CodeTreeFromJSONFileObject( src ):
-	return deserialise( src )
+def codeTreeFromJSONFileObject( src ):
+	return __deserialize( src )
 
-def CodeTreeFromJSONString( jstring ):
-	return CodeTreeFromJSONFileObject( io.StringIO( jstring ) )
+def codeTreeFromJSONString( jstring ):
+	return codeTreeFromJSONFileObject( io.StringIO( jstring ) )
 
-def CodeTreeFromJSONObject( jobject ):
+def codeTreeFromJSONObject( jobject ):
 	# TODO: Is there a better way? Surely there is??
-	return CodeTreeFromJSONString( json.dumps( jobject ) )
+	return codeTreeFromJSONString( json.dumps( jobject ) )
