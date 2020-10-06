@@ -12,7 +12,7 @@ def test_resolveID():
         "name": "x",
         "reftype": "get"
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert
@@ -24,7 +24,7 @@ def test_resolveLiteral():
         "kind": "string",
         "value": "hello world"
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert
@@ -44,7 +44,7 @@ def test_resolveBinding():
             "value": "hello world"
         }
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert
@@ -65,7 +65,7 @@ def test_resolveFunction():
             "reftype": "get"
         }
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert
@@ -99,7 +99,7 @@ def test_resolveFunction2Variables():
             "reftype": "get"
         }
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert
@@ -136,7 +136,7 @@ def test_resolveIf():
             "reftype": "get"
         }
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert

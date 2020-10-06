@@ -1,6 +1,6 @@
 {
     "comment": "fn x: x + 1 end",
-    "kind": "function",
+    "kind": "lambda",
     "parameters": {
         "kind": "id",
         "name": "x",

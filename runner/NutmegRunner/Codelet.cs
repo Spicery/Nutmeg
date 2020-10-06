@@ -50,7 +50,7 @@ namespace NutmegRunner {
         protected override Codelet Create( Type objectType, JObject jObject ) {
             var kind = jObject["kind"];
             switch (kind.ToString()) {
-                case "function": return new FunctionCodelet();
+                case "lambda": return new LambdaCodelet();
                 case "syscall": return new SyscallCodelet();
                 case "string": return new StringCodelet();
                 case "int": return new IntCodelet();
@@ -184,7 +184,7 @@ namespace NutmegRunner {
     }
 
 
-    public class FunctionCodelet : Codelet {
+    public class LambdaCodelet : Codelet {
 
         [JsonProperty( "nargs" )]
         public int Nargs { get; set; }
@@ -194,11 +194,11 @@ namespace NutmegRunner {
         public Codelet Body { get; set; }
 
 
-        public FunctionCodelet() {
+        public LambdaCodelet() {
             //  Used by deserialisation.
         }
 
-        public FunctionCodelet( int nargs, int nlocals, Codelet body ) {
+        public LambdaCodelet( int nargs, int nlocals, Codelet body ) {
             this.Nargs = nargs;
             this.Nlocals = nlocals;
             this.Body = body;

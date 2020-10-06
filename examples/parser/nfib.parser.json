@@ -7,7 +7,7 @@
         "reftype": "var"
     },
     "rhs": {
-        "kind": "function",
+        "kind": "lambda",
         "parameters": {
             "kind": "id",
             "name": "n",
