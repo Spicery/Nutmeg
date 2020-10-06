@@ -3,7 +3,7 @@ parser -- parser module for the Nutmeg compiler
 """
 
 import codetree
-from tokenizer import tokenizer, IdToken, BasicToken, IntToken
+from tokenizer import tokenizer, IdToken, BasicToken, IntToken, StringToken
 from peekablepushable import PeekablePushable
 import math
 
@@ -158,7 +158,8 @@ PREFIX_TABLE = {
     "DEC_FUNCTION_1": defPrefixMiniParser,
     BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
     IdToken: lambda parser, token, source: codetree.IdCodelet( name=token.value(), reftype="get" ),
-    IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() )
+    IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() ),
+    StringToken: lambda parser, token, source: codetree.StringCodelet( value=token.literalValue() ),
 }
 
 def idPostfixMiniParser( parser, p, lhs, token, source ):
