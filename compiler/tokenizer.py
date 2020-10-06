@@ -1,6 +1,23 @@
 import re
 import abc
 
+def literalStringTranslation( token_text : str ):
+    """
+    Translate the raw token-text of a string into the string that is denoted
+    by the token.
+    :param token_text: the raw token text e.g. 'foo'
+    :return: the string constant's value e.g. foo
+    """
+    # Discard the leading/trailing quotes.
+    if token_text.startswith( "'''" ) or token_text.startswith( '"""' ):
+        token_text = token_text[ 3 : -4 ]
+    elif token_text.startswith( "'" ) or token_text.startswith( '"' ):
+        token_text = token_text[ 1 : -1 ]
+    else:
+        raise Exception( f'Internal error during tokenisation - cannot understand this string token: {token_text}')
+    # TODO - decode any escape sequences.
+    return token_text
+
 class Token( abc.ABC ):
 
     def __init__( self, value ):
@@ -22,6 +39,9 @@ class Token( abc.ABC ):
 
     def value( self ):
         return self._value
+
+    def valueForLiteralString( self ):
+        return literalStringTranslation( self._value )
 
     def isPrefixer( self ):
         return True
@@ -81,6 +101,20 @@ class IntToken( Token ):
 
     def category( self ):
         return type(self)
+
+class StringToken( Token ):
+
+    @staticmethod
+    def make( toktype, match ):
+        token_text = match.group( match.lastgroup )
+        return StringToken( token_text )
+
+    def literalValue( self ):
+        return literalStringTranslation( self._value )
+
+    def category( self ):
+        return type( self )
+
 
 class PunctuationToken( Token ):
 
@@ -172,11 +206,11 @@ token_spec = {
     tt.idname(): tt for tt in [
         # literal_constants
         TokenType( r"(?P<INT>(\+|-)?\d+)", make=IntToken.make ),
-        TokenType( r'(?P<S_STRING>(?!""")"[^\n"]*")' ),
-        TokenType( r"(?P<DQSTRING>(?!''')'[^\n']*')" ),
-        TokenType( r'(?P<SQSTRING>"""(?:(?!""").)*""")' ),
-        TokenType( r'(?P<MULTILINE_DQSTRING>"""(?:(?!""").)*""")' ),
-        TokenType( r"(?P<MULTILINE_SQSTRING>'''(?:(?!''').)*''')" ),
+        TokenType( r'(?P<S_STRING>(?!""")"[^\n"]*")', make=StringToken.make ),
+        TokenType( r"(?P<DQSTRING>(?!''')'[^\n']*')", make=StringToken.make ),
+        TokenType( r'(?P<SQSTRING>"""(?:(?!""").)*""")', make=StringToken.make ),
+        TokenType( r'(?P<MULTILINE_DQSTRING>"""(?:(?!""").)*""")', make=StringToken.make ),
+        TokenType( r"(?P<MULTILINE_SQSTRING>'''(?:(?!''').)*''')", make=StringToken.make ),
         TokenType( r"(?P<WS>\s+)" ),
 
         # operators
