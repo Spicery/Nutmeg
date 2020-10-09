@@ -91,7 +91,7 @@ class CompilerLauncher(Launcher):
         cmplr.compile()
 
 
-class RunLauncher(Launcher):
+class RunLauncher( Launcher ):
 
     def __init__( self, args ):
         super().__init__( args )
