@@ -413,6 +413,9 @@ namespace NutmegRunner {
                     } else {
                         throw new NutmegException( $"Stream exhausted: {e}" );
                     }
+                case SystemFunction sf:
+                    sf.ExecuteRunlet( runtimeEngine );
+                    return this.Next;
                 default:
                     throw new NutmegException( $"Cannot call this object: {obj}" );
             }
