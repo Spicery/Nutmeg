@@ -52,6 +52,7 @@ namespace NutmegRunner {
             switch (kind.ToString()) {
                 case "lambda": return new LambdaCodelet();
                 case "syscall": return new SyscallCodelet();
+                case "sysfn": return new SysfnCodelet();
                 case "string": return new StringCodelet();
                 case "int": return new IntCodelet();
                 case "bool": return new BoolCodelet();
@@ -281,6 +282,24 @@ namespace NutmegRunner {
             return TestPart.Weave( new ForkRunlet( ThenPart.Weave( continuation, g ), ElsePart.Weave( continuation, g ) ), g );
         }
 
+    }
+
+    public class SysfnCodelet : Codelet {
+
+        string _name;
+        [JsonProperty( "name" )]
+        public string Name {
+            get { return _name; }
+            set {
+                _systemFunction = NutmegSystem.Find( value );
+                _name = value;
+            }
+        }
+        private SystemFunctionMaker _systemFunction;
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            return this._systemFunction( null );
+        }
     }
 
     public class SyscallCodelet : Codelet {

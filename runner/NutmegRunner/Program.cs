@@ -132,6 +132,8 @@ namespace NutmegRunner {
                             runtimeEngine.PreBind( idName );
                             if (codelet is LambdaCodelet fc) {
                                 bindings.Add( idName, codelet );
+                            } else if ( codelet is SysfnCodelet sfc ) {
+                                bindings.Add( idName, codelet );
                             } else {
                                 initialisations.Add( new KeyValuePair<string, Codelet>( idName, codelet ) );
                             }
