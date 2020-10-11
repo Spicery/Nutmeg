@@ -1,4 +1,4 @@
-using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
@@ -104,13 +104,13 @@ namespace NutmegRunner {
             if (this._debug) stdErr.WriteLine( $"Entry point: {this._entryPoint}" );
             try {
                 RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
-                using (SQLiteConnection connection = GetConnection()) {
+                using (SQLiteConnection connection = new SQLiteConnection( $"Data Source={this._bundleFile}" )) {
                     connection.Open();
                     if (this._entryPoint == null) {
                         //  If the entry-point is not specified, check if there a unique entry-point in the bundle.
                         var entrypoints = this.GetEntryPoints( connection ).ToList();
                         var n = entrypoints.Count();
-                        if (n == 1) {
+                        if ( n == 1 ) {
                             this._entryPoint = entrypoints.First();
                             if (this._debug) stdErr.WriteLine( $"Inferred entry point: {this._entryPoint}" );
                         } else {
@@ -132,29 +132,27 @@ namespace NutmegRunner {
                             runtimeEngine.PreBind( idName );
                             if (codelet is LambdaCodelet fc) {
                                 bindings.Add( idName, codelet );
-                            } else if (codelet is SysfnCodelet sfc) {
-                                bindings.Add( idName, codelet );
                             } else {
                                 initialisations.Add( new KeyValuePair<string, Codelet>( idName, codelet ) );
                             }
-                        } catch (Newtonsoft.Json.JsonSerializationException e) {
+                        } catch ( Newtonsoft.Json.JsonSerializationException e ) {
                             Exception inner = e.InnerException;
-                            throw (inner is NutmegException nme) ? (Exception)nme : (Exception)e;
+                            throw ( inner is NutmegException nme ) ? (Exception)nme : (Exception)e;
                         }
                     }
                     foreach (var k in bindings) {
                         runtimeEngine.Bind( k.Key, k.Value );
                     }
-                    foreach (var kvp in initialisations) {
+                    foreach (var kvp in initialisations ) {
                         if (this._debug) Console.WriteLine( $"Binding {kvp.Key}" );
                         try {
                             runtimeEngine.Initialise( kvp.Key, kvp.Value );
-                        } catch (NormalExitNutmegException) {
+                        } catch ( NormalExitNutmegException ) {
                             //  This is how initialisation is halted.
                         }
                     }
                 }
-                if (this._graphviz != null) {
+                if (this._graphviz != null ) {
                     runtimeEngine.GraphViz( this._graphviz );
                 } else {
                     runtimeEngine.Start( this._entryPoint, useEvaluate: false, usePrint: this._print );
@@ -168,14 +166,6 @@ namespace NutmegRunner {
             }
             //var jobj = JToken.ReadFrom(new JsonTextReader(new StreamReader(Console.OpenStandardInput())));
             //Console.WriteLine($"Output = {jobj.ToString()}");
-        }
-
-        private SQLiteConnection GetConnection() {
-            try {
-                return new SQLiteConnection( $"Data Source={this._bundleFile}; Read Only=True;" );
-            } catch (System.Data.SQLite.SQLiteException) {
-                throw new NutmegException( "Cannot find/open bundle" ).Culprit( "Filename", this._bundleFile );
-            }
         }
 
         static void Main(string[] args) {
