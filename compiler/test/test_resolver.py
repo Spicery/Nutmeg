@@ -1,9 +1,6 @@
 import codetree
 import resolver
-
-
-def resolveCodeTree( tree ):
-    resolver.Resolver().resolveCodeTree( tree )
+from resolver import resolveCodeTree
 
 def test_resolveID():
     # Arrange
@@ -53,7 +50,7 @@ def test_resolveBinding():
 def test_resolveFunction():
     # Arrange
     jcodelet = {
-        "kind": "function",
+        "kind": "lambda",
         "parameters": {
             "kind": "id",
             "name": "x",
@@ -77,7 +74,7 @@ def test_resolveFunction():
 def test_resolveFunction2Variables():
     # Arrange
     jcodelet = {
-        "kind": "function",
+        "kind": "lambda",
         "parameters": {
             "kind":"seq",
             "body": [
