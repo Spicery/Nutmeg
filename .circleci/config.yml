@@ -4,6 +4,10 @@ orbs:
   win: circleci/windows@2.2.0
   python: circleci/python@0.2.1
 
+filters:
+  branches:
+    only: /v0\.1_24\.*/
+
 jobs:
   compiler:
     executor: python/default
@@ -19,16 +23,16 @@ jobs:
   runtime:
      executor: win/default     
      steps:
+       - run:
+          command: echo "hello world"
+          name: Stub
        - checkout
        - run: dotnet build
 
 workflows:
-  compiler:
-    filters:
-      branches:
-        only: /v0\.1_24\.*/
-    jobs:
-      - compiler
+  # compiler:
+  #   jobs:
+  #     - compiler
   all:
     jobs:
     - compiler
