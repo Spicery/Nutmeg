@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 
 namespace NutmegRunner {
 
     class Program {
 
         string _bundleFile;
-        string _entryPoint = "program";
+        string _entryPoint = null;
         bool _debug = false;
         string _graphviz = null;
         bool _print = false;
@@ -87,6 +88,14 @@ namespace NutmegRunner {
             }
         }
 
+        private IEnumerable<string> GetEntryPoints( SQLiteConnection connection ) {
+            var cmd = new SQLiteCommand( "SELECT [IdName] FROM [EntryPoints]", connection );
+            var reader = cmd.ExecuteReader();
+            while (reader.Read()) {
+                yield return reader.GetString( 0 );
+            }
+        }
+
         private void Run()
         {
             TextWriter stdErr = Console.Error;
@@ -97,7 +106,18 @@ namespace NutmegRunner {
                 RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
                 using (SQLiteConnection connection = new SQLiteConnection( $"Data Source={this._bundleFile}" )) {
                     connection.Open();
-                    var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [EntryPoints] E ON E.[Needs] = B.[IdName] WHERE E.[EntryPoint]=@EntryPoint", connection );
+                    if (this._entryPoint == null) {
+                        //  If the entry-point is not specified, check if there a unique entry-point in the bundle.
+                        var entrypoints = this.GetEntryPoints( connection ).ToList();
+                        var n = entrypoints.Count();
+                        if ( n == 1 ) {
+                            this._entryPoint = entrypoints.First();
+                            if (this._debug) stdErr.WriteLine( $"Inferred entry point: {this._entryPoint}" );
+                        } else {
+                            throw new NutmegException( "Cannot determine the entry-point" ).Hint( n == 0 ? "No default entry-point" : "More than one entry-point" );
+                        }
+                    }
+                    var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] WHERE E.[IdName]=@EntryPoint", connection );
                     cmd.Parameters.AddWithValue( "@EntryPoint", this._entryPoint );
                     cmd.Prepare();
                     var reader = cmd.ExecuteReader();
@@ -110,7 +130,7 @@ namespace NutmegRunner {
                         try {
                             Codelet codelet = Codelet.DeserialiseCodelet( jsonValue );
                             runtimeEngine.PreBind( idName );
-                            if (codelet is FunctionCodelet fc) {
+                            if (codelet is LambdaCodelet fc) {
                                 bindings.Add( idName, codelet );
                             } else {
                                 initialisations.Add( new KeyValuePair<string, Codelet>( idName, codelet ) );

@@ -1,5 +1,6 @@
 import codetree
 import abc
+from syscalls import isSysconst
 
 class Scope( abc.ABC ):
 
@@ -22,8 +23,8 @@ class GlobalScope( Scope ):
         """Returns the scope that the name appears in, by definition this is the outermost scope"""
         return self
 
-    def addInfo( self, code_let ):
-        code_let.setAsGlobal()
+    def addInfo( self, id_codelet ):
+        id_codelet.setAsGlobal()
 
     def declare( self, id_codelet ):
         id_codelet.setAsGlobal()
@@ -81,21 +82,6 @@ class Resolver( codetree.CodeletVisitor ):
         [x] function
     """
 
-    def resolveFile( self, file ):
-        """
-        resolveFile deserialises a file and then resolves it. This is only
-        useful when the resolve phase is being used standalone.
-        """
-        tree = codetree.deserialise( file )
-        self.resolveCodeTree( tree )
-        return tree
-
-    def resolveCodeTree( self, tree ):
-        """
-        resolveCodeTree updates a code-tree in place.
-        """
-        tree.visit( self, GlobalScope() )
-
     def visitCodelet( self, codelet, scopes ):
         """
         By default we leave the tree alone and perform no updates.
@@ -123,6 +109,10 @@ class Resolver( codetree.CodeletVisitor ):
         for c in codelet.members():
             c.visit( self, scopes )
 
+    def visitCallCodelet( self, codelet, scopes ):
+        for c in codelet.members():
+            c.visit( self, scopes )
+
     def visitBindingCodelet( self, binding_codelet, scopes ):
         """
         Fix up bindings e.g.  x := EXPR
@@ -143,6 +133,18 @@ class Resolver( codetree.CodeletVisitor ):
         fun_codelet.parameters().visit( self, new_scopes )
         fun_codelet.body().visit( self, new_scopes )
 
+
+def resolveCodeTree( tree ):
+    """
+    resolveCodeTree updates a code-tree in place.
+    """
+    tree.visit( Resolver(), GlobalScope() )
    
-
-
+def resolveFile( file ):
+    """
+    resolveFile deserialises a file and then resolves it. This is only
+    useful when the resolve phase is being used standalone.
+    """
+    tree = codetree.codeTreeFromJSONFileObject( file )
+    resolveCodeTree( tree )
+    return tree

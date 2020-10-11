@@ -6,7 +6,7 @@ namespace NutmegRunnerTests {
     public class Weave_Codelet_Tests {
 
         private Runlet Encapsulate( Codelet codelet ) {
-            var fc = new FunctionCodelet( 0, 0, codelet );
+            var fc = new LambdaCodelet( 0, 0, codelet );
             return fc.Weave( new ReturnRunlet(), null );
         }
 

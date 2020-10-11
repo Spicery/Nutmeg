@@ -8,7 +8,7 @@
         "scope": "global"
     },
     "rhs": {
-        "kind": "function",
+        "kind": "lambda",
         "nlocals": 1,
         "nargs": 1,
         "parameters": {

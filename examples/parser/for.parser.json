@@ -1,5 +1,5 @@
 {
-    "kind": "function",
+    "kind": "lambda",
     "nlocals": 2,
     "nargs": 0,
     "parameters": { "kind": "seq", "body": [] },

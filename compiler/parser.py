@@ -3,7 +3,7 @@ parser -- parser module for the Nutmeg compiler
 """
 
 import codetree
-from tokenizer import tokenizer, IdToken, BasicToken, IntToken
+from tokenizer import tokenizer, IdToken, BasicToken, IntToken, StringToken
 from peekablepushable import PeekablePushable
 import math
 
@@ -146,11 +146,11 @@ def defPrefixMiniParser( parser, token, source ):
     mustRead( source, 'END_PARAMETERS', 'END_PHRASE' )
     b = parser.readStatements( source )
     mustRead( source, 'END_DEC_FUNCTION_1', 'END' )
-    # TODO: horribly wrong!
+    # TODO: horribly wrong! Should use a specialist reader for the call-shape.
     func = funcArgs.function()
     args = funcArgs.arguments()
     id = codetree.IdCodelet( name=func.name(), reftype="val" )
-    func = codetree.FunctionCodelet( parameters=args, body=b)
+    func = codetree.LambdaCodelet( parameters=args, body=b )
     return codetree.BindingCodelet( lhs=id, rhs=func )
 
 PREFIX_TABLE = {
@@ -158,7 +158,8 @@ PREFIX_TABLE = {
     "DEC_FUNCTION_1": defPrefixMiniParser,
     BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
     IdToken: lambda parser, token, source: codetree.IdCodelet( name=token.value(), reftype="get" ),
-    IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() )
+    IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() ),
+    StringToken: lambda parser, token, source: codetree.StringCodelet( value=token.literalValue() ),
 }
 
 def idPostfixMiniParser( parser, p, lhs, token, source ):

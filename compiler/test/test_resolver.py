@@ -1,9 +1,6 @@
 import codetree
 import resolver
-
-
-def resolveCodeTree( tree ):
-    resolver.Resolver().resolveCodeTree( tree )
+from resolver import resolveCodeTree
 
 def test_resolveID():
     # Arrange
@@ -12,7 +9,7 @@ def test_resolveID():
         "name": "x",
         "reftype": "get"
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert
@@ -24,7 +21,7 @@ def test_resolveLiteral():
         "kind": "string",
         "value": "hello world"
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert
@@ -44,7 +41,7 @@ def test_resolveBinding():
             "value": "hello world"
         }
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert
@@ -53,7 +50,7 @@ def test_resolveBinding():
 def test_resolveFunction():
     # Arrange
     jcodelet = {
-        "kind": "function",
+        "kind": "lambda",
         "parameters": {
             "kind": "id",
             "name": "x",
@@ -65,7 +62,7 @@ def test_resolveFunction():
             "reftype": "get"
         }
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert
@@ -77,7 +74,7 @@ def test_resolveFunction():
 def test_resolveFunction2Variables():
     # Arrange
     jcodelet = {
-        "kind": "function",
+        "kind": "lambda",
         "parameters": {
             "kind":"seq",
             "body": [
@@ -99,7 +96,7 @@ def test_resolveFunction2Variables():
             "reftype": "get"
         }
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert
@@ -136,7 +133,7 @@ def test_resolveIf():
             "reftype": "get"
         }
     }
-    codelet = codetree.CodeTreeFromJSONObject( jcodelet )
+    codelet = codetree.codeTreeFromJSONObject( jcodelet )
     # Act
     resolveCodeTree( codelet )
     # Assert

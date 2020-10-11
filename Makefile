@@ -68,8 +68,8 @@ build:
 build-compiler:
 	make -C compiler build
 	rm -rf _build/compiler/
-	mkdir -p _build/compiler/
-	mv compiler/_build/nutmeg _build/compiler/
+	mkdir -p _build/
+	mv compiler/_build/nutmeg _build/compiler
 
 _build/compiler/nutmeg/nutmeg:
 	#cxfreeze launcher.py -O --silent --target-dir=_build/compiler --target-name=nutmeg
@@ -88,8 +88,8 @@ build-runner:
 mkinstaller: build
 	# Add the nutmeg & nutmegc scripts into _build/nutmeg-installer/bin.
 	mkdir -p _build/nutmeg-installer/bin
-	printf '#!/bin/bash\nexec $(INSTALL_DIR)/compiler/nutmeg $$*\n' > _build/nutmeg-installer/bin/nutmeg
-	printf '#!/bin/bash\nexec $(INSTALL_DIR)/compiler/nutmeg compile $$*\n' > _build/nutmeg-installer/bin/nutmegc
+	python3 scripts/mkbinnutmeg.py --install_dir=$(INSTALL_DIR) > _build/nutmeg-installer/bin/nutmeg
+	python3 scripts/mkbinnutmegc.py --install_dir=$(INSTALL_DIR) > _build/nutmeg-installer/bin/nutmegc
 	# Add the compiler and runner into _build/nutmeg-installer/libexec/nutmeg/.
 	mkdir -p _build/nutmeg-installer/libexec/nutmeg/compiler
 	( cd _build/compiler/nutmeg; tar cf - . ) | ( cd _build/nutmeg-installer/libexec/nutmeg/compiler; tar xf - )
@@ -102,12 +102,12 @@ mkinstaller: build
 	( cd _build; zip -qr nutmeg-installer.zip nutmeg-installer )
 	( cd _build; tar cf - nutmeg-installer ) | gzip > _build/nutmeg-installer.tgz
 
-# Do a local installation, building first if needed.
+# Do a local installation. Will need to be run as sudo.
 .PHONEY: install
-install: build
+install:
 	mkdir -p $(EXEC_DIR)
-	printf '#!/bin/bash\nexec $(INSTALL_DIR)/compiler/nutmeg $$*\n' > $(EXEC_DIR)/nutmeg
-	printf '#!/bin/bash\nexec $(INSTALL_DIR)/compiler/nutmeg compile $$*\n' > $(EXEC_DIR)/nutmegc
+	python3 scripts/mkbinnutmeg.py --install_dir=$(INSTALL_DIR) > $(EXEC_DIR)/nutmeg
+	python3 scripts/mkbinnutmegc.py --install_dir=$(INSTALL_DIR) > $(EXEC_DIR)/nutmegc
 	chmod a+rx,a-w $(EXEC_DIR)/nutmeg
 	chmod a+rx,a-w $(EXEC_DIR)/nutmegc
 	make install-compiler
