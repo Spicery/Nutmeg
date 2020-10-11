@@ -12,21 +12,24 @@ jobs:
   compiler:
     executor: python/default
     steps:
-      - checkout
-      - python/load-cache
-      - python/install-deps
-      - python/save-cache
       - run:
           command: echo "hello world"
           name: Stub
+      - checkout
+      - run: cd compiler
+      - python/load-cache
+      - python/install-deps
+      - python/save-cache
+
   
-  runtime:
+  runner:
      executor: win/default     
      steps:
        - run:
           command: echo "hello world"
           name: Stub
        - checkout
+       - run: cd runner
        - run: dotnet build
 
 workflows:
@@ -36,4 +39,4 @@ workflows:
   all:
     jobs:
     - compiler
-    - runtime
+    - runner
