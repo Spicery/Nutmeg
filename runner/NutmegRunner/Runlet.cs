@@ -406,12 +406,8 @@ namespace NutmegRunner {
         {
             var obj = runtimeEngine.PopValue();
             switch ( obj ) {
-                case FunctionRunlet f:
-                    //runtimeEngine.PushReturnAddress( this.Next, alt: false );
+                case ICallable f:
                     return f.Call( runtimeEngine, this.Next, alt: false );
-                case SystemFunction sf:
-                    return sf.Call( runtimeEngine, this.Next, alt: false );
-                    //return this.Next;
                 case IEnumerator<object> e:
                     if ( e.MoveNext() ) {
                         runtimeEngine.PushValue( e.Current );
@@ -419,7 +415,6 @@ namespace NutmegRunner {
                     } else {
                         throw new NutmegException( $"Stream exhausted: {e}" );
                     }
-
                 default:
                     throw new NutmegException( $"Cannot call this object: {obj}" );
             }
