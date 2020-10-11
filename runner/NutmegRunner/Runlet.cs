@@ -239,8 +239,7 @@ namespace NutmegRunner {
 
         public override Runlet ExecuteRunlet(RuntimeEngine runtimeEngine)
         {
-            runtimeEngine.PushReturnAddress(this._next, alt: false);
-            return this._functionRunlet.Call(runtimeEngine);
+            return this._functionRunlet.Call(runtimeEngine, this._next, alt: false );
         }
 
     }
@@ -348,8 +347,11 @@ namespace NutmegRunner {
 
     }
 
+    interface ICallable {
+        Runlet Call( RuntimeEngine runtimeEngine, Runlet next, bool alt );
+    }
 
-    public class FunctionRunlet : RunletWithNext
+    public class FunctionRunlet : RunletWithNext, ICallable
     {
 
         private int Nargs { get; set; }
@@ -364,8 +366,9 @@ namespace NutmegRunner {
             this._startCodelet = startCodelet;
         }
 
-        public Runlet Call(RuntimeEngine runtimeEngine)
+        public Runlet Call(RuntimeEngine runtimeEngine, Runlet next, bool alt )
         {
+            runtimeEngine.PushReturnAddress( next, alt: false );
             var nargs = runtimeEngine.CreateFrameAndCopyValueStack(this.Nlocals);
             if (nargs != this.Nargs)
             {
@@ -404,8 +407,11 @@ namespace NutmegRunner {
             var obj = runtimeEngine.PopValue();
             switch ( obj ) {
                 case FunctionRunlet f:
-                    runtimeEngine.PushReturnAddress( this.Next, alt: false );
-                    return f.Call( runtimeEngine );
+                    //runtimeEngine.PushReturnAddress( this.Next, alt: false );
+                    return f.Call( runtimeEngine, this.Next, alt: false );
+                case SystemFunction sf:
+                    return sf.Call( runtimeEngine, this.Next, alt: false );
+                    //return this.Next;
                 case IEnumerator<object> e:
                     if ( e.MoveNext() ) {
                         runtimeEngine.PushValue( e.Current );
@@ -413,9 +419,7 @@ namespace NutmegRunner {
                     } else {
                         throw new NutmegException( $"Stream exhausted: {e}" );
                     }
-                case SystemFunction sf:
-                    sf.ExecuteRunlet( runtimeEngine );
-                    return this.Next;
+
                 default:
                     throw new NutmegException( $"Cannot call this object: {obj}" );
             }
