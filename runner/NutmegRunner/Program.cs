@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
@@ -104,13 +104,13 @@ namespace NutmegRunner {
             if (this._debug) stdErr.WriteLine( $"Entry point: {this._entryPoint}" );
             try {
                 RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
-                using (SQLiteConnection connection = new SQLiteConnection( $"Data Source={this._bundleFile}" )) {
+                using (SQLiteConnection connection = GetConnection()) {
                     connection.Open();
                     if (this._entryPoint == null) {
                         //  If the entry-point is not specified, check if there a unique entry-point in the bundle.
                         var entrypoints = this.GetEntryPoints( connection ).ToList();
                         var n = entrypoints.Count();
-                        if ( n == 1 ) {
+                        if (n == 1) {
                             this._entryPoint = entrypoints.First();
                             if (this._debug) stdErr.WriteLine( $"Inferred entry point: {this._entryPoint}" );
                         } else {
@@ -131,6 +131,8 @@ namespace NutmegRunner {
                             Codelet codelet = Codelet.DeserialiseCodelet( jsonValue );
                             runtimeEngine.PreBind( idName );
                             if (codelet is LambdaCodelet fc) {
+                                bindings.Add( idName, codelet );
+                            } else if (codelet is SysfnCodelet sfc) {
                                 bindings.Add( idName, codelet );
                             } else {
                                 initialisations.Add( new KeyValuePair<string, Codelet>( idName, codelet ) );
