@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace NutmegRunner {
 
-    public abstract class SystemFunction : Runlet {
+    public abstract class SystemFunction : Runlet, ICallable {
 
         public SystemFunction( Runlet next ) {
             this.Next = next;
@@ -11,9 +11,14 @@ namespace NutmegRunner {
 
         public Runlet Next { get; set; }
 
+        public Runlet Call( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
+            this.ExecuteRunlet( runtimeEngine );
+            return next;
+        }
+
         public override IEnumerable<Runlet> Neighbors() {
             return new List<Runlet> { Next };
-        }
+        }        
 
     }
 

@@ -157,10 +157,10 @@ namespace NutmegRunner {
         }
 
         public Runlet Return() {
-            this._valueStack.Unlock();
-            this._callStack.ClearAndUnlock();
-            this._callStack.Drop();
-            return (Runlet)this._callStack.Pop();
+            this._valueStack.Unlock();              //  Merge the top two value-stack frames.
+            this._callStack.ClearAndUnlock();       //  Tear down the current call-stack frame.
+            this._callStack.Drop();                 //  Remove alt flag from callstack.
+            return (Runlet)this._callStack.Pop();   //  And continue from the return runlet.
         }
 
         public void Start( string idName, bool useEvaluate, bool usePrint ) {

@@ -32,6 +32,9 @@ class CodeletVisitor( abc.ABC ):
 	def visitSyscallCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
+	def visitSysfnCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
 	def visitCallCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
@@ -265,6 +268,25 @@ class IdCodelet( Codelet ):
 		if self._reftype == "get":
 			self._reftype = "val"
 
+class SysfnCodelet( Codelet ):
+
+	KIND="sysfn"
+
+	def __init__( self, *, name, **kwargs ):
+		super().__init__( **kwargs )
+		self._name = name
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, name=self._name, **self._kwargs )
+
+	def members( self ):
+		yield from ()
+
+	def transform( self, f ):
+		return self
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitSysfnCodelet( self, *args, **kwargs )
 
 class SyscallCodelet( Codelet ):
 
