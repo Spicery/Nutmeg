@@ -3,3 +3,4 @@ macholib==1.14
 pyinstaller==4.0
 pyinstaller-hooks-contrib==2020.7
 str2bool==1.1
+pytest==6.1.1

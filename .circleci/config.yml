@@ -2,34 +2,36 @@ version: 2.1
 
 orbs:
   win: circleci/windows@2.2.0
-  python: circleci/python@0.2.1
+  python: circleci/python@1.2.0
 
 filters:
   branches:
     only: /v0\.1_24\.*/
 
 jobs:
-  compiler:
+  compiler-build:
     executor: python/default
+    working_directory: ~/project/compiler
     steps:
-      - run:
-          command: echo "hello world"
-          name: Stub
       - checkout
-      - run: cd compiler
-      - python/load-cache
-      - python/install-deps
-      - python/save-cache
+      - python/install-packages:
+          app-dir: ~/project/compiler
+          pip-dependency-file: requirements.txt
+          pkg-manager: pip
+      - run:
+          command: |
+            pytest --version
+          name: Ping
 
-  
-  runner:
-     executor: win/default     
+  # need to find a linux / .net core setup o
+  runner-build:
+     executor: win/default 
+     working_directory: ~/project/runner 
      steps:
        - run:
           command: echo "hello world"
           name: Stub
        - checkout
-       - run: cd runner
        - run: dotnet build
 
 workflows:
@@ -38,5 +40,9 @@ workflows:
   #     - compiler
   all:
     jobs:
-    - compiler
-    - runner
+    - python/test:
+        app-dir: ~/project/compiler
+        pip-dependency-file: requirements.txt
+        pkg-manager: pip
+        test-tool: pytest
+    - runner-build
