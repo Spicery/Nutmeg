@@ -1,6 +1,7 @@
 version: 2.1
 
 orbs:
+  ### Orbs are basically libraries
   win: circleci/windows@2.2.0
   python: circleci/python@1.2.0
 
@@ -9,9 +10,10 @@ filters:
     only: /v0\.1_24\.*/
 
 jobs:
+  ### This job description takes some manual control but as far down as docker image.
+  ### Predefined python/test does not let you run the tests in a subdirectory.
   compiler-build:
     executor: python/default
-    working_directory: ~/project/compiler
     steps:
       - checkout
       - python/install-packages:
@@ -19,30 +21,34 @@ jobs:
           pip-dependency-file: requirements.txt
           pkg-manager: pip
       - run:
+          name: Test
           command: |
-            pytest --version
-          name: Ping
+            mkdir test-report
+            pytest --junit-xml=test-report/report.xml test
+            pytest 
+          
 
-  # need to find a linux / .net core setup o
+  ### Start with pre-defined Windows docker image.
+  ### TODO: define image by adding .net core deps onto a vanilla linux image
+  ###       Challenge is to define dev and CI images in one file. Use stages?
   runner-build:
-     executor: win/default 
-     working_directory: ~/project/runner 
-     steps:
-       - run:
-          command: pwd
-          name: wtfaw
-       - checkout
-       - run: dotnet build
+    executor: win/default 
+    steps:
+      - checkout
+      - run: 
+          name: Build
+          command: |
+            cd ./runner/NutmegRunner
+            dotnet build
 
+### Can worflows be scoped by folder? Or maybe by pattern on branch name?
 workflows:
-  # compiler:
-  #   jobs:
-  #     - compiler
   all:
     jobs:
-    - python/test:
-        app-dir: ~/project/compiler
-        pip-dependency-file: requirements.txt
-        pkg-manager: pip
-        test-tool: pytest
+    # - python/test:
+    #     app-dir: ~/project/compiler
+    #     pip-dependency-file: requirements.txt
+    #     pkg-manager: pip
+    #     test-tool: pytest
+    - compiler-build
     - runner-build
