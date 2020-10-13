@@ -7,7 +7,7 @@ orbs:
 
 filters:
   branches:
-    only: /v0\.1_24\.*/
+    only: /v0\.1\/24_cont\.*/
 
 jobs:
   ### This job description takes some manual control but as far down as docker image.
@@ -22,6 +22,7 @@ jobs:
           pkg-manager: pip
       - run:
           name: Test
+          working_directory: ~/project/compiler
           command: |
             mkdir test-report
             pytest --junit-xml=test-report/report.xml test
