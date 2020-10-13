@@ -5,9 +5,9 @@ orbs:
   win: circleci/windows@2.2.0
   python: circleci/python@1.2.0
 
-filters:
-  branches:
-    only: /v0\.1\/24_cont\.*/
+# filters:
+#   branches:
+#     only: /v0\.1\/24_cont\.*/
 
 jobs:
   ### This job description takes some manual control but as far down as docker image.
