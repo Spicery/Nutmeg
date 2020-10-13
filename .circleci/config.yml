@@ -29,8 +29,8 @@ jobs:
      working_directory: ~/project/runner 
      steps:
        - run:
-          command: echo "hello world"
-          name: Stub
+          command: pwd
+          name: wtfaw
        - checkout
        - run: dotnet build
 
