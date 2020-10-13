@@ -222,6 +222,7 @@ token_spec = {
         TokenType( r"(?P<MINUS>-)", prec=100, make=IdToken.make ),
         TokenType( r"(?P<TIMES>\*)", prec=90, make=IdToken.make ),
         TokenType( r"(?P<DIVIDE>/)", prec=90, make=IdToken.make ),
+        TokenType( r"(?P<LTE><=)", prec=590, make=IdToken.make ),
         TokenType( r"(?P<SEQ>,)", prec=1000, prefix=False, make=SyntaxToken.make ),
 
         # separators
