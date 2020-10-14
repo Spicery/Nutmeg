@@ -203,6 +203,21 @@ namespace NutmegRunner {
 
     }
 
+    public class MulSystemFunction : FixedAritySystemFunction {
+
+        public MulSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 2;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
+            runtimeEngine.PushValue( x * y );
+            return this.Next;
+        }
+
+    }
+
     public class SumSystemFunction : VariadicSystemFunction {
 
         public SumSystemFunction( Runlet next ) : base( next ) { }
@@ -275,8 +290,9 @@ namespace NutmegRunner {
             .Add( "[x..<y]", r => new HalfOpenRangeListSystemFunction( r ), "halfOpenRangeList" )
             .Add( "[x...y]", r => new ClosedRangeListSystemFunction( r ), "closedRangeList" )
             .Add( "+", r => new AddSystemFunction( r ), "add" )
-            .Add( "sum", r => new SumSystemFunction( r ) )
+            .Add( "*", r => new MulSystemFunction( r ), "mul" )
             .Add( "-", r => new SubtractSystemFunction( r ), "sub" )
+            .Add( "sum", r => new SumSystemFunction( r ) )
             .Add( "<=", r => new LTESystemFunction( r ), "lessThanOrEqualTo" )
             .Table;
 
