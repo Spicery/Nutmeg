@@ -183,6 +183,9 @@ class BoolCodelet( ConstantCodelet ):
 	def valueAsString( self ):
 		return 'true' if self._value else 'false'
 
+	def valueAsBool( self ):
+		return self._value
+
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitBoolCodelet( self, *args, **kwargs )
 
@@ -402,6 +405,9 @@ class SeqCodelet( Codelet ):
 
 	def body( self ):
 		return self._body
+
+	def __getitem__(self, item):
+		return self._body[ item ]
 
 	def transform( self, f ):
 		return SeqCodelet( *map( f, self._body ), **self._kwargs )
