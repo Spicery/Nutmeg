@@ -1,7 +1,8 @@
 {
 	"name": "Ubuntu",
 	"build": {
-		"dockerfile": "DevDockerfile",
+		"dockerfile": "../Dockerfile",
+		"target": "vscode"
 	},
 
 	// Set *default* container specific settings.json values on container create.
