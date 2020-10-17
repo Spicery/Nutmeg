@@ -2,9 +2,7 @@
 
 **>>>>>> Work in Progress <<<<<<**
 
-Nutmeg is a teaching-oriented imperative programming language that aims to provide seamless integration of the individual features of functional programming. 
-
-This naturally includes the ability to write higher-order functions, as do most modern programming languages. However, Nutmeg goes further and supports abilities such as:
+Nutmeg is a teaching-oriented imperative programming language that aims to provide seamless integration of the individual features of functional programming. This includes the ability to write higher-order functions, as do most modern programming languages. However, Nutmeg goes further and supports abilities such as:
 
 - Declaring functions side-effect free and/or to only work on immutable values.
 - Both mutable and immutable versions for all built-in classes.
@@ -18,3 +16,4 @@ While we are still developing Nutmeg, this guide is very far from complete. Howe
 
 * [Tokenisation Rules as EBNF Grammar](Tokens.ebnf.txt) and as a [railroad diagram](Tokens.pdf).
 * [Nutmeg Syntax as EBNF Grammar](Nutmeg.ebnf.txt) and as a [railroad diagram](Nutmeg-prototype-grammar.pdf).
+* [If Syntax](if-syntax.md) - a page on the syntax of the `if` conditional in Nutmeg.
