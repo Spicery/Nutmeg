@@ -30,6 +30,6 @@ def test_if_syntax():
     assert 5 == len( ts )
     assert ts[0].isPrefixer() and isinstance( ts[0], SyntaxToken ) and ts[0].category() == "IF"
     assert __isPunctuation( ts[1], "THEN" )
-    assert __isPunctuation( ts[2], "ELSEIF" )
+    assert __isPunctuation( ts[2], "ELSE_IF" )
     assert __isPunctuation( ts[3], "ELSE" )
     assert __isPunctuation( ts[4], "END_IF" )
