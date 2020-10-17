@@ -1,5 +1,5 @@
 from parser import parseFromString
-import json
+import codetree
 
 def parseOne( text ):
     e = [ *parseFromString( text ) ]
@@ -30,6 +30,45 @@ def test_parses_signed_neg_int():
         "kind": "int",
         "value": "-99",
     }
+
+def test_if2_ifPrefixMiniParser():
+    if2 = parseOne( "if x then y endif" )
+    assert isinstance( if2, codetree.IfCodelet )
+    assert isinstance( if2.testPart(), codetree.IdCodelet )
+    assert isinstance( if2.thenPart(), codetree.IdCodelet )
+    assert isinstance( if2.elsePart(), codetree.SeqCodelet )
+    assert len(if2.elsePart().body()) == 0
+
+def test_if3_ifPrefixMiniParser():
+    if3 = parseOne( "if x then y else z endif" )
+    assert isinstance( if3, codetree.IfCodelet )
+    assert isinstance( if3.testPart(), codetree.IdCodelet )
+    assert isinstance( if3.thenPart(), codetree.IdCodelet )
+    assert isinstance( if3.elsePart(), codetree.IdCodelet )
+
+def test_if4_ifPrefixMiniParser():
+    if4 = parseOne( "if x then y elseif p then q endif" )
+    assert isinstance( if4, codetree.IfCodelet )
+    assert isinstance( if4.testPart(), codetree.IdCodelet )
+    assert isinstance( if4.thenPart(), codetree.IdCodelet )
+    assert isinstance( if4.elsePart(), codetree.IfCodelet )
+    if2 = if4.elsePart()
+    assert isinstance( if2.testPart(), codetree.IdCodelet )
+    assert isinstance( if2.thenPart(), codetree.IdCodelet )
+    assert isinstance( if2.elsePart(), codetree.SeqCodelet )
+    assert len(if2.elsePart().body()) == 0
+
+def test_if5_ifPrefixMiniParser():
+    if5 = parseOne( "if x then y elseif p then q else z endif" )
+    assert isinstance( if5, codetree.IfCodelet )
+    assert isinstance( if5.testPart(), codetree.IdCodelet )
+    assert isinstance( if5.thenPart(), codetree.IdCodelet )
+    assert isinstance( if5.elsePart(), codetree.IfCodelet )
+    if3 = if5.elsePart()
+    assert isinstance( if3.testPart(), codetree.IdCodelet )
+    assert isinstance( if3.thenPart(), codetree.IdCodelet )
+    assert isinstance( if3.elsePart(), codetree.IdCodelet )
+
 
 ################################################################################
 ### Tests for Issue #14

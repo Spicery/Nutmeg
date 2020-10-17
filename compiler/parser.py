@@ -3,7 +3,7 @@ parser -- parser module for the Nutmeg compiler
 """
 
 import codetree
-from tokenizer import tokenizer, IdToken, BasicToken, IntToken, StringToken
+from tokenizer import tokenizer, IdToken, BasicToken, IntToken, StringToken, BoolToken
 from peekablepushable import PeekablePushable
 import math
 
@@ -153,12 +153,29 @@ def defPrefixMiniParser( parser, token, source ):
     func = codetree.LambdaCodelet( parameters=args, body=b )
     return codetree.BindingCodelet( lhs=id, rhs=func )
 
+def ifPrefixMiniParser( parser, token, source ):
+    testPart = parser.readExpr( math.inf, source )
+    mustRead( source, "THEN" )
+    thenPart = parser.readStatements( source )
+    if tryRead( source, "ELSE_IF" ):
+        elsePart = ifPrefixMiniParser( parser, None, source )
+        return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=elsePart )
+    elif tryRead( source, "ELSE" ):
+        elsePart = parser.readStatements( source )
+        mustRead( source, "END_IF" )
+        return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=elsePart )
+    else:
+        mustRead( source, "END_IF" )
+        return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=codetree.SeqCodelet() )
+
 PREFIX_TABLE = {
     "LPAREN": lparenPrefixMiniParser,
     "DEC_FUNCTION_1": defPrefixMiniParser,
+    "IF": ifPrefixMiniParser,
     BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
     IdToken: lambda parser, token, source: codetree.IdCodelet( name=token.value(), reftype="get" ),
     IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() ),
+    BoolToken: lambda parser, token, source: codetree.BoolCodelet( value=token.value() ),
     StringToken: lambda parser, token, source: codetree.StringCodelet( value=token.literalValue() ),
 }
 
