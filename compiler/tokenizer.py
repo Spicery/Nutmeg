@@ -247,7 +247,7 @@ token_spec = {
         TokenType( r"(?P<COMMENT_BLOCK_START>\#\#\()" ),
 
         # identifier
-        TokenType( r"(?i)(?P<ID>([a-z_])\w*)", make=IdToken.make ),                         # Must come after all other keywords.
+        TokenType( r"(?P<ID>([A-Za-z_])\w*)", make=IdToken.make ),                         # Must come after all other keywords.
     ]
 }
 
