@@ -21,7 +21,7 @@ class GlobalScope( Scope ):
 
     def lookup( self, name ):
         """Returns the scope that the name appears in, by definition this is the outermost scope"""
-        return self
+        return self, 0
 
     def addInfo( self, id_codelet ):
         id_codelet.setAsGlobal()
@@ -37,17 +37,19 @@ def newLabel():
 
 class LexicalScope( Scope ):
 
-    def __init__( self, is_block = False, previous = None ):
+    def __init__( self, is_block = False, previous = None, is_lambda = False ):
         self._previous = previous
         self._is_block = is_block
         self._locals = {}
+        self._is_lambda = 1 if is_lambda else 0
 
     def lookup( self, name ):
         """Returns the scope that the name appears in"""
         if name in self._locals:
-            return self
+            return self, 0
         else:
-            return self._previous.lookup( name )
+            scope, lambda_nesting = self._previous.lookup( name )
+            return scope, lambda_nesting + self._is_lambda
 
     def addInfo( self, code_let ):
         code_let.setAsLocal( **self._locals[ code_let.name() ] )
@@ -95,11 +97,16 @@ class Resolver( codetree.CodeletVisitor ):
         reftype = id_codelet.reftype()
         if reftype == "get" or reftype == "set":
             nm = id_codelet.name()
-            scopes.lookup( nm ).addInfo( id_codelet )
+            scope, lambda_nesting = scopes.lookup( nm )
+            scope.addInfo( id_codelet )
+            if lambda_nesting > 0 and not id_codelet.nonassignable():
+                raise Exception( f"Cannot access assignable variable across lambda boundary: {id_codelet.name()}" )
         elif reftype == "var" or reftype == "val" or reftype == "const" or reftype == "new":
             scopes.declare( id_codelet )
         else:
             raise Exception( f'Unexpected reftype (Internal error?): {reftype}')
+        if id_codelet.reftype() == "set" and id_codelet.nonassignable():
+            raise Exception( f'Trying to assign to protected variable: {id_codelet.name()}')
 
     def visitSeqCodelet( self, codelet, scopes ):
         for c in codelet.members():
@@ -120,6 +127,10 @@ class Resolver( codetree.CodeletVisitor ):
         binding_codelet.lhs().visit( self, scopes )
         binding_codelet.rhs().visit( self, scopes )
 
+    def visitAssignCodelet( self, assign_codelet, scopes ):
+        assign_codelet.lhs().visit( self, scopes )
+        assign_codelet.rhs().visit( self, scopes )
+
     def visitIfCodelet( self, if_codelet, scopes ):
         """
         Fix up if-expression e.g. if t then x else y endif
@@ -129,7 +140,7 @@ class Resolver( codetree.CodeletVisitor ):
         if_codelet.elsePart().visit( self, LexicalScope( previous = scopes ) )
 
     def visitFunctionCodelet( self, fun_codelet, scopes ):
-        new_scopes = LexicalScope( previous = scopes )
+        new_scopes = LexicalScope( previous = scopes, is_lambda=True )
         fun_codelet.parameters().visit( self, new_scopes )
         fun_codelet.body().visit( self, new_scopes )
 

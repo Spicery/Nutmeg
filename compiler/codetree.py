@@ -47,6 +47,9 @@ class CodeletVisitor( abc.ABC ):
 	def visitBindingCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
+	def visitAssignCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
 	def visitFunctionCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
@@ -111,6 +114,9 @@ class Codelet( abc.ABC ):
 		for m in self.members():
 			m.declarationMode()
 
+	def assignMode( self ):
+		for m in self.members():
+			m.assignMode()
 
 class ConstantCodelet( Codelet, ABC ):
 	"""
@@ -253,6 +259,7 @@ class IdCodelet( Codelet ):
 
 	def setAsGlobal( self ):
 		self._scope = "global"
+		self._nonassignable = True
 
 	def setAsLocal( self, * , label, nonassignable, immutable, **kwargs ):
 		self._scope = "local"
@@ -270,6 +277,11 @@ class IdCodelet( Codelet ):
 	def declarationMode( self ):
 		if self._reftype == "get":
 			self._reftype = "val"
+
+	def assignMode( self ):
+		if self._reftype == "get":
+			self._reftype = "set"
+
 
 class SysfnCodelet( Codelet ):
 
@@ -415,10 +427,7 @@ class SeqCodelet( Codelet ):
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitSeqCodelet( self, *args, **kwargs )
 
-
-class BindingCodelet( Codelet ):
-
-	KIND = "binding"
+class AssignLikeCodelet( Codelet, ABC ):
 
 	def __init__( self, *, lhs, rhs, **kwargs ):
 		super().__init__( **kwargs )
@@ -429,9 +438,6 @@ class BindingCodelet( Codelet ):
 		yield self.lhs()
 		yield self.rhs()
 
-	def transform( self, f ):
-		return BindingCodelet( lhs=f( self.lhs() ), rhs=f( self.rhs() ), **self._kwargs )
-
 	def lhs( self ):
 		return self._lhs
 
@@ -440,6 +446,25 @@ class BindingCodelet( Codelet ):
 
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, lhs=self._lhs, rhs=self._rhs, **self._kwargs )
+
+
+class AssignCodelet( AssignLikeCodelet ):
+
+	KIND = "assign"
+
+	def transform( self, f ):
+		return AssignCodelet( lhs=f( self.lhs() ), rhs=f( self.rhs() ), **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitAssignCodelet( self, *args, **kwargs )
+
+
+class BindingCodelet( AssignLikeCodelet ):
+
+	KIND = "binding"
+
+	def transform( self, f ):
+		return BindingCodelet( lhs=f( self.lhs() ), rhs=f( self.rhs() ), **self._kwargs )
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitBindingCodelet( self, *args, **kwargs )

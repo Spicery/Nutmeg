@@ -87,7 +87,7 @@ class CompilerLauncher(Launcher):
                 raise Exception( 'COMPILER: No bundle file provided' )
 
     def launch( self ):
-        cmplr = compiler.Compiler( self._args.entry_point, self._args.bundle, tuple( map( Path, self._args.files ) )  )
+        cmplr = compiler.Compiler( self._args.entry_point, self._args.bundle, tuple( map( Path, self._args.files ) ), keep=self._args.keep  )
         cmplr.compile()
 
 
@@ -205,6 +205,7 @@ def main():
     mode_compile.set_defaults( mode=CompilerLauncher )
     mode_compile.add_argument( "--bundle", "-b", type=Path )
     mode_compile.add_argument( "--entry-point", "-e", action='append' )
+    mode_compile.add_argument( "--keep", "-k", action='store_true', default=False, help="If bundle file exists keep records (i.e. do not clear tables)" )
     mode_compile.add_argument( 'files', nargs = argparse.REMAINDER )
 
     mode_run = subparsers.add_parser( COMMANDS[ "runner" ], help="Runs a bundle-file" )

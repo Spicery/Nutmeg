@@ -62,6 +62,8 @@ namespace NutmegRunner {
                 case "id": return new IdCodelet();
                 case "for": return new ForCodelet();
                 case "in": return new InCodelet();
+                case "binding": return new BindingCodelet();
+                case "assign": return new AssignCodelet();
                 default: throw new NutmegException( $"Unrecognised kind: {kind}" );
             }
         }
@@ -211,7 +213,9 @@ namespace NutmegRunner {
 
     }
 
-    public class CallCodelet : Codelet{
+
+
+    public class CallCodelet : Codelet {
         [JsonProperty( "function" )]        //  TODO: I propose we change this to "run".
         Codelet Funarg { get; set; }
 
@@ -282,6 +286,35 @@ namespace NutmegRunner {
             return TestPart.Weave( new ForkRunlet( ThenPart.Weave( continuation, g ), ElsePart.Weave( continuation, g ) ), g );
         }
 
+    }
+
+    public abstract class AssignLikeCodelet : Codelet {
+
+        public Codelet lhs { get; set; }
+        public Codelet rhs { get; set; }
+
+        public AssignLikeCodelet() {
+            //  Used by deserialisation.
+        }
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            switch (this.lhs) {
+                case IdCodelet lhs_id:
+                    var c4 = new PopValue1IntoSlotRunlet( lhs_id.Slot, continuation );
+                    var c3 = new CheckedUnlockRunlet( 1, c4 );
+                    var c2 = this.rhs.Weave( c3, g );
+                    return new LockRunlet( c2 );
+                default:
+                    throw new NutmegException( "Left hand side of binding not a simple variable" );
+            }
+        }
+
+    }
+
+    public class AssignCodelet : AssignLikeCodelet {
+    }
+
+    public class BindingCodelet : AssignLikeCodelet {
     }
 
     public class SysfnCodelet : Codelet {
