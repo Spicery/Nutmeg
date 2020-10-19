@@ -154,18 +154,29 @@ def defPrefixMiniParser( parser, token, source ):
     return codetree.BindingCodelet( lhs=id, rhs=func )
 
 def ifPrefixMiniParser( parser, token, source ):
+    # if ^ EXPR then STMNTS ... endif
     testPart = parser.readExpr( math.inf, source )
+    # if EXPR ^ then STMNTS ... endif
     mustRead( source, "THEN" )
+    # if EXPR then ^ STMNTS ... endif
     thenPart = parser.readStatements( source )
+    # if EXPR then STMNTS ^ (elseif EXPR then STATEMENTS ... | else STMNTS | )  endif
     if tryRead( source, "ELSE_IF" ):
+        # if EXPR then STMNTS elseif ^ EXPR then STATEMENTS ... endif
         elsePart = ifPrefixMiniParser( parser, None, source )
+        # if EXPR then STMNTS elseif EXPR then STATEMENTS .... endif ^
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=elsePart )
     elif tryRead( source, "ELSE" ):
+        # if EXPR then STMNTS else ^ STMNTS endif
         elsePart = parser.readStatements( source )
+        # if EXPR then STMNTS else STMNTS ^ endif
         mustRead( source, "END_IF" )
+        # if EXPR then STMNTS else STMNTS endif ^
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=elsePart )
     else:
+        # if EXPR then STMNTS ^ endif
         mustRead( source, "END_IF" )
+        # if EXPR then STMNTS endif ^
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=codetree.SeqCodelet() )
 
 PREFIX_TABLE = {

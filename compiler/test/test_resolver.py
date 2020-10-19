@@ -148,6 +148,8 @@ def parseOne( text ):
     assert len( e ) == 1
     return e[0]
 
+
+# The following test is deferred until we have bindings implemented (see #48).
 import pytest
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_if3_visitIfCodelet():
