@@ -11,6 +11,14 @@ def createBundleFile( bundle_file ):
         c.execute( '''CREATE TABLE "DependsOn" ( "IdName" TEXT NOT NULL, "Needs" TEXT NOT NULL, PRIMARY KEY("IdName","Needs") )''' )
         c.execute( '''CREATE TABLE "SourceFiles" ( "FileName" TEXT NOT NULL, "Contents" TEXT NOT NULL, PRIMARY KEY("FileName") )''' )
 
+def clearBundleFile( bundle_file ):
+    with sqlite3.connect( bundle_file ) as conn:
+        c = conn.cursor()
+        c.execute( '''DELETE FROM "Bindings"''' )
+        c.execute( '''DELETE FROM "EntryPoints"''' )
+        c.execute( '''DELETE FROM "DependsOn"''' )
+        c.execute( '''DELETE FROM "SourceFiles"''' )
+
 def bundleCodeTree( bundle_file : Path, tree : Codelet ):
     if not isinstance( tree, BindingCodelet ):
         raise Exception( 'At this point in time we can only bundle bindings: {tree}' )
