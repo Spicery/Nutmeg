@@ -114,20 +114,11 @@ class RunLauncher( Launcher ):
         """
         Exec into the runner monolith
         """
+        # This is only intended for developers, for when the developer sets $NUTMEG_HOME.
         executable = Path( Path( os.environ[ 'NUTMEG_HOME' ] ), Path( "runner/NutmegRunner" ) )
         command = [ executable, f"--entry-point={self._args.entry_point}", self._args.bundle ]
         subprocess.run( command )
-        # try:
-        #     pid = os.fork()
-        # except OSError as e:
-        #     raise Exception( f"{e.strerror} [{e.errno}]" )
-        # if pid == 0:
-        #     # Child
-        #     os.execlp( "/bin/echo", executable, f"--entry-point={self._args.entry_point}", f"--bundle={self._args.bundle}" )
-        # else:
-        #     os._exit( 0 )
 
-    
 ###############################################################################
 # Main entry point - parses the options and launches the right phase.
 ###############################################################################
@@ -140,7 +131,7 @@ COMMANDS = {
     "bundler" : "bundle",
     "tracer" : "trace",
     "compiler" : "compile",
-    "runner": "run"
+    "runner": "run",            # Arguably we should remove 'run' from the compiler.
 }
 
 def main():
