@@ -183,6 +183,9 @@ class BoolCodelet( ConstantCodelet ):
 	def valueAsString( self ):
 		return 'true' if self._value else 'false'
 
+	def valueAsBool( self ):
+		return self._value
+
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitBoolCodelet( self, *args, **kwargs )
 
@@ -344,11 +347,15 @@ class IfCodelet( Codelet ):
 
 	# Slightly awkward because the constructor for an if-codelet uses a Python
 	# reserved word (else) as a keyword-argument.
-	def __init__( self, *, test, then, **kwargs ):
-		self._else = kwargs.pop( 'else', None )
+	def __init__( self, *, test=None, then=None, testPart=None, thenPart=None, elsePart=None, **kwargs ):
+		self._else = kwargs.pop( 'else', elsePart )
 		super().__init__( **kwargs )
-		self._test = test
-		self._then = then
+		self._test = test or testPart
+		self._then = then or thenPart
+		if self._test is None:
+			raise Exception( 'Test part is not specified' )
+		if self._then is None:
+			raise Exception( 'Then part is not specified' )
 
 	def members( self ):
 		yield self.testPart()
@@ -398,6 +405,9 @@ class SeqCodelet( Codelet ):
 
 	def body( self ):
 		return self._body
+
+	def __getitem__(self, item):
+		return self._body[ item ]
 
 	def transform( self, f ):
 		return SeqCodelet( *map( f, self._body ), **self._kwargs )

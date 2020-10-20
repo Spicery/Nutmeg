@@ -102,6 +102,15 @@ class IntToken( Token ):
     def category( self ):
         return type(self)
 
+class BoolToken( Token ):
+
+    @staticmethod
+    def make( toktype, match ):
+        return BoolToken( match.group( match.lastgroup ) )
+
+    def category( self ):
+        return type(self)
+
 class StringToken( Token ):
 
     @staticmethod
@@ -211,6 +220,7 @@ token_spec = {
         TokenType( r'(?P<SQSTRING>"""(?:(?!""").)*""")', make=StringToken.make ),
         TokenType( r'(?P<MULTILINE_DQSTRING>"""(?:(?!""").)*""")', make=StringToken.make ),
         TokenType( r"(?P<MULTILINE_SQSTRING>'''(?:(?!''').)*''')", make=StringToken.make ),
+        TokenType( r"(?P<BOOL>true|false)", make=BoolToken.make ),
         TokenType( r"(?P<WS>\s+)" ),
 
         # operators
@@ -225,7 +235,7 @@ token_spec = {
         TokenType( r"(?P<LTE><=)", prec=590, make=IdToken.make ),
         TokenType( r"(?P<SEQ>,)", prec=1000, prefix=False, make=SyntaxToken.make ),
 
-        # separators
+        # keywords
         TokenType( r"(?P<TERMINATE_STATEMENT>;)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_PHRASE>:)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_PARAMETERS>=>>)", make=PunctuationToken.make ),
@@ -233,6 +243,11 @@ token_spec = {
         TokenType( r"(?P<RPAREN>\))", make=PunctuationToken.make ),
         TokenType( r"(?P<END_DEC_FUNCTION_1>enddef)", make=SyntaxToken.make ),
         TokenType( r"(?P<END_DEC_FUNCTION_2>endfunction)", make=SyntaxToken.make ),
+        TokenType( r"(?P<IF>if)", prefix=True, make=SyntaxToken.make ),
+        TokenType( r"(?P<THEN>then)", make=PunctuationToken.make ),
+        TokenType( r"(?P<ELSE_IF>elseif)", make=PunctuationToken.make ),
+        TokenType( r"(?P<ELSE>else)", make=PunctuationToken.make ),
+        TokenType( r"(?P<END_IF>endif)", make=PunctuationToken.make ),
         TokenType( r"(?P<END>end)", make=PunctuationToken.make ),                           # MUST come after all other end... token types.
 
         # keywords"

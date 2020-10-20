@@ -1,4 +1,4 @@
-from tokenizer import tokenizer, IntToken
+from tokenizer import tokenizer, IntToken, SyntaxToken, PunctuationToken
 
 def tokenize( text ):
     return [ *tokenizer( text ) ]
@@ -21,3 +21,15 @@ def test_ints():
 def test_token_separation():
     ts = tokenize( "x + 3" )
     assert len( ts ) == 3
+
+def __isPunctuation( token, category ):
+    return not token.isPrefixer() and not token.isPostfixer() and isinstance( token, PunctuationToken ) and token.category() == category
+
+def test_if_syntax():
+    ts = tokenize( "if then elseif else endif" )
+    assert 5 == len( ts )
+    assert ts[0].isPrefixer() and isinstance( ts[0], SyntaxToken ) and ts[0].category() == "IF"
+    assert __isPunctuation( ts[1], "THEN" )
+    assert __isPunctuation( ts[2], "ELSE_IF" )
+    assert __isPunctuation( ts[3], "ELSE" )
+    assert __isPunctuation( ts[4], "END_IF" )
