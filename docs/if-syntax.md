@@ -43,7 +43,7 @@ statement has the form:
     else
         <i>CONSEQUENT</i>
     endif
-<code></pre>
+</code></pre>
 The <code>else <i>CONSEQUENT</i></code> can be omitted if desired. The <code>elseif
 <i>CONDITION</i> then <i>CONSEQUENT</i></code> can be either omitted or repeated as many
 times as required.  A <i>`CONDITION`</i> is any expression, and a <i>`CONSEQUENT`</i>
