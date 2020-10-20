@@ -1,6 +1,7 @@
 import codetree
-import resolver
 from resolver import resolveCodeTree
+import pytest
+from mishap import Mishap
 
 def test_resolveID():
     # Arrange
@@ -148,10 +149,6 @@ def parseOne( text ):
     assert len( e ) == 1
     return e[0]
 
-
-# The following test is deferred until we have bindings implemented (see #48).
-import pytest
-@pytest.mark.skip(reason="no way of currently testing this")
 def test_if3_visitIfCodelet():
     # Arrange
     tree = parseOne( "def f(): x := 0; if t then x := 1; x else x := 2; x endif enddef" )
@@ -159,7 +156,7 @@ def test_if3_visitIfCodelet():
     resolveCodeTree( tree )
     # Re-arrange for Assert
     _function = tree.rhs()
-    assert isinstance( _function, codetree.LambaCodelet )
+    assert isinstance( _function, codetree.LambdaCodelet )
     _seq = _function.body()
     assert isinstance( _seq, codetree.SeqCodelet )
     _binding0 = _seq[0]
@@ -187,4 +184,10 @@ def test_if3_visitIfCodelet():
     assert _x0.label() != _x1_decl.label()
     assert _x0.label() != _x2_decl.label()
 
+def test_noassignment():
+    # Arrange
+    tree = parseOne( "def f(): x := 0; x <- 1 enddef" )
+    # Act
+    with pytest.raises( Mishap ):
+        resolveCodeTree( tree )
 

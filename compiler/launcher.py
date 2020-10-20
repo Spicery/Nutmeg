@@ -10,6 +10,8 @@ from pathlib import Path
 import compiler
 import os
 import subprocess
+from mishap import Mishap
+import sys
 
 ### WARNING: The next two imports do indeed do something useful - via decorators.
 ### DO NOT REMOVE (unless you _really_ know what you're doing)
@@ -152,6 +154,7 @@ def main():
             """,
     )
     parser.set_defaults(mode=RunLauncher)
+    parser.add_argument( "--developer", "-D", action='store_true', default=False )
 
     subparsers = parser.add_subparsers(
         help="Selects which part(s) of the nutmeg system to use"
@@ -214,19 +217,42 @@ def main():
     mode_run.add_argument( "--entry-point", "-e", type=str )
     mode_run.add_argument( 'others', nargs = argparse.REMAINDER )
 
-    # Handle the case when the subparser command is omitted.
-    argv = sys.argv[1:]
-
-    if len( argv ) == 0 or argv[0] not in COMMANDS.values():
-        argv = [ COMMANDS[ "runner" ], *argv ]
+    # Find the first argument not starting with '-'
+    argv = []
+    seen_subcommand = False
+    for i in range( 1, len( sys.argv ) ):
+        arg = sys.argv[i]
+        if seen_subcommand:
+            pass
+        elif arg.startswith( '-' ):
+            pass
+        elif arg in COMMANDS.values():
+            seen_subcommand = True
+        else:
+            # Handle the case when the subparser command is omitted.
+            argv.append( COMMANDS[ "runner" ] )
+            seen_subcommand = True
+        argv.append( arg )
+    print( 'argv', argv, sys.argv )
 
     args = parser.parse_args( args=argv )
-    args.mode(args).launch()
-
+    try:
+        args.mode(args).launch()
+    except Mishap as m:
+        message = 'Mishap'
+        print( message, ':', str( m ), file=sys.stderr )
+        max_width = max( len(message), *map( lambda kv: len( kv[ 0 ] ), m.items() ) )
+        for (key, value) in m.items():
+            title_key = str( key ).title()
+            width_padding = (max_width - len( title_key )) * ' '
+            print( f'{title_key}{width_padding} : {value}', file=sys.stderr )
+        if args.developer:
+            raise m
 
 ################################################################################
 # This is the top-level entry point for the whole Nutmeg system.
 ################################################################################
+
 
 if __name__ == "__main__":
     main()

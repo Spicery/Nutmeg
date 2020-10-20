@@ -1,6 +1,7 @@
 import codetree
 import abc
 from syscalls import isSysconst
+from mishap import Mishap
 
 class Scope( abc.ABC ):
 
@@ -106,7 +107,7 @@ class Resolver( codetree.CodeletVisitor ):
         else:
             raise Exception( f'Unexpected reftype (Internal error?): {reftype}')
         if id_codelet.reftype() == "set" and id_codelet.nonassignable():
-            raise Exception( f'Trying to assign to protected variable: {id_codelet.name()}')
+            raise Mishap( f'Trying to assign to protected variable', name=id_codelet.name() )
 
     def visitSeqCodelet( self, codelet, scopes ):
         for c in codelet.members():

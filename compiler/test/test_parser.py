@@ -160,4 +160,33 @@ def test_issue14_7():
         }
     }
 
+def test_assignments_issue48():
+    parseOne( 'x <- 99' ).toJSON() == {
+        "kind": "assign",
+        "lhs": {
+            "kind": "id",
+            "value": "x",
+            "reftype": "get"
+        },
+        "rhs": {
+            "kind": "int",
+            "value": "99"
+        }
+    }
+
+def test_assignments_issue48():
+    parseOne( 'x := 99' ).toJSON() == {
+        "kind": "binding",
+        "lhs": {
+            "kind": "id",
+            "value": "x",
+            "reftype": "get"
+        },
+        "rhs": {
+            "kind": "int",
+            "value": "99"
+        }
+    }
+
+
 

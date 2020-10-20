@@ -6,6 +6,7 @@ import codetree
 from tokenizer import tokenizer, IdToken, BasicToken, IntToken, StringToken, BoolToken
 from peekablepushable import PeekablePushable
 import math
+from mishap import Mishap
 
 class TableDrivenParser:
     """
@@ -36,9 +37,9 @@ class TableDrivenParser:
         if e:
             return e
         elif source.isEmpty():
-            raise Exception( 'Unexpected end of input' )
+            raise Mishap( 'Unexpected end of input' )
         else:
-            raise Exception( f'Unexpected token {source.pop()}')
+            raise Mishap( f'Unexpected token', token=source.pop().value())
 
     def tryReadExpr( self, prec, source ):
         token = source.popOrElse()
