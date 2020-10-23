@@ -94,12 +94,45 @@ def counter() =>>
     endlambda
 enddef
 ```
-Why does Nutmeg make these restrictions, especially when other language do not? Well, by imposing these restrictions, we make it possible to use assignments when writing functional rather than procedural code. And the thrust of Nutmeg is to make it possible to neatly and safely blend functional and imperative programming.
+Why does Nutmeg make these restrictions, especially when other language do not? Well, by imposing these minor restrictions, assignments are always compatible with Nutmeg's all-important concept of recursive immutability. This means we can have a simple explanation of recursive immutability without hedging around what does and doesn't count as mutation. And these really are minor restrictions because you easily always work around them using [references](references.md).
+
+```
+def counter() =>>
+    var n = Ref( 0 )   ### Allocate a reference.
+    lambda:
+        n!             ### Get the value of the reference.
+        n! <-- n! + 1  ### Use the structure-update arrow to update it.
+    endlambda
+enddef
+```
 
 ### Nonassignable Variables: `val`
 
+This is the default modifier that is applied to bindings when there's no explicit modifier. It means that you cannot assign to the variable and so the variable will refer to the same object value for the lifetime of the program. The object itself may change (i.e. may be mutable) but the variable cannot.
+
+Unlike `var`, `val` variables can be referenced by nested procedures. So you can write the K-combinator like this:
+```
+def K( val x ) =>> 
+    lambda( val y ) =>> x endlambda
+enddef
+```
+Because `val` is the default you can omit both modifiers.
+```
+def K( x ) =>> 
+    lambda( y ) =>> x endlambda
+enddef
+```
+
 ### Constants: `const`
 
+Our last modifier is `const`, which is short for constant. In Nutmeg this doesn't just mean non-assignable it also means _recursively immutable_. This means that not only can it not change but nothing that it can reach can be changed either! This is the normal state of play for functional programmers, of course, because all variables and values are immutable.
+
+```
+const x = "this is my string"  ### Allowed because strings are immutable.
+const y = Ref( x )             ### No! The Nutmeg will prevent this.
+```
+
+The Nutmeg runtime engine is designed to make it very cheap to know the local and recursive immutability of every object at runtime. When a `const` variable is bound, it will be necessary for the runtime engine to check this, unless it is coming from another `const` variable (or the optimizer can work out that it is immutable).
 
 # Footnotes
 <b id="f1">1</b> However, within a procedure 
