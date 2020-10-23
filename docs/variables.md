@@ -34,7 +34,7 @@ used. We say that this _binds_ the variable to their starting value. After
 that point variables act as a shortcut way of referring to their bound
 value. For example, we can bind the variable `poem` to the string `"one, two, buckle my shoe"` and then check to see if the `poem` starts with the string `"on"`.
 ```
-poem = "one, two, buckle my shoe"
+poem := "one, two, buckle my shoe"
 println( poem.startsWith( "on" ) )    ### prints true
 ```
 
@@ -47,7 +47,7 @@ local statements that follow, which is the [local scope](scopes). For
 this section we can simplify a little and 
 treat procedures and local scope as the same<sup id="a1">[1](#f1)</sup>. 
 ```
-var corners = 4     ### The corners variable is global, visible everywhere.
+var corners := 4     ### The corners variable is global, visible everywhere.
 def hello() =>>     ### hello is another global variable.
     ### The message variable is local and visible inside the procedure.
     message := "corners of a square: "   
@@ -74,7 +74,7 @@ x <- "my new value"
 Assignments allows you to write procedural code like this, for example:
 ```
 def factorial( n ) =>>
-    var sofar = 1;
+    var sofar := 1;
     for i in [1 ..< n] do
         sofar <- sofar * i
     endfor
@@ -87,7 +87,7 @@ var count_registrations = 0; ### Globals cannot be vars!
 
 ### And this is not allowed either.
 def counter() =>>
-    var n = 0
+    var n := 0
     lambda:
         n               
         n <- n + 1      ### No! Defined in an outer procedure.
@@ -98,7 +98,7 @@ Why does Nutmeg make these restrictions, especially when other language do not? 
 
 ```
 def counter() =>>
-    var n = Ref( 0 )   ### Allocate a reference.
+    var n := Ref( 0 )  ### Allocate a reference.
     lambda:
         n!             ### Get the value of the reference.
         n! <-- n! + 1  ### Use the structure-update arrow to update it.
@@ -128,8 +128,8 @@ enddef
 Our last modifier is `const`, which is short for constant. In Nutmeg this doesn't just mean non-assignable it also means _recursively immutable_. This means that not only can it not change but nothing that it can reach can be changed either! This is the normal state of play for functional programmers, of course, because all variables and values are immutable.
 
 ```
-const x = "this is my string"  ### Allowed because strings are immutable.
-const y = Ref( x )             ### No! The Nutmeg will prevent this.
+const x := "this is my string"  ### Allowed because strings are immutable.
+const y := Ref( x )             ### No! The Nutmeg will prevent this.
 ```
 
 The Nutmeg runtime engine is designed to make it very cheap to know the local and recursive immutability of every object at runtime. When a `const` variable is bound, it will be necessary for the runtime engine to check this, unless it is coming from another `const` variable (or the optimizer can work out that it is immutable).
