@@ -1,8 +1,4 @@
-Identifier ::= '_'* IdStartChar IdChar*
- 
-IdStartChar ::= [A-Z] | [a-z] | LowerCase | UpperCase
-
-IdChar ::= IdStartChar | DecimalDigit
+Identifier ::= [_a-zA-Z] [_a-zA-Z0-9]*
 
 DecimalNumber ::=
     [-+]? '_'* DecimalDigit DecimalDigitPlus* ( '.' DecimalDigitPlus* )? ( e [-+]? '_'* DecimalDigit DecimalDigitPlus* )?

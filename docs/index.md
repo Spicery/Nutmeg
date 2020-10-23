@@ -17,3 +17,5 @@ While we are still developing Nutmeg, this guide is very far from complete. Howe
 * [Tokenisation Rules as EBNF Grammar](Tokens.ebnf.txt) and as a [railroad diagram](Tokens.pdf).
 * [Nutmeg Syntax as EBNF Grammar](Nutmeg.ebnf.txt) and as a [railroad diagram](Nutmeg-prototype-grammar.pdf).
 * [If Syntax](if-syntax.md) - a page on the syntax of the `if` conditional in Nutmeg.
+* [Variables](variables.md) - a page on the different kinds of variables
+* [Assignment](assignment.md) - a page on assignment in Nutmeg
