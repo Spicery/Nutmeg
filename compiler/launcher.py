@@ -224,7 +224,6 @@ def main():
             argv.append( COMMANDS[ "runner" ] )
             seen_subcommand = True
         argv.append( arg )
-    print( 'argv', argv, sys.argv )
 
     args = parser.parse_args( args=argv )
     try:
