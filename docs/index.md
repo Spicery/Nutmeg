@@ -19,3 +19,4 @@ While we are still developing Nutmeg, this guide is very far from complete. Howe
 * [If Syntax](if-syntax.md) - a page on the syntax of the `if` conditional in Nutmeg.
 * [Variables](variables.md) - a page on the different kinds of variables
 * [Assignments](assignments.md) - a page on assignment in Nutmeg
+* [Comments](comments.md) - a page on comments in Nutmeg
