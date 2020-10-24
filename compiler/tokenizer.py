@@ -224,14 +224,14 @@ token_spec = {
         TokenType( r"(?P<WS>\s+)" ),
 
         # operators
-        TokenType( r"(?P<BIND>:=)" ),
-        TokenType( r"(?P<ASSIGN><-)" ),
+        TokenType( r"(?P<BIND>:=)", prec=990, make=SyntaxToken.make ),
+        TokenType( r"(?P<ASSIGN><-)", prec=990, make=SyntaxToken.make ),
         TokenType( r"(?P<UPDATE_ELEMENT><--)" ),
         TokenType( r"(?P<COPY_AND_SET><==)" ),
-        TokenType( r"(?P<PLUS>\+)", prec=100, make=IdToken.make ),
-        TokenType( r"(?P<MINUS>-)", prec=100, make=IdToken.make ),
-        TokenType( r"(?P<TIMES>\*)", prec=90, make=IdToken.make ),
-        TokenType( r"(?P<DIVIDE>/)", prec=90, make=IdToken.make ),
+        TokenType( r"(?P<PLUS>\+)", prec=190, make=IdToken.make ),
+        TokenType( r"(?P<MINUS>-)", prec=190, make=IdToken.make ),
+        TokenType( r"(?P<TIMES>\*)", prec=180, make=IdToken.make ),
+        TokenType( r"(?P<DIVIDE>/)", prec=180, make=IdToken.make ),
         TokenType( r"(?P<LTE><=)", prec=590, make=IdToken.make ),
         TokenType( r"(?P<SEQ>,)", prec=1000, prefix=False, make=SyntaxToken.make ),
 
@@ -251,9 +251,9 @@ token_spec = {
         TokenType( r"(?P<END>end)", make=PunctuationToken.make ),                           # MUST come after all other end... token types.
 
         # keywords"
-        TokenType( r"(?P<DEC_VARIABLE>var)" ),
-        TokenType( r"(?P<DEC_NONASSIGNABLE>val)" ),
-        TokenType( r"(?P<DEC_IMMUTABLE>const)" ),
+        TokenType( r"(?P<DEC_VARIABLE>var)", make=SyntaxToken.make ),
+        TokenType( r"(?P<DEC_NONASSIGNABLE>val)", make=SyntaxToken.make ),
+        TokenType( r"(?P<DEC_IMMUTABLE>const)", make=SyntaxToken.make ),
         TokenType( r"(?P<DEC_FUNCTION_1>def)", make=SyntaxToken.make ),
         TokenType( r"(?P<DEC_FUNCTION_2>function)" ),
 

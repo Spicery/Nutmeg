@@ -10,6 +10,8 @@ from pathlib import Path
 import compiler
 import os
 import subprocess
+from mishap import Mishap
+import sys
 
 ### WARNING: The next two imports do indeed do something useful - via decorators.
 ### DO NOT REMOVE (unless you _really_ know what you're doing)
@@ -87,7 +89,7 @@ class CompilerLauncher(Launcher):
                 raise Exception( 'COMPILER: No bundle file provided' )
 
     def launch( self ):
-        cmplr = compiler.Compiler( self._args.entry_point, self._args.bundle, tuple( map( Path, self._args.files ) )  )
+        cmplr = compiler.Compiler( self._args.entry_point, self._args.bundle, tuple( map( Path, self._args.files ) ), keep=self._args.keep  )
         cmplr.compile()
 
 
@@ -112,20 +114,11 @@ class RunLauncher( Launcher ):
         """
         Exec into the runner monolith
         """
+        # This is only intended for developers, for when the developer sets $NUTMEG_HOME.
         executable = Path( Path( os.environ[ 'NUTMEG_HOME' ] ), Path( "runner/NutmegRunner" ) )
         command = [ executable, f"--entry-point={self._args.entry_point}", self._args.bundle ]
         subprocess.run( command )
-        # try:
-        #     pid = os.fork()
-        # except OSError as e:
-        #     raise Exception( f"{e.strerror} [{e.errno}]" )
-        # if pid == 0:
-        #     # Child
-        #     os.execlp( "/bin/echo", executable, f"--entry-point={self._args.entry_point}", f"--bundle={self._args.bundle}" )
-        # else:
-        #     os._exit( 0 )
 
-    
 ###############################################################################
 # Main entry point - parses the options and launches the right phase.
 ###############################################################################
@@ -138,7 +131,7 @@ COMMANDS = {
     "bundler" : "bundle",
     "tracer" : "trace",
     "compiler" : "compile",
-    "runner": "run"
+    "runner": "run",            # Arguably we should remove 'run' from the compiler.
 }
 
 def main():
@@ -152,6 +145,7 @@ def main():
             """,
     )
     parser.set_defaults(mode=RunLauncher)
+    parser.add_argument( "--developer", "-D", action='store_true', default=False )
 
     subparsers = parser.add_subparsers(
         help="Selects which part(s) of the nutmeg system to use"
@@ -205,6 +199,7 @@ def main():
     mode_compile.set_defaults( mode=CompilerLauncher )
     mode_compile.add_argument( "--bundle", "-b", type=Path )
     mode_compile.add_argument( "--entry-point", "-e", action='append' )
+    mode_compile.add_argument( "--keep", "-k", action='store_true', default=False, help="If bundle file exists keep records (i.e. do not clear tables)" )
     mode_compile.add_argument( 'files', nargs = argparse.REMAINDER )
 
     mode_run = subparsers.add_parser( COMMANDS[ "runner" ], help="Runs a bundle-file" )
@@ -213,19 +208,42 @@ def main():
     mode_run.add_argument( "--entry-point", "-e", type=str )
     mode_run.add_argument( 'others', nargs = argparse.REMAINDER )
 
-    # Handle the case when the subparser command is omitted.
-    argv = sys.argv[1:]
-
-    if len( argv ) == 0 or argv[0] not in COMMANDS.values():
-        argv = [ COMMANDS[ "runner" ], *argv ]
+    # Find the first argument not starting with '-'
+    argv = []
+    seen_subcommand = False
+    for i in range( 1, len( sys.argv ) ):
+        arg = sys.argv[i]
+        if seen_subcommand:
+            pass
+        elif arg.startswith( '-' ):
+            pass
+        elif arg in COMMANDS.values():
+            seen_subcommand = True
+        else:
+            # Handle the case when the subparser command is omitted.
+            argv.append( COMMANDS[ "runner" ] )
+            seen_subcommand = True
+        argv.append( arg )
+    print( 'argv', argv, sys.argv )
 
     args = parser.parse_args( args=argv )
-    args.mode(args).launch()
-
+    try:
+        args.mode(args).launch()
+    except Mishap as m:
+        message = 'Mishap'
+        print( message, ':', str( m ), file=sys.stderr )
+        max_width = max( len(message), *map( lambda kv: len( kv[ 0 ] ), m.items() ) )
+        for (key, value) in m.items():
+            title_key = str( key ).title()
+            width_padding = (max_width - len( title_key )) * ' '
+            print( f'{title_key}{width_padding} : {value}', file=sys.stderr )
+        if args.developer:
+            raise m
 
 ################################################################################
 # This is the top-level entry point for the whole Nutmeg system.
 ################################################################################
+
 
 if __name__ == "__main__":
     main()

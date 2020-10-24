@@ -6,6 +6,7 @@ import codetree
 from tokenizer import tokenizer, IdToken, BasicToken, IntToken, StringToken, BoolToken
 from peekablepushable import PeekablePushable
 import math
+from mishap import Mishap
 
 class TableDrivenParser:
     """
@@ -36,9 +37,9 @@ class TableDrivenParser:
         if e:
             return e
         elif source.isEmpty():
-            raise Exception( 'Unexpected end of input' )
+            raise Mishap( 'Unexpected end of input' )
         else:
-            raise Exception( f'Unexpected token {source.pop()}')
+            raise Mishap( f'Unexpected token', token=source.pop().value())
 
     def tryReadExpr( self, prec, source ):
         token = source.popOrElse()
@@ -179,6 +180,14 @@ def ifPrefixMiniParser( parser, token, source ):
         # if EXPR then STMNTS endif ^
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=codetree.SeqCodelet() )
 
+def varPrefixMiniParser( parser, token, source ):
+    t = source.pop()
+    if t.category() == IdToken:
+        return codetree.IdCodelet( name=t.value(), reftype=token.value() )
+    else:
+        raise Exception( f"Unexpected token: {t}")
+
+
 PREFIX_TABLE = {
     "LPAREN": lparenPrefixMiniParser,
     "DEC_FUNCTION_1": defPrefixMiniParser,
@@ -188,6 +197,9 @@ PREFIX_TABLE = {
     IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() ),
     BoolToken: lambda parser, token, source: codetree.BoolCodelet( value=token.value() ),
     StringToken: lambda parser, token, source: codetree.StringCodelet( value=token.literalValue() ),
+    "DEC_VARIABLE": varPrefixMiniParser,
+    "DEC_NONASSIGNABLE": varPrefixMiniParser,
+    "DEC_IMMUTABLE": varPrefixMiniParser,
 }
 
 def idPostfixMiniParser( parser, p, lhs, token, source ):
@@ -216,10 +228,22 @@ def lparenPostfixMiniParser( parser, p, lhs, token, source ):
         mustRead( source, "RPAREN" )
         return codetree.CallCodelet( function=lhs, arguments=rhs )
 
+def bindPostfixMiniParser( parser, p, lhs, token, source ):
+    lhs.declarationMode()
+    rhs = parser.readExpr( p, source )
+    return codetree.BindingCodelet( lhs=lhs, rhs=rhs )
+
+def assignPostfixMiniParser( parser, p, lhs, token, source ):
+    lhs.assignMode()
+    rhs = parser.readExpr( p, source )
+    return codetree.AssignCodelet( lhs=lhs, rhs=rhs )
+
 POSTFIX_TABLE = {
     "SEQ": commaPostfixMiniParser,
     "LPAREN": lparenPostfixMiniParser,
-    IdToken: idPostfixMiniParser
+    IdToken: idPostfixMiniParser,
+    "BIND": bindPostfixMiniParser,
+    "ASSIGN": assignPostfixMiniParser,
 }
 
 def standardParser():
