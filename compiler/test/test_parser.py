@@ -188,5 +188,22 @@ def test_assignments_issue48():
         }
     }
 
+def test_optional_semi():
+    text = """
+    def foo():
+        bar()
+        gort()
+    enddef
+    """
+    # Do we need a semi-colon? Should NOT throw an exception.
+    codetree = parseOne( text )
 
-
+def test_explicit_semi():
+    text = """
+    def foo():
+        bar();
+        gort();
+    enddef
+    """
+    # Is the semi-colon permitted? Should NOT throw an exception.
+    codetree = parseOne( text )

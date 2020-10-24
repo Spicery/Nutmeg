@@ -1,5 +1,6 @@
 import re
 import abc
+from mishap import Mishap
 
 def literalStringTranslation( token_text : str ):
     """
@@ -22,6 +23,13 @@ class Token( abc.ABC ):
 
     def __init__( self, value ):
         self._value = value
+        self._followsNewLine = False
+
+    def followsNewLine( self ):
+        return self._followsNewLine
+
+    def setFollowsNewLine( self ):
+        self._followsNewLine = True
 
     def __eq__( self, other ):
         """TODO: Only needed for unit tests - must be a better way"""
@@ -299,28 +307,37 @@ def scan_nested_comment( text, position ):
                 position = m.end()
                 depth += 1
             else:
-                raise Exception( 'Multi-line comment not terminated properly' )
+                raise Mishap( 'A multi-line comment is not terminated properly' )
     return position
 
 def tokenizer( text : str ):
     """
     Simple scanner for working on input supplied as a string.
     """
+    follows_newline = False
     position = 0
     while position < len( text ):
         m = token_spec_regex.match( text, position )
         if m:
             idname = m.lastgroup
+            old_position = position
             position = m.end()
+            follows_newline |= text.find( "\n", old_position, position ) != -1
             if idname == "COMMENT_BLOCK_START":
+                old_position = position
                 position = scan_nested_comment( text, position )
+                follows_newline |= text.find( "\n", old_position, position ) != -1
             elif idname != "WS" and idname != "COMMENT_LINE":
                 token_type = token_spec[idname]
-                yield token_type.newToken( m )
+                tok = token_type.newToken( m )
+                if follows_newline:
+                    tok.setFollowsNewLine()
+                    follows_newline = False
+                yield tok
         else:
             n = text.find("\n", position)
             msg = text[position:n] if n != -1 else text
-            raise Exception( f'Cannot tokenise past this point: {msg}')
+            raise Mishap( f'Tokeniser cannot recognise the text that follows' ).addDetails( text=msg )
 
 if __name__ == "__main__":
     # This is some ad hoc test code.

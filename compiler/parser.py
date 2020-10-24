@@ -99,7 +99,10 @@ class TableDrivenParser:
             else:
                 break
             if not tryRead( source, 'TERMINATE_STATEMENT' ):
-                break
+                nonsemi = source.peekOrElse()
+                virtual_semi = nonsemi.followsNewLine() and nonsemi.isPrefixer()
+                if not virtual_semi:
+                    break
         if len( body ) == 1:
             # Minor optimization.
             return body[0]
