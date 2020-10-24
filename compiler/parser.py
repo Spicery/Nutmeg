@@ -101,6 +101,7 @@ class TableDrivenParser:
             if not tryRead( source, 'TERMINATE_STATEMENT' ):
                 break
         if len( body ) == 1:
+            # Minor optimization.
             return body[0]
         else:
             return codetree.SeqCodelet( body=body )
