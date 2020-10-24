@@ -1,32 +1,5 @@
 # Variables
 
-## Summary
-
-In Nutmeg, variables are a way of naming objects. You can use any name for
-a variable that starts with a letter or underscore and then continues with 
-letters, digits and underscores.
-```
-Identifier ::= [_a-zA-Z] [_a-zA-Z0-9]*
-```
-![Railroad diagram for EBNF grammar](Identifier-railroad.svg)
-
-Variables are both declared and given their initial value at the same time 
-using a _binding_ statement. Bindings look like this.
-```
-Binding ::= ('var'|'val'|'const')? Identifier ':=' Expression
-```
-![Railroad diagram for EBNF grammar](Binding-railroad.svg)
-
-The initial optional modifier is one of `var`, `val` or `const`. The `var` 
-modifier allows subsequent assignments but limits the variable to a single 
-procedure and cannot be used for top-level variables. The `val` modifier,
-which is the default when no explicit modifier is supplied, disallows
-subsequent assignments. And the `const` modifier not only disallows 
-assignment but requires that the initial value is recursively immutable.
-
-Once a variable has been bound, it can be used in any expression and
-evaluates to the single bound value. 
-
 ## Overview of Bindings
 
 In Nutmeg, variables must be given an initial value before they can be
@@ -133,6 +106,36 @@ const y := Ref( x )             ### No! The Nutmeg will prevent this.
 ```
 
 The Nutmeg runtime engine is designed to make it very cheap to know the local and recursive immutability of every object at runtime. When a `const` variable is bound, it will be necessary for the runtime engine to check this, unless it is coming from another `const` variable (or the optimizer can work out that it is immutable).
+
+## Technical Summary
+
+In Nutmeg, variables are a way of naming objects. You can use any name for
+a variable that starts with a letter or underscore and then continues with 
+letters, digits and underscores.
+```
+Identifier ::= [_a-zA-Z] [_a-zA-Z0-9]*
+```
+![Railroad diagram for EBNF grammar](Identifier-railroad.svg)
+
+Variables are both declared and given their initial value at the same time 
+using a _binding_ statement. Bindings look like this.
+```
+Binding ::= ('var'|'val'|'const')? Identifier ':=' Expression
+```
+![Railroad diagram for EBNF grammar](Binding-railroad.svg)
+
+The initial optional modifier is one of `var`, `val` or `const`. The `var` 
+modifier allows subsequent assignments but limits the variable to a single 
+procedure and cannot be used for top-level variables. The `val` modifier,
+which is the default when no explicit modifier is supplied, disallows
+subsequent assignments. And the `const` modifier not only disallows 
+assignment but requires that the initial value is recursively immutable.
+
+Once a variable has been bound, it can be used in any expression and
+evaluates to the single bound value. 
+
+
+
 
 # Footnotes
 <b id="f1">1</b> However, within a procedure 

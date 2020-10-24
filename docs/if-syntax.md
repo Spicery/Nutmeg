@@ -1,20 +1,5 @@
 # If Syntax
 
-## Summary
-
-The `if` syntax is used to conditionally execute statements.
-
-```
-IfExpression ::= 
-    'if' Expression ('then'|':') Statements 
-    ( 'elseif' Expression ('then'|':') Statements )* ('else' ':'? Statements)? 
-    ('endif'|'end')
-```
-![Railroad diagram for EBNF grammar](If-Syntax-railroad.svg)
-
-* The conditions are evaluated in order and must evaluate to true or false. As soon as a condition evaluates to true the matching action is evaluated and then the statement finishes. If no conditions match then the default action, if provided, is evaluated and the statement finishes.
-* The `Statements` of an if-statement introduce their own lexical scopes that enclose the statement and no more. This ensures that variables introduced by the statements are only in scope where their definition is guaranteed to be executed.
-
 ## Overview
 
 `if` is the first word of a conditional expression and must be matched by a 
@@ -81,3 +66,19 @@ all, for example:
         endif
     enddef
 ```
+
+## Technical Summary
+
+The `if` syntax is used to conditionally execute statements.
+
+```
+IfExpression ::= 
+    'if' Expression ('then'|':') Statements 
+    ( 'elseif' Expression ('then'|':') Statements )* ('else' ':'? Statements)? 
+    ('endif'|'end')
+```
+![Railroad diagram for EBNF grammar](If-Syntax-railroad.svg)
+
+* The conditions are evaluated in order and must evaluate to true or false. As soon as a condition evaluates to true the matching action is evaluated and then the statement finishes. If no conditions match then the default action, if provided, is evaluated and the statement finishes.
+* The `Statements` of an if-statement introduce their own lexical scopes that enclose the statement and no more. This ensures that variables introduced by the statements are only in scope where their definition is guaranteed to be executed.
+
