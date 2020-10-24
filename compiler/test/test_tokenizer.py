@@ -33,3 +33,11 @@ def test_if_syntax():
     assert __isPunctuation( ts[2], "ELSE_IF" )
     assert __isPunctuation( ts[3], "ELSE" )
     assert __isPunctuation( ts[4], "END_IF" )
+
+def test_eol_comment():
+    ts = tokenize(
+        """
+        can you ### see this?
+        """
+    )
+    assert 2 == len( ts )

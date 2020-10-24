@@ -314,7 +314,7 @@ def tokenizer( text : str ):
             position = m.end()
             if idname == "COMMENT_BLOCK_START":
                 position = scan_nested_comment( text, position )
-            elif idname != "WS":
+            elif idname != "WS" and idname != "COMMENT_LINE":
                 token_type = token_spec[idname]
                 yield token_type.newToken( m )
         else:
