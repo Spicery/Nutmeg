@@ -17,11 +17,14 @@ class TableDrivenParser:
     def __init__( self, prefix_table, postfix_table ):
         self._prefix_table = prefix_table
         self._postfix_table = postfix_table
-        self._non_breakable = False
+        self._non_breakable = True
         self._non_breakable_dump = []
 
     def isNonBreakable( self ):
         return self._non_breakable
+
+    def isBreakable( self ):
+        return not self._non_breakable
 
     def pushNonBreakable( self, flag ):
         self._non_breakable_dump.append( self._non_breakable )
@@ -48,7 +51,7 @@ class TableDrivenParser:
             minip = self._postfix_table[ token.category() ]
             return minip( self, prec, lhs, token, source )
         except KeyError:
-            raise Exception( f'Unexpected token in infix/postfix position {token}')
+            raise Mishap( f'Unexpected token in infix/postfix position', token=token )
 
     def readExpr( self, prec, source ):
         e = self.tryReadExpr( prec, source )
@@ -59,10 +62,14 @@ class TableDrivenParser:
         else:
             raise Mishap( f'Unexpected token', token=source.pop().value())
 
-    def tryReadExpr( self, prec, source ):
+    def tryReadExpr( self, prec, source, checkNewlines=True ):
         token = source.popOrElse()
         if not token:
             return None
+        elif checkNewlines:
+            print( 'checkNewlines', token )
+            if token.followsNewLine() and self.isBreakable():
+                return None
         sofar = self.tryRunPrefixMiniParser( token, source )
         if not sofar:
             source.push( token )
@@ -71,7 +78,7 @@ class TableDrivenParser:
             token = source.peekOrElse()
             # print( 'PEEK', token, token and token.isPostfixer() )
             if not token or not token.isPostfixer(): break
-            if token.followsNewLine() and not self.isNonBreakable(): break
+            if token.followsNewLine() and self.isBreakable(): break
             p = token.precedence()
             # print( 'PREC', p )
             if not p or not p <= prec: break
@@ -117,30 +124,30 @@ class TableDrivenParser:
         if nonsemi.isPostfixerOnly():
             return False
         # It depends on whether we're inside an outfixer.
-        return not self.isNonBreakable()
-
+        return self.isBreakable()
 
     def readStatements( self, source ):
+        body = list( self.readStatementsGenerator( source ) )
+        if len( body ) == 1:
+            return body[0]
+        else:
+            return codetree.SeqCodelet( body=body )
+
+    def readStatementsGenerator( self, source ):
         try:
             self.pushNonBreakable( False )
-            body = []
             while not source.isEmpty():
-                e = self.tryReadExpr( math.inf, source )
+                e = self.tryReadExpr( math.inf, source, checkNewlines=False )
                 if e:
-                    body.append( e )
+                    yield e
                 else:
                     break
+                # Continue if there's a semi-colon o.n.o. - which means breaking if there isn't.
                 if not tryRead( source, 'TERMINATE_STATEMENT' ):
                     # Break if we don't find a semicolon or a newline that counts as a semi-colon.
                     nonsemi = source.peekOrElse()
-                    virtual_semi = self.isVirtualSemi( nonsemi )
-                    if not virtual_semi:
+                    if nonsemi is None or not self.isVirtualSemi( nonsemi ):
                         break
-            if len( body ) == 1:
-                # Minor optimization.
-                return body[0]
-            else:
-                return codetree.SeqCodelet( body=body )
         finally:
             self.popNonBreakable()
 
@@ -149,8 +156,9 @@ class TableDrivenParser:
 
     def parseFromString( self, text ):
         source = PeekablePushable( tokenizer( text ) )
-        while not source.isEmpty():
-            yield self.readExpr( math.inf, source )
+        yield from self.readStatementsGenerator( source )
+        if not source.isEmpty():
+            raise Mishap( 'Unexpected token', token=source.peekOrElse() )
 
 def mustRead( source, *categories ):
     token = source.popOrElse()
@@ -186,7 +194,6 @@ def defPrefixMiniParser( parser, token, source ):
     mustRead( source, 'END_PARAMETERS', 'END_PHRASE' )
     b = parser.readStatements( source )
     mustRead( source, 'END_DEC_FUNCTION_1', 'END' )
-    # TODO: horribly wrong! Should use a specialist reader for the call-shape.
     func = funcArgs.function()
     args = funcArgs.arguments()
     id = codetree.IdCodelet( name=func.name(), reftype="val" )
