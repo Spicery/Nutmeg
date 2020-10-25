@@ -54,8 +54,17 @@ class Token( abc.ABC ):
     def isPrefixer( self ):
         return True
 
+    def isPrefixerOnly( self ):
+        return self.isPrefixer() and not self.isPostfixer()
+
+    def isOutfixer( self ):
+        return False
+
     def isPostfixer( self ):
         return False
+
+    def isPostfixerOnly( self ):
+        return not self.isPrefixer() and self.isPostfixer()
 
     def checkCategory( self, c ):
         if c != self.category():
@@ -152,15 +161,16 @@ class PunctuationToken( Token ):
 
 class SyntaxToken( Token ):
 
-    def  __init__( self, value, prec, prefix, idname ):
+    def  __init__( self, value, prec, prefix, outfix, idname ):
         super().__init__( value )
         self._prec = prec
         self._prefix = prefix
+        self._outfix = outfix
         self._idname = idname
 
     @staticmethod
     def make( toktype, match ):
-        return SyntaxToken( match.group( match.lastgroup ), toktype.precedence(), toktype.prefix(), toktype.idname() )
+        return SyntaxToken( match.group( match.lastgroup ), toktype.precedence(), toktype.prefix(), toktype.outfix(), toktype.idname() )
 
     def __eq__( self, other ):
         # TODO: Remove after sorting out the tests
@@ -182,13 +192,17 @@ class SyntaxToken( Token ):
     def isPrefixer( self ):
         return self._prefix
 
+    def isOutfixer( self ):
+        return self._outfix
+
 class TokenType:
 
-    def __init__( self, regex_str, make = None, prec = 0, prefix = True ):
+    def __init__( self, regex_str, make = None, prec = 0, prefix = True, outfix = False ):
         self._regex_str = regex_str
         self._make = make
         self._prec = prec
-        self._prefix = prefix
+        self._prefix = prefix or outfix
+        self._outfix = outfix
         m = re.match( r'(?:(?!\(\?P<).)*\(\?P<(\w+)>', self._regex_str )
         if m:
             self._idname = m.group( 1 )
@@ -206,6 +220,9 @@ class TokenType:
 
     def prefix( self ):
         return self._prefix
+
+    def outfix( self ):
+        return self._outfix
 
     def newToken( self, match ):
         if self._make:
@@ -247,11 +264,13 @@ token_spec = {
         TokenType( r"(?P<TERMINATE_STATEMENT>;)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_PHRASE>:)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_PARAMETERS>=>>)", make=PunctuationToken.make ),
-        TokenType( r"(?P<LPAREN>\()", prec=10, prefix=True, make=SyntaxToken.make ),
+        TokenType( r"(?P<LPAREN>\()", prec=10, outfix=True, make=SyntaxToken.make ),
         TokenType( r"(?P<RPAREN>\))", make=PunctuationToken.make ),
+        TokenType( r"(?P<LAMBDA>lambda)", outfix=True, make=SyntaxToken.make ),
+        TokenType( r"(?P<END_LAMBDA>endlambda)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_DEC_FUNCTION_1>enddef)", make=SyntaxToken.make ),
         TokenType( r"(?P<END_DEC_FUNCTION_2>endfunction)", make=SyntaxToken.make ),
-        TokenType( r"(?P<IF>if)", prefix=True, make=SyntaxToken.make ),
+        TokenType( r"(?P<IF>if)", outfix=True, make=SyntaxToken.make ),
         TokenType( r"(?P<THEN>then)", make=PunctuationToken.make ),
         TokenType( r"(?P<ELSE_IF>elseif)", make=PunctuationToken.make ),
         TokenType( r"(?P<ELSE>else)", make=PunctuationToken.make ),
@@ -262,8 +281,8 @@ token_spec = {
         TokenType( r"(?P<DEC_VARIABLE>var)", make=SyntaxToken.make ),
         TokenType( r"(?P<DEC_NONASSIGNABLE>val)", make=SyntaxToken.make ),
         TokenType( r"(?P<DEC_IMMUTABLE>const)", make=SyntaxToken.make ),
-        TokenType( r"(?P<DEC_FUNCTION_1>def)", make=SyntaxToken.make ),
-        TokenType( r"(?P<DEC_FUNCTION_2>function)" ),
+        TokenType( r"(?P<DEC_FUNCTION_1>def)", outfix=True, make=SyntaxToken.make ),
+        TokenType( r"(?P<DEC_FUNCTION_2>function)", outfix=True, make=SyntaxToken.make  ),
 
         # comments
         TokenType( r"(?P<COMMENT_LINE>###)[^\n]*\n" ),

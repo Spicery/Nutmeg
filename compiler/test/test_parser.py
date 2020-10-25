@@ -196,7 +196,22 @@ def test_optional_semi():
     enddef
     """
     # Do we need a semi-colon? Should NOT throw an exception.
-    codetree = parseOne( text )
+    codelet = parseOne( text )
+
+def test_optional_semi_required():
+    text = """
+    def foo():
+        f
+        ()
+    enddef
+    """
+    # Do we need a semi-colon? Should NOT throw an exception.
+    codelet = parseOne( text )
+    assert isinstance( codelet, codetree.BindingCodelet )
+    rhs = codelet.rhs()
+    assert isinstance( rhs, codetree.LambdaCodelet )
+    body = rhs.body()
+    assert isinstance( body, codetree.SeqCodelet )
 
 def test_explicit_semi():
     text = """
@@ -206,4 +221,4 @@ def test_explicit_semi():
     enddef
     """
     # Is the semi-colon permitted? Should NOT throw an exception.
-    codetree = parseOne( text )
+    codelet = parseOne( text )

@@ -17,13 +17,31 @@ class TableDrivenParser:
     def __init__( self, prefix_table, postfix_table ):
         self._prefix_table = prefix_table
         self._postfix_table = postfix_table
+        self._non_breakable = False
+        self._non_breakable_dump = []
+
+    def isNonBreakable( self ):
+        return self._non_breakable
+
+    def pushNonBreakable( self, flag ):
+        self._non_breakable_dump.append( self._non_breakable )
+        self._non_breakable = flag
+
+    def pushNonBreakableOr( self, flag ):
+        self.pushNonBreakable( flag or self._non_breakable )
+
+    def popNonBreakable( self ):
+        self._non_breakable = self._non_breakable_dump.pop()
 
     def tryRunPrefixMiniParser( self, token, source ):
         try:
+            self.pushNonBreakableOr( token.isOutfixer() )
             minip = self._prefix_table[ token.category() ]
             return minip( self, token, source )
         except KeyError:
             return None
+        finally:
+            self.popNonBreakable()
 
     def runPostfixMiniParser( self, prec, lhs, token, source ):
         try:
@@ -53,6 +71,7 @@ class TableDrivenParser:
             token = source.peekOrElse()
             # print( 'PEEK', token, token and token.isPostfixer() )
             if not token or not token.isPostfixer(): break
+            if token.followsNewLine() and not self.isNonBreakable(): break
             p = token.precedence()
             # print( 'PREC', p )
             if not p or not p <= prec: break
@@ -90,24 +109,40 @@ class TableDrivenParser:
         else:
             return funcargs
 
+    def isVirtualSemi( self, nonsemi ):
+        if not nonsemi.followsNewLine():
+            return False
+        if nonsemi.isPrefixerOnly():
+            return True
+        if nonsemi.isPostfixerOnly():
+            return False
+        # It depends on whether we're inside an outfixer.
+        return not self.isNonBreakable()
+
+
     def readStatements( self, source ):
-        body = []
-        while not source.isEmpty():
-            e = self.tryReadExpr( math.inf, source )
-            if e:
-                body.append( e )
-            else:
-                break
-            if not tryRead( source, 'TERMINATE_STATEMENT' ):
-                nonsemi = source.peekOrElse()
-                virtual_semi = nonsemi.followsNewLine() and nonsemi.isPrefixer()
-                if not virtual_semi:
+        try:
+            self.pushNonBreakable( False )
+            body = []
+            while not source.isEmpty():
+                e = self.tryReadExpr( math.inf, source )
+                if e:
+                    body.append( e )
+                else:
                     break
-        if len( body ) == 1:
-            # Minor optimization.
-            return body[0]
-        else:
-            return codetree.SeqCodelet( body=body )
+                if not tryRead( source, 'TERMINATE_STATEMENT' ):
+                    # Break if we don't find a semicolon or a newline that counts as a semi-colon.
+                    nonsemi = source.peekOrElse()
+                    virtual_semi = self.isVirtualSemi( nonsemi )
+                    if not virtual_semi:
+                        break
+            if len( body ) == 1:
+                # Minor optimization.
+                return body[0]
+            else:
+                return codetree.SeqCodelet( body=body )
+        finally:
+            self.popNonBreakable()
 
     def parseFromFileObject(self, file_object):
         return self.parseFromString( file_object.read() )
