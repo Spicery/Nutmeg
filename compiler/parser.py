@@ -67,7 +67,6 @@ class TableDrivenParser:
         if not token:
             return None
         elif checkNewlines:
-            print( 'checkNewlines', token )
             if token.followsNewLine() and self.isBreakable():
                 return None
         sofar = self.tryRunPrefixMiniParser( token, source )
