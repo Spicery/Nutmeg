@@ -257,6 +257,8 @@ token_spec = {
         TokenType( r"(?P<MINUS>-)", prec=190, make=IdToken.make ),
         TokenType( r"(?P<TIMES>\*)", prec=180, make=IdToken.make ),
         TokenType( r"(?P<DIVIDE>/)", prec=180, make=IdToken.make ),
+        TokenType( r"(?P<HALF_OPEN_INTERVAL>\.\.<)", prec=240, make=IdToken.make ),
+        TokenType( r"(?P<CLOSED_INTERVAL>\.\.\.)", prec=240, make=IdToken.make ),
         TokenType( r"(?P<LTE><=)", prec=590, make=IdToken.make ),
         TokenType( r"(?P<SEQ>,)", prec=1000, prefix=False, make=SyntaxToken.make ),
 
