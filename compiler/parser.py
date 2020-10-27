@@ -187,6 +187,14 @@ def lparenPrefixMiniParser( parser, token, source ):
         mustRead( source, "RPAREN" )
         return e
 
+def lbracketPrefixMiniParser( parser, token, source ):
+    if tryRead( source, 'RBRACKET' ):
+        kernel = codetree.SeqCodelet()
+    else:
+        kernel = parser.readExpr( math.inf, source )
+        mustRead( source, "RBRACKET" )
+    return codetree.SyscallCodelet( name="[...]", arguments=kernel )
+
 def defPrefixMiniParser( parser, token, source ):
     funcArgs = parser.readFuncArgs( source )
     funcArgs.declarationMode()
@@ -235,6 +243,7 @@ def varPrefixMiniParser( parser, token, source ):
 
 PREFIX_TABLE = {
     "LPAREN": lparenPrefixMiniParser,
+    "LBRACKET": lbracketPrefixMiniParser,
     "DEC_FUNCTION_1": defPrefixMiniParser,
     "IF": ifPrefixMiniParser,
     BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
