@@ -97,7 +97,7 @@ namespace NutmegRunner {
                 if (!first) {
                     Console.Write( sep );
                 }
-                ShowMe( (dynamic)runtimeEngine.PopValue() );
+                ShowMe( (dynamic)item );
                 first = false;
             }
             Console.WriteLine();
