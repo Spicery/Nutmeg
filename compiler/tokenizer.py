@@ -268,6 +268,8 @@ token_spec = {
         TokenType( r"(?P<END_PARAMETERS>=>>)", make=PunctuationToken.make ),
         TokenType( r"(?P<LPAREN>\()", prec=10, outfix=True, make=SyntaxToken.make ),
         TokenType( r"(?P<RPAREN>\))", make=PunctuationToken.make ),
+        TokenType( r"(?P<LBRACKET>\[)", outfix=True, make=SyntaxToken.make ),
+        TokenType( r"(?P<RBRACKET>\])", make=PunctuationToken.make ),
         TokenType( r"(?P<LAMBDA>lambda)", outfix=True, make=SyntaxToken.make ),
         TokenType( r"(?P<END_LAMBDA>endlambda)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_DEC_FUNCTION_1>enddef)", make=SyntaxToken.make ),
