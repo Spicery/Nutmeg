@@ -44,6 +44,20 @@ class Simplify( codetree.CodeletVisitor ):
         else:
             return self.visitCodelet( if_codelet )
 
+    def visitSyscallCodelet( self, syscall_codelet ):
+        name = syscall_codelet.name()
+        args = syscall_codelet.arguments()
+        if isinstance( args, codetree.SyscallCodelet ):
+            args_name = args.name()
+            if args_name == "..<" or args_name == "...":
+                transformed_args = args.arguments().visit( self )
+                return codetree.SyscallCodelet( name=f'[{args_name}]', arguments=transformed_args )
+            else:
+                return self.visitCodelet( syscall_codelet )
+        else:
+            return self.visitCodelet( syscall_codelet )
+
+
 
 def replaceIdsWithSysconsts( tree ):
     return ReplaceIdsWithSysconsts()( tree )

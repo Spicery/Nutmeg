@@ -315,6 +315,12 @@ class SyscallCodelet( Codelet ):
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, name=self._name, arguments=self._arguments, **self._kwargs )
 
+	def name( self ):
+		return self._name
+
+	def arguments( self ):
+		return self._arguments
+
 	def members( self ):
 		yield self._arguments
 
