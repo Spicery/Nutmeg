@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace NutmegRunner {
 
@@ -169,6 +170,19 @@ namespace NutmegRunner {
         public List<object> PopAllAndUnlock() {
             var all = this.PopAll();
             this.Unlock();
+            return all;
+        }
+
+        private IEnumerable<object> AllAsEnumerable() {
+            var n = this.Size();
+            for (int i = 0; i < n; i++) {
+                yield return this.items[this.layer + i];
+            }
+        }
+
+        public ImmutableList<object> ImmutablePopAll() {
+            var all = ImmutableList<object>.Empty.AddRange( this.AllAsEnumerable() );
+            this.top = this.layer;
             return all;
         }
 
