@@ -41,3 +41,19 @@ def test_eol_comment():
         """
     )
     assert 2 == len( ts )
+
+def test_follows_newline():
+    text = """
+    this is
+    a list 
+    of some tokens
+    """
+    ts = tokenize( text )
+    assert 7 == len( ts )
+    assert ts[0].followsNewLine()
+    assert not ts[1].followsNewLine()
+    assert ts[2].followsNewLine()
+    assert not ts[3].followsNewLine()
+    assert ts[4].followsNewLine()
+    assert not ts[5].followsNewLine()
+    assert not ts[6].followsNewLine()

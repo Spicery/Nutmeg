@@ -188,5 +188,37 @@ def test_assignments_issue48():
         }
     }
 
+def test_optional_semi():
+    text = """
+    def foo():
+        bar()
+        gort()
+    enddef
+    """
+    # Do we need a semi-colon? Should NOT throw an exception.
+    codelet = parseOne( text )
 
+def test_optional_semi_required():
+    text = """
+    def foo():
+        f
+        ()
+    enddef
+    """
+    # Do we need a semi-colon? Should NOT throw an exception.
+    codelet = parseOne( text )
+    assert isinstance( codelet, codetree.BindingCodelet )
+    rhs = codelet.rhs()
+    assert isinstance( rhs, codetree.LambdaCodelet )
+    body = rhs.body()
+    assert isinstance( body, codetree.SeqCodelet )
 
+def test_explicit_semi():
+    text = """
+    def foo():
+        bar();
+        gort();
+    enddef
+    """
+    # Is the semi-colon permitted? Should NOT throw an exception.
+    codelet = parseOne( text )
