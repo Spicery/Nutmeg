@@ -63,7 +63,6 @@ namespace NutmegRunner {
 
         public ShowMeSystemFunction( Runlet next ) : base( next ) { }
 
-
         static public void ShowMe( HalfOpenRangeList horl ) {
             Console.Write( $"[{horl.Low}..<{horl.High}]" );
         }

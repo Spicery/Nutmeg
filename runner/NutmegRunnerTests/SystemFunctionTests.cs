@@ -11,6 +11,40 @@ namespace NutmegRunnerTests
     {
 
         [Fact]
+        public void Empty_ListSystemFunction_Test() {
+            //  Arrange
+            var runtime = new RuntimeEngine( false );
+            runtime.LockValueStack();
+            var list_sysfn = new ListSystemFunction( null );
+            //  Act
+            list_sysfn.ExecuteRunlet( runtime );
+            //  Assert
+            Assert.Equal( 1, runtime.ValueStackLength() );
+            object list_maybe = runtime.PopValue1();
+            var list = list_maybe as IList<object>;
+            Assert.NotNull( list );
+            Assert.Equal( 0, list.Count );
+        }
+
+        [Fact]
+        public void Simple_ListSystemFunction_Test() {
+            //  Arrange
+            var runtime = new RuntimeEngine( false );
+            runtime.LockValueStack();
+            runtime.PushValue( 0L );
+            runtime.PushValue( 0L );
+            var list_sysfn = new ListSystemFunction( null );
+            //  Act
+            list_sysfn.ExecuteRunlet( runtime );
+            //  Assert
+            Assert.Equal( 1, runtime.ValueStackLength() );
+            object list_maybe = runtime.PopValue1();
+            var list = list_maybe as IList<object>;
+            Assert.NotNull( list );
+            Assert.Equal( 2, list.Count );
+        }
+
+        [Fact]
         public void Empty_HalfOpenRangeSystemFunction_Test()
         {
             //  Arrange
