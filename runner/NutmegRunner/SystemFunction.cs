@@ -39,8 +39,6 @@ namespace NutmegRunner {
 
     }
 
-
-
     public class PrintlnSystemFunction : VariadicSystemFunction {
 
         public PrintlnSystemFunction( Runlet next ) : base( next ) { }
@@ -61,41 +59,47 @@ namespace NutmegRunner {
 
     }
 
-    public class ShowMeSystemFunction : FixedAritySystemFunction {
+    public class ShowMeSystemFunction : VariadicSystemFunction {
 
         public ShowMeSystemFunction( Runlet next ) : base( next ) { }
 
-        public override int Nargs => 1;
+
+        static public void ShowMe( HalfOpenRangeList horl ) {
+            Console.Write( $"[{horl.Low}..<{horl.High}]" );
+        }
+
+        static public void ShowMe( IReadOnlyList<object> list ) {
+            Console.Write( "[" );
+            var first = true;
+            foreach (var i in list) {
+                if (!first) {
+                    Console.Write( ", " );
+                }
+                ShowMe( i );
+                first = false;
+            }
+            Console.Write( "]" );
+        }
+
+        static public void ShowMe( string s ) {
+            //  TODO - escape quotes etc
+            Console.Write( $"\"{s}\"" );
+        }
 
         static public void ShowMe( object item ) {
-            switch ( item ) {
-                case HalfOpenRangeList horl:
-                    Console.Write( $"[{horl.Low}..<{horl.High}]" );
-                    break;
-                case IReadOnlyList<object> list:
-                    Console.Write( "[" );
-                    var first = true;
-                    foreach (var i in list) {
-                        if ( ! first ) {
-                            Console.Write( "," );
-                        }
-                        ShowMe( i );
-                        first = false;
-                    }
-                    Console.Write( "]" );
-                    break;
-                case string s:
-                    //  TODO - escape quotes etc
-                    Console.Write( $"\"{s}\"" );
-                    break;
-                default:
-                    Console.Write( $"{item}" );
-                    break;
-            }
+            Console.Write( $"{item}" );
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            ShowMe( runtimeEngine.PopValue() );
+            var sep = " ";
+            var first = true;
+            foreach (var item in runtimeEngine.PopAll()) {
+                if (!first) {
+                    Console.Write( sep );
+                }
+                ShowMe( (dynamic)runtimeEngine.PopValue() );
+                first = false;
+            }
             Console.WriteLine();
             return this.Next;
         }
@@ -120,6 +124,16 @@ namespace NutmegRunner {
             return this.Next;
         }
 
+    }
+
+    public class ListSystemFunction : VariadicSystemFunction {
+
+        public ListSystemFunction( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.PushValue( runtimeEngine.PopAll( immutable: true ) );
+            return this.Next;
+        }
     }
 
     public class HalfOpenRangeListSystemFunction : FixedAritySystemFunction {
@@ -294,6 +308,7 @@ namespace NutmegRunner {
             .Add( "-", r => new SubtractSystemFunction( r ), "sub" )
             .Add( "sum", r => new SumSystemFunction( r ) )
             .Add( "<=", r => new LTESystemFunction( r ), "lessThanOrEqualTo" )
+            .Add( "[...]", r => new ListSystemFunction( r ) )
             .Table;
 
         public static SystemFunctionMaker Find( string name ) {

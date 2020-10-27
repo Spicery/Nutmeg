@@ -242,13 +242,14 @@ namespace NutmegRunner {
             }
         }
 
-        public List<object> PopAllAndUnlock() {
+        public IList<object> PopAllAndUnlock() {
             return this._valueStack.PopAllAndUnlock();
         }
 
-        public List<object> PopAll() {
-            return this._valueStack.PopAll();
+        public IList<object> PopAll( bool immutable = false ) {
+            return immutable ? (IList<object>)this._valueStack.ImmutablePopAll() : (IList<object>)this._valueStack.PopAll();
         }
+
     }
 
 }
