@@ -20,6 +20,7 @@ While we are still developing Nutmeg, this guide is very far from complete. Howe
 * [Comments](comments.md) - a page on comments in Nutmeg.
 * [For syntax](for-syntax.md) - a page on of `for` loops i Nutmeg.
 * [If Syntax](if-syntax.md) - a page on the `if` conditional in Nutmeg.
+* [Ranges](ranges.md) - a page on ranges in Nutmeg.
 * [Statements](statements.md) - a page on the syntax of statements.
 * [Variables](variables.md) - a page on the different kinds of variables.
 
