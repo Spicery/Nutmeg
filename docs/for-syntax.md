@@ -3,8 +3,7 @@
 ## Overview
 
 The expression:
-<pre><code>
-for _variable_ in _expression_ do _actions_ endfor
+<pre><code>for _variable_ in _expression_ do _actions_ endfor
 </code></pre>
 evaluates the expression, which should yield an iterable object, like a list, and then performs the actions with the variable being successively bound to each element in turn
 ```
