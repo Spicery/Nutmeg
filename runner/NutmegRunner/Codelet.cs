@@ -115,13 +115,13 @@ namespace NutmegRunner {
 
     public class InCodelet : Codelet {
 
-        [JsonProperty( "in.var" )]
+        [JsonProperty( "pattern" )]
         public Codelet InVar { get; set; }
 
-        [JsonProperty( "in.expr" )]
+        [JsonProperty( "streamable" )]
         public Codelet InExpr { get; set; }
-
-        [JsonProperty( "in.stream.slot" )]
+        
+        [JsonProperty( "streamSlot" )]
         public int InStreamSlot { get; set; }
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {

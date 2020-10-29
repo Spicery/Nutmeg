@@ -447,7 +447,7 @@ namespace NutmegRunner {
                         return this._failRunlet;
                     }
                 default:
-                    throw new NutmegException( $"Cannot call this object: {obj}" );
+                    throw new NutmegException( $"Cannot get next from this object: {obj}" );
             }
         }
 

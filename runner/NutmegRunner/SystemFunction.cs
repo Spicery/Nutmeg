@@ -276,6 +276,51 @@ namespace NutmegRunner {
 
     }
 
+    public class LTSystemFunction : FixedAritySystemFunction {
+
+        public LTSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 2;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
+            runtimeEngine.PushValue( x < y );
+            return this.Next;
+        }
+
+    }
+
+    public class GTESystemFunction : FixedAritySystemFunction {
+
+        public GTESystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 2;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
+            runtimeEngine.PushValue( x >= y );
+            return this.Next;
+        }
+
+    }
+
+    public class GTSystemFunction : FixedAritySystemFunction {
+
+        public GTSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 2;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
+            runtimeEngine.PushValue( x > y );
+            return this.Next;
+        }
+
+    }
+
     public delegate SystemFunction SystemFunctionMaker( Runlet next );
 
     public class LookupTableBuilder {
@@ -307,7 +352,10 @@ namespace NutmegRunner {
             .Add( "-", r => new SubtractSystemFunction( r ), "sub" )
             .Add( "sum", r => new SumSystemFunction( r ) )
             .Add( "<=", r => new LTESystemFunction( r ), "lessThanOrEqualTo" )
-            .Add( "[...]", r => new ListSystemFunction( r ) )
+            .Add( "<", r => new LTSystemFunction( r ), "lessThan" )
+            .Add( ">=", r => new GTESystemFunction( r ), "greaterThanOrEqualTo" )
+            .Add( ">", r => new GTSystemFunction( r ), "greaterThan" )
+            .Add( "newImmutableList", r => new ListSystemFunction( r ) )
             .Table;
 
         public static SystemFunctionMaker Find( string name ) {
