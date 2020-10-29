@@ -41,6 +41,12 @@ class CodeletVisitor( abc.ABC ):
 	def visitIfCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
+	def visitInCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitForCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
 	def visitSeqCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
@@ -357,6 +363,63 @@ class CallCodelet( Codelet ):
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitCallCodelet( self, *args, **kwargs )
+
+class InCodelet( Codelet ):
+
+	KIND = "in"
+
+	def __init__( self, *, pattern, streamable, **kwargs ):
+		self._streamSlot = kwargs.pop( "streamSlot", None )
+		super().__init__( **kwargs )
+		self._pattern = pattern
+		self._streamable = streamable
+
+	def pattern( self ):
+		return self._pattern
+
+	def streamable( self ):
+		return self._streamable
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, pattern=self._pattern, streamable=self._streamable, streamSlot=self._streamSlot, **self._kwargs )
+
+	def members( self ):
+		yield self._pattern
+		yield self._streamable
+
+	def transform( self, f ):
+		return InCodelet( pattern=f(self._pattern), streamable=f(self._streamable), **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitInCodelet( self, *args, **kwargs )
+
+class ForCodelet( Codelet ):
+
+	KIND = "for"
+
+	def __init__( self, *, query, body, **kwargs ):
+		super().__init__( **kwargs )
+		self._query = query
+		self._body = body
+
+	def query( self ):
+		return self._query
+
+	def body( self ):
+		return self._body
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, query=self._query, body=self._body, **self._kwargs )
+
+	def members( self ):
+		yield self._query
+		yield self._body
+
+	def transform( self, f ):
+		return ForCodelet( query=f( self._query ), body=f( self._body ), **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitForCodelet( self, *args, **kwargs )
 
 
 class IfCodelet( Codelet ):
