@@ -40,6 +40,7 @@ class TableDrivenParser:
         try:
             self.pushNonBreakableOr( token.isOutfixer() )
             minip = self._prefix_table[ token.category() ]
+            # print( "PREFIX", token )
             return minip( self, token, source )
         except KeyError:
             return None
@@ -48,10 +49,15 @@ class TableDrivenParser:
 
     def runPostfixMiniParser( self, prec, lhs, token, source ):
         try:
-            minip = self._postfix_table[ token.category() ]
+            self.pushNonBreakableOr( token.isOutfixer() )
+            try:
+                # print( 'TOKEN', token, token.category() )
+                minip = self._postfix_table[ token.category() ]
+            except KeyError:
+                raise Mishap( f'Unexpected token in infix/postfix position', token=token )
             return minip( self, prec, lhs, token, source )
-        except KeyError:
-            raise Mishap( f'Unexpected token in infix/postfix position', token=token )
+        finally:
+            self.popNonBreakable()
 
     def readExpr( self, prec, source ):
         e = self.tryReadExpr( prec, source )
@@ -60,7 +66,7 @@ class TableDrivenParser:
         elif source.isEmpty():
             raise Mishap( 'Unexpected end of input' )
         else:
-            raise Mishap( f'Unexpected token', token=source.pop().value())
+            raise Mishap( f'No continuation because of unexpected token', token=source.pop().value())
 
     def tryReadExpr( self, prec, source, checkNewlines=True ):
         token = source.popOrElse()
@@ -79,9 +85,10 @@ class TableDrivenParser:
             if not token or not token.isPostfixer(): break
             if token.followsNewLine() and self.isBreakable(): break
             p = token.precedence()
-            # print( 'PREC', p )
+            # print( 'PREC', p, prec )
             if not p or not p <= prec: break
             source.pop()
+            # print( 'Run postfix mini parser' )
             sofar = self.runPostfixMiniParser( p, sofar, token, source )
         return sofar
 
@@ -157,15 +164,15 @@ class TableDrivenParser:
         source = PeekablePushable( tokenizer( text ) )
         yield from self.readStatementsGenerator( source )
         if not source.isEmpty():
-            raise Mishap( 'Unexpected token', token=source.peekOrElse() )
+            raise Mishap( 'Unexpected token after end of statements', token=source.peekOrElse() )
 
 def mustRead( source, *categories ):
     token = source.popOrElse()
     if token:
         if token.category() not in categories:
-            raise Exception( f'Unexpected token: {token}, wanted {str(categories)}' )
+            raise Mishap( f'Required keyword not found', found=token, wanted=str(categories) )
     else:
-        raise Exception( 'Unexpected end of file' )
+        raise Mishap( 'Unexpected end of file' )
 
 def tryRead( source, *categories ):
     token = source.peekOrElse()
@@ -193,7 +200,7 @@ def lbracketPrefixMiniParser( parser, token, source ):
     else:
         kernel = parser.readExpr( math.inf, source )
         mustRead( source, "RBRACKET" )
-    return codetree.SyscallCodelet( name="[...]", arguments=kernel )
+    return codetree.SyscallCodelet( name="newImmutableList", arguments=kernel )
 
 def defPrefixMiniParser( parser, token, source ):
     funcArgs = parser.readFuncArgs( source )
@@ -207,11 +214,21 @@ def defPrefixMiniParser( parser, token, source ):
     func = codetree.LambdaCodelet( parameters=args, body=b )
     return codetree.BindingCodelet( lhs=id, rhs=func )
 
+def forPrefixMiniParser( parser, token, source ):
+    # for ^ QUERY do STMNTS endfor
+    query = parser.readExpr( math.inf, source )
+    # for QUERY ^ do STMNTS endfor
+    mustRead( source, 'DO', 'END_PHRASE' )
+    # for QUERY do ^ STMNTS endfor
+    body = parser.readStatements( source )
+    mustRead( source, "ENDFOR", "END" )
+    return codetree.ForCodelet( query=query, body=body )
+
 def ifPrefixMiniParser( parser, token, source ):
     # if ^ EXPR then STMNTS ... endif
     testPart = parser.readExpr( math.inf, source )
     # if EXPR ^ then STMNTS ... endif
-    mustRead( source, "THEN" )
+    mustRead( source, "THEN", 'END_PHRASE' )
     # if EXPR then ^ STMNTS ... endif
     thenPart = parser.readStatements( source )
     # if EXPR then STMNTS ^ (elseif EXPR then STATEMENTS ... | else STMNTS | )  endif
@@ -221,6 +238,7 @@ def ifPrefixMiniParser( parser, token, source ):
         # if EXPR then STMNTS elseif EXPR then STATEMENTS .... endif ^
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=elsePart )
     elif tryRead( source, "ELSE" ):
+        tryRead( source, 'END_PHRASE' )                 ### Discard optional colon
         # if EXPR then STMNTS else ^ STMNTS endif
         elsePart = parser.readStatements( source )
         # if EXPR then STMNTS else STMNTS ^ endif
@@ -229,7 +247,7 @@ def ifPrefixMiniParser( parser, token, source ):
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=elsePart )
     else:
         # if EXPR then STMNTS ^ endif
-        mustRead( source, "END_IF" )
+        mustRead( source, "END_IF", "END" )
         # if EXPR then STMNTS endif ^
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=codetree.SeqCodelet() )
 
@@ -246,6 +264,7 @@ PREFIX_TABLE = {
     "LBRACKET": lbracketPrefixMiniParser,
     "DEC_FUNCTION_1": defPrefixMiniParser,
     "IF": ifPrefixMiniParser,
+    "FOR": forPrefixMiniParser,
     BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
     IdToken: lambda parser, token, source: codetree.IdCodelet( name=token.value(), reftype="get" ),
     IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() ),
@@ -292,12 +311,19 @@ def assignPostfixMiniParser( parser, p, lhs, token, source ):
     rhs = parser.readExpr( p, source )
     return codetree.AssignCodelet( lhs=lhs, rhs=rhs )
 
+def inPostfixMiniParser( parser, p, lhs, token, source ):
+    lhs.declarationMode()
+    rhs = parser.readExpr( math.inf, source )
+    return codetree.InCodelet( pattern = lhs, streamable = rhs )
+
+
 POSTFIX_TABLE = {
     "SEQ": commaPostfixMiniParser,
     "LPAREN": lparenPostfixMiniParser,
     IdToken: idPostfixMiniParser,
     "BIND": bindPostfixMiniParser,
     "ASSIGN": assignPostfixMiniParser,
+    "IN": inPostfixMiniParser,
 }
 
 def standardParser():

@@ -27,6 +27,12 @@ class CodeGenSetSlots( codetree.CodeletVisitor ):
                 self._sofar += 1
             id_codelet.setSlot( self._allocated[ name ] )
 
+    def visitInCodelet( self, in_codelet ):
+        in_codelet.pattern().visit( self )
+        in_codelet._streamSlot = self._sofar
+        self._sofar += 1
+        in_codelet.streamable().visit( self )
+
     def visitFunctionCodelet( self, fn_codelet ):
         setslots = CodeGenSetSlots()
         fn_codelet.parameters().visit( setslots )
