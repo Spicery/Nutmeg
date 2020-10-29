@@ -42,6 +42,15 @@ def test_eol_comment():
     )
     assert 2 == len( ts )
 
+def test_lt_lte_gt_gte():
+    text = "< <= > >="
+    ts = tokenize( text )
+    assert 4 == len( ts )
+    assert ts[0].value() == "<"
+    assert ts[1].value() == "<="
+    assert ts[2].value() == ">"
+    assert ts[3].value() == ">="
+
 def test_follows_newline():
     text = """
     this is
