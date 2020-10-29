@@ -259,8 +259,13 @@ token_spec = {
         TokenType( r"(?P<DIVIDE>/)", prec=180, make=IdToken.make ),
         TokenType( r"(?P<HALF_OPEN_INTERVAL>\.\.<)", prec=240, make=IdToken.make ),
         TokenType( r"(?P<CLOSED_INTERVAL>\.\.\.)", prec=240, make=IdToken.make ),
-        TokenType( r"(?P<LTE><=)", prec=590, make=IdToken.make ),
         TokenType( r"(?P<SEQ>,)", prec=1000, prefix=False, make=SyntaxToken.make ),
+
+        # Warning! Short tokens must come AFTER long ones.
+        TokenType( r"(?P<LTE><=)", prec=590, make=IdToken.make ),
+        TokenType( r"(?P<GTE>>=)", prec=590, make=IdToken.make ),
+        TokenType( r"(?P<LT>\<)", prec=590, make=IdToken.make ),
+        TokenType( r"(?P<GT>\>)", prec=590, make=IdToken.make ),
 
         # keywords
         TokenType( r"(?P<TERMINATE_STATEMENT>;)", make=PunctuationToken.make ),
@@ -279,7 +284,12 @@ token_spec = {
         TokenType( r"(?P<ELSE_IF>elseif)", make=PunctuationToken.make ),
         TokenType( r"(?P<ELSE>else)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_IF>endif)", make=PunctuationToken.make ),
-        TokenType( r"(?P<END>end)", make=PunctuationToken.make ),                           # MUST come after all other end... token types.
+        TokenType( r"(?P<FOR>for)", make=SyntaxToken.make ),
+        TokenType( r"(?P<IN>in)", prec=900, prefix=False, make=SyntaxToken.make ),
+        TokenType( r"(?P<DO>do)", make=PunctuationToken.make ),
+        TokenType( r"(?P<ENDFOR>endfor)", make=PunctuationToken.make ),
+
+        TokenType( r"(?P<END>end)", make=PunctuationToken.make ),  # MUST come after all other end... token types.
 
         # keywords"
         TokenType( r"(?P<DEC_VARIABLE>var)", make=SyntaxToken.make ),
