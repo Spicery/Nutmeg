@@ -321,6 +321,25 @@ namespace NutmegRunner {
 
     }
 
+    public class AssertSystemFunction : FixedAritySystemFunction {
+
+        public AssertSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 1;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            switch ( runtimeEngine.PopValue() ) {
+                case Boolean b:
+                    if (b) return this.Next;
+                    break;
+                default:
+                    break;
+            }
+            throw new NutmegTestFailException();
+        }
+
+    }
+
     public delegate SystemFunction SystemFunctionMaker( Runlet next );
 
     public class LookupTableBuilder {
@@ -336,6 +355,8 @@ namespace NutmegRunner {
         }
 
     }
+
+
 
     public class NutmegSystem {
 
@@ -356,6 +377,7 @@ namespace NutmegRunner {
             .Add( ">=", r => new GTESystemFunction( r ), "greaterThanOrEqualTo" )
             .Add( ">", r => new GTSystemFunction( r ), "greaterThan" )
             .Add( "newImmutableList", r => new ListSystemFunction( r ) )
+            .Add( "assert", r => new AssertSystemFunction( r ) )
             .Table;
 
         public static SystemFunctionMaker Find( string name ) {

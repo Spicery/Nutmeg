@@ -3,6 +3,19 @@ using System.Collections.Generic;
 
 namespace NutmegRunner {
 
+    public class NutmegTestFailException : ApplicationException {
+
+        public NutmegTestFailException() : base( "assert failed" ) {
+        }
+
+        public NutmegTestFailException( string message ) : base( message ) {
+        }
+
+        public NutmegTestFailException( string message, Exception exn ) : base( message, exn ) {
+        }
+
+    }
+
     public class NutmegException : ApplicationException {
 
         protected Dictionary<string, string> _culprits = new Dictionary<string, string>();

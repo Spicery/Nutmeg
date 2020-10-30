@@ -13,6 +13,7 @@ namespace NutmegRunner {
         bool _debug = false;
         string _graphviz = null;
         bool _print = false;
+        bool _test = false;
 
         /// <summary>
         /// This constructor is responsible for parsing the arguments into instance variables.
@@ -67,6 +68,9 @@ namespace NutmegRunner {
                         case "--graphviz":
                             this._graphviz = parameter;
                             break;
+                        case "--test":
+                            this._test = true;
+                            break;
                         default:
                             throw new NutmegException( $"Unrecognised option: {option}" ).Culprit( "Option", option );
                     }
@@ -99,15 +103,19 @@ namespace NutmegRunner {
         private void Run()
         {
             TextWriter stdErr = Console.Error;
-            if (this._debug) stdErr.WriteLine("Nutmeg kicks the ball ...");
-            if (this._debug) stdErr.WriteLine( $"Bundle file: {this._bundleFile}" );
-            if (this._debug) stdErr.WriteLine( $"Entry point: {this._entryPoint}" );
+            if (this._debug) {
+                stdErr.WriteLine( "Nutmeg kicks the ball ..." );
+                stdErr.WriteLine( $"Bundle file: {this._bundleFile}" );
+                stdErr.WriteLine( $"Entry point: {this._entryPoint}" );
+                stdErr.WriteLine( $"Unittests: {this._test}" );
+            }
             try {
                 RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
                 using (SQLiteConnection connection = GetConnection()) {
                     connection.Open();
-                    if (this._entryPoint == null) {
-                        //  If the entry-point is not specified, check if there a unique entry-point in the bundle.
+                    if (this._entryPoint == null && !this._test) {
+                        //  If the entry-point is not specified, and we need an entry-point (i.e. not a test run), check if
+                        //  there a unique entry-point in the bundle.
                         var entrypoints = this.GetEntryPoints( connection ).ToList();
                         var n = entrypoints.Count();
                         if (n == 1) {
@@ -117,14 +125,13 @@ namespace NutmegRunner {
                             throw new NutmegException( "Cannot determine the entry-point" ).Hint( n == 0 ? "No default entry-point" : "More than one entry-point" );
                         }
                     }
-                    var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] WHERE E.[IdName]=@EntryPoint", connection );
-                    cmd.Parameters.AddWithValue( "@EntryPoint", this._entryPoint );
-                    cmd.Prepare();
+                    SQLiteCommand cmd = GetCommandForBindingsToLoad( connection );
                     var reader = cmd.ExecuteReader();
                     var bindings = new Dictionary<string, Codelet>();
                     var initialisations = new List<KeyValuePair<string, Codelet>>();
                     while (reader.Read()) {
                         string idName = reader.GetString( 0 );
+                        if (this._debug) Console.WriteLine( $"Loading {idName}" );
                         string jsonValue = reader.GetString( 1 );
                         if (this._debug) stdErr.WriteLine( $"Loading definition: {idName}" );
                         try {
@@ -156,11 +163,36 @@ namespace NutmegRunner {
                 }
                 if (this._graphviz != null) {
                     runtimeEngine.GraphViz( this._graphviz );
+                } else if ( this._test ) {
+                    using (SQLiteConnection connection = GetConnection()) {
+                        connection.Open();
+                        var tests_to_run = GetTestsToRun( connection );
+                        var passes = new List<string>();
+                        var failures = new List< Tuple<string, Exception> >();
+                        foreach ( var idName in tests_to_run ) {
+                            if ( this._debug ) Console.WriteLine( $"Running unit test for {idName}" );
+                            try {
+                                runtimeEngine.Start( idName, useEvaluate: false, usePrint: this._print );
+                                passes.Add( idName );
+                            } catch (Exception ex) {
+                                failures.Add( new Tuple<string, Exception>( idName, ex ) );
+                            } finally {
+                                runtimeEngine.Reset();
+                            }
+                        }
+                        var r_a_g = failures.Count == 0 ? "GREEN" : "RED";
+                        Console.WriteLine( $"{r_a_g}: {passes.Count} passed, {failures.Count} failed" );
+                        if ( failures.Count > 0 ) { 
+                            foreach ( var f in failures ) {
+                                Console.WriteLine( $" * {f.Item1}: {f.Item2.Message}" );
+                            }
+                        }
+                    }
                 } else {
                     runtimeEngine.Start( this._entryPoint, useEvaluate: false, usePrint: this._print );
                 }
             } catch (NutmegException nme) {
-                Console.Error.WriteLine( $"MISHAP: {nme.Message}" );
+                if ( this._debug ) Console.Error.WriteLine( $"MISHAP: {nme.Message}" );
                 foreach (var culprit in nme.Culprits) {
                     Console.Error.WriteLine( $" {culprit.Key}: {culprit.Value}" );
                 }
@@ -168,6 +200,30 @@ namespace NutmegRunner {
             }
             //var jobj = JToken.ReadFrom(new JsonTextReader(new StreamReader(Console.OpenStandardInput())));
             //Console.WriteLine($"Output = {jobj.ToString()}");
+        }
+
+        private List<string> GetTestsToRun( SQLiteConnection connection ) {
+            var sofar = new List<string>();
+            var cmd = new SQLiteCommand( "SELECT B.[IdName] FROM [Bindings] B JOIN [Annotations] A ON A.IdName = B.IdName WHERE A.AnnotationKey='unittest'", connection );
+            var reader = cmd.ExecuteReader();
+            while (reader.Read()) {
+                string idName = reader.GetString( 0 );
+                sofar.Add( idName );
+            }
+            return sofar;
+        }
+
+        private SQLiteCommand GetCommandForBindingsToLoad( SQLiteConnection connection ) {
+            if ( this._test ) {
+                var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [Annotations] A ON A.IdName = B.IdName JOIN [DependsOn] E ON E.[Needs] = B.[IdName] WHERE A.AnnotationKey='unittest'", connection );
+                cmd.Prepare();
+                return cmd;
+            } else {
+                var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] WHERE E.[IdName]=@EntryPoint", connection );
+                cmd.Parameters.AddWithValue( "@EntryPoint", this._entryPoint );
+                cmd.Prepare();
+                return cmd;
+            }
         }
 
         private SQLiteConnection GetConnection() {
