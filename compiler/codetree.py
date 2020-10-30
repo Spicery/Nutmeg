@@ -513,10 +513,6 @@ class AssignLikeCodelet( Codelet, ABC ):
 	def rhs( self ):
 		return self._rhs
 
-	def encodeAsJSON( self, encoder ):
-		return dict( kind=self.KIND, lhs=self._lhs, rhs=self._rhs, **self._kwargs )
-
-
 class AssignCodelet( AssignLikeCodelet ):
 
 	KIND = "assign"
@@ -527,16 +523,31 @@ class AssignCodelet( AssignLikeCodelet ):
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitAssignCodelet( self, *args, **kwargs )
 
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, lhs=self._lhs, rhs=self._rhs, **self._kwargs )
 
 class BindingCodelet( AssignLikeCodelet ):
 
 	KIND = "binding"
 
+	def __init__( self, *, lhs, rhs, annotations=None, **kwargs ):
+		super().__init__( lhs=lhs, rhs=rhs, **kwargs )
+		self._annotations = annotations or {}
+
 	def transform( self, f ):
-		return BindingCodelet( lhs=f( self.lhs() ), rhs=f( self.rhs() ), **self._kwargs )
+		return BindingCodelet( lhs=f( self.lhs() ), rhs=f( self.rhs() ), annotations=self._annotations, **self._kwargs )
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitBindingCodelet( self, *args, **kwargs )
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, lhs=self._lhs, rhs=self._rhs, annotations=self._annotations, **self._kwargs )
+
+	def setAnnotation( self, **kwargs ):
+		self._annotations.update( kwargs )
+
+	def annotations( self ):
+		return self._annotations
 
 
 class LambdaCodelet( Codelet ):

@@ -37,10 +37,10 @@ class TableDrivenParser:
         self._non_breakable = self._non_breakable_dump.pop()
 
     def tryRunPrefixMiniParser( self, token, source ):
+        # print( "PREFIX", token, token.category() )
         try:
             self.pushNonBreakableOr( token.isOutfixer() )
             minip = self._prefix_table[ token.category() ]
-            # print( "PREFIX", token )
             return minip( self, token, source )
         except KeyError:
             return None
@@ -70,6 +70,7 @@ class TableDrivenParser:
 
     def tryReadExpr( self, prec, source, checkNewlines=True ):
         token = source.popOrElse()
+        # print( 'TRYREADEXPR', token.value(), checkNewlines )
         if not token:
             return None
         elif checkNewlines:
@@ -258,8 +259,22 @@ def varPrefixMiniParser( parser, token, source ):
     else:
         raise Exception( f"Unexpected token: {t}")
 
+def annotationPrefixMiniParser( parser, token, source ):
+    t = source.pop()
+    if t.category() == IdToken:
+        e = parser.tryReadExpr( math.inf, source, checkNewlines=False )
+        if not isinstance( e, codetree.BindingCodelet ):
+            raise Mishap( 'Invalid expression following annotation, needed binding' )
+        if t.value() == "unittest":
+            e.setAnnotation( unittest=True )
+        else:
+            raise Mishap( 'Unknown annotation', name=t.value() )
+        return e
+    else:
+        raise Mishap( "Invalid name for annotation", name=t )
 
 PREFIX_TABLE = {
+    "ANNOTATION": annotationPrefixMiniParser,
     "LPAREN": lparenPrefixMiniParser,
     "LBRACKET": lbracketPrefixMiniParser,
     "DEC_FUNCTION_1": defPrefixMiniParser,

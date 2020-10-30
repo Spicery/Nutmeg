@@ -249,6 +249,7 @@ token_spec = {
         TokenType( r"(?P<WS>\s+)" ),
 
         # operators
+        TokenType( r"(?P<ANNOTATION>@)", make=SyntaxToken.make ),
         TokenType( r"(?P<BIND>:=)", prec=990, make=SyntaxToken.make ),
         TokenType( r"(?P<ASSIGN><-)", prec=990, make=SyntaxToken.make ),
         TokenType( r"(?P<UPDATE_ELEMENT><--)" ),

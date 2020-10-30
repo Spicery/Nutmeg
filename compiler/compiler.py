@@ -36,7 +36,7 @@ class Compiler:
             resolver.resolveCodeTree( codelet )                                 # Edits in place.
             codelet = optimizer.optimizeCodeTree( codelet )
             codegen.codeGenCodeTree( codelet )                                  # Also edits in place
-            bundler.bundleCodeTree( self._bundle, codelet )
+            bundler.bundleCodeTree( self._bundle, codelet, filename )
 
     def compile( self ):
         if not self._bundle.exists():
