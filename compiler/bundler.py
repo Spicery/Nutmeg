@@ -36,7 +36,7 @@ def bundleCodeTree( bundle_file : Path, tree : Codelet, input_file: Path ):
         createBundleFile( bundle_file )
     with sqlite3.connect( bundle_file ) as conn:
         c = conn.cursor()
-        c.execute( '''INSERT OR REPLACE INTO Bindings VALUES ( ?, ?, ? )''', ( name, value, str(input_file) ) )
+        c.execute( '''INSERT OR REPLACE INTO Bindings VALUES ( ?, ?, ? )''', ( name, value, str(input_file.absolute()) ) )
         for annkey, annvalue in annotations.items():
             c.execute( '''INSERT OR REPLACE INTO Annotations VALUES ( ?, ?, ? )''', ( name, annkey, json.dumps( annvalue ) ) )
 

@@ -5,15 +5,21 @@ namespace NutmegRunner {
 
     public class NutmegTestFailException : ApplicationException {
 
-        public NutmegTestFailException() : base( "assert failed" ) {
-        }
+        public string Unit { get; set; }
+        public long Position { get; set; }
 
-        public NutmegTestFailException( string message ) : base( message ) {
+        public NutmegTestFailException( string message, object unit, object position, Exception exn = null ) : base( message, exn ) {
+            switch ( position ) {
+                case long posn:
+                    this.Position = posn;
+                    break;
+            }
+            switch (unit) {
+                case string u:
+                    this.Unit = u;
+                    break;
+            }
         }
-
-        public NutmegTestFailException( string message, Exception exn ) : base( message, exn ) {
-        }
-
     }
 
     public class NutmegException : ApplicationException {

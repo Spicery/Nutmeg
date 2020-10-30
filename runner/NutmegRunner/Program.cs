@@ -168,9 +168,9 @@ namespace NutmegRunner {
                         connection.Open();
                         var tests_to_run = GetTestsToRun( connection );
                         var passes = new List<string>();
-                        var failures = new List< Tuple<string, Exception> >();
-                        foreach ( var idName in tests_to_run ) {
-                            if ( this._debug ) Console.WriteLine( $"Running unit test for {idName}" );
+                        var failures = new List<Tuple<string, Exception>>();
+                        foreach (var idName in tests_to_run) {
+                            if (this._debug) Console.WriteLine( $"Running unit test for {idName}" );
                             try {
                                 runtimeEngine.Start( idName, useEvaluate: false, usePrint: this._print );
                                 passes.Add( idName );
@@ -182,9 +182,10 @@ namespace NutmegRunner {
                         }
                         var r_a_g = failures.Count == 0 ? "GREEN" : "RED";
                         Console.WriteLine( $"{r_a_g}: {passes.Count} passed, {failures.Count} failed" );
-                        if ( failures.Count > 0 ) { 
-                            foreach ( var f in failures ) {
-                                Console.WriteLine( $" * {f.Item1}: {f.Item2.Message}" );
+                        if (failures.Count > 0) {
+                            foreach (var f in failures) {
+                                string msg = GetAssertFailureMessage( connection, f.Item2 );
+                                Console.WriteLine( $" * {f.Item1}: {msg}" );
                             }
                         }
                     }
@@ -198,19 +199,49 @@ namespace NutmegRunner {
                 }
                 throw nme;  // rethrow
             }
-            //var jobj = JToken.ReadFrom(new JsonTextReader(new StreamReader(Console.OpenStandardInput())));
-            //Console.WriteLine($"Output = {jobj.ToString()}");
+        }
+
+        private string GetAssertFailureMessage( SQLiteConnection connection, Exception ex ) {
+            var msg = ex.Message;
+            if (ex is NutmegTestFailException exn ) {
+                int pos = (int)exn.Position;
+                if (TryGetLine( connection, exn.Unit, pos, out var line )) {
+                    int n = line.IndexOf( '\n' );
+                    if ( n < 0 ) {
+                        n = line.Length;
+                    }
+                    msg = line.Substring( 0, n );
+                }
+            }
+
+            return msg;
+        }
+
+        private bool TryGetLine( SQLiteConnection connection, string unit, int posn, out string line ) {
+            line = null;
+            if (unit == null) return false;
+            using (SQLiteCommand cmd = new SQLiteCommand( "SELECT substr( Contents, @Posn, 80 ) FROM SourceFiles WHERE FileName = @Unit", connection )) {
+                cmd.Parameters.AddWithValue( "@Posn", posn + 1 );   //  Add 1 to compensate for the 1-indexing of substr.
+                cmd.Parameters.AddWithValue( "@Unit", unit );
+                cmd.Prepare();
+                var reader = cmd.ExecuteReader();
+                if ( reader.Read() ) {
+                    line = reader.GetString( 0 );
+                }
+            }
+            return line != null;
         }
 
         private List<string> GetTestsToRun( SQLiteConnection connection ) {
             var sofar = new List<string>();
-            var cmd = new SQLiteCommand( "SELECT B.[IdName] FROM [Bindings] B JOIN [Annotations] A ON A.IdName = B.IdName WHERE A.AnnotationKey='unittest'", connection );
-            var reader = cmd.ExecuteReader();
-            while (reader.Read()) {
-                string idName = reader.GetString( 0 );
-                sofar.Add( idName );
+            using (var cmd = new SQLiteCommand( "SELECT B.[IdName] FROM [Bindings] B JOIN [Annotations] A ON A.IdName = B.IdName WHERE A.AnnotationKey='unittest'", connection )) {
+                var reader = cmd.ExecuteReader();
+                while (reader.Read()) {
+                    string idName = reader.GetString( 0 );
+                    sofar.Add( idName );
+                }
+                return sofar;
             }
-            return sofar;
         }
 
         private SQLiteCommand GetCommandForBindingsToLoad( SQLiteConnection connection ) {

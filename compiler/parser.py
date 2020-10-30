@@ -14,11 +14,15 @@ class TableDrivenParser:
     to look up in tables what we should do next.
     """
 
-    def __init__( self, prefix_table, postfix_table ):
+    def __init__( self, prefix_table, postfix_table, unit=None ):
         self._prefix_table = prefix_table
         self._postfix_table = postfix_table
         self._non_breakable = True
         self._non_breakable_dump = []
+        self._unit = unit
+
+    def unit( self ):
+        return self._unit
 
     def isNonBreakable( self ):
         return self._non_breakable
@@ -159,9 +163,9 @@ class TableDrivenParser:
             self.popNonBreakable()
 
     def parseFromFileObject(self, file_object):
-        return self.parseFromString( file_object.read() )
+        return self.parseFromString( file_object.read(), origin=str(file_object) )
 
-    def parseFromString( self, text ):
+    def parseFromString( self, text, origin=None ):
         source = PeekablePushable( tokenizer( text ) )
         yield from self.readStatementsGenerator( source )
         if not source.isEmpty():
@@ -273,8 +277,16 @@ def annotationPrefixMiniParser( parser, token, source ):
     else:
         raise Mishap( "Invalid name for annotation", name=t )
 
+def assertPrefixMiniParser( parser, token, source ):
+    test_expr = parser.tryReadExpr( math.inf, source, checkNewlines=False )
+    position = codetree.IntCodelet( token.span()[0] )
+    unit = codetree.StringCodelet( parser.unit() )
+    args = codetree.SeqCodelet( test_expr, unit, position )
+    return codetree.SyscallCodelet( name="assert", arguments=args )
+
 PREFIX_TABLE = {
     "ANNOTATION": annotationPrefixMiniParser,
+    "ASSERT": assertPrefixMiniParser,
     "LPAREN": lparenPrefixMiniParser,
     "LBRACKET": lbracketPrefixMiniParser,
     "DEC_FUNCTION_1": defPrefixMiniParser,
@@ -341,11 +353,11 @@ POSTFIX_TABLE = {
     "IN": inPostfixMiniParser,
 }
 
-def standardParser():
-    return TableDrivenParser( PREFIX_TABLE, POSTFIX_TABLE )
+def standardParser( unit=None ):
+    return TableDrivenParser( PREFIX_TABLE, POSTFIX_TABLE, unit=unit )
 
 def parseFromString( text ):
     return standardParser().parseFromString( text )
 
-def parseFromFileObject( file_object ):
-    return standardParser().parseFromFileObject( file_object )
+def parseFromFileObject( file_object, unit=None ):
+    return standardParser( unit=unit ).parseFromFileObject( file_object )

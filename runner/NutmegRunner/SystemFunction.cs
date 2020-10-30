@@ -321,13 +321,29 @@ namespace NutmegRunner {
 
     }
 
+    public class EqualsSystemFunction : FixedAritySystemFunction {
+
+        public EqualsSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 2;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            var y = runtimeEngine.PopValue();
+            var x = runtimeEngine.PopValue();
+            runtimeEngine.PushValue( x == y );
+            return this.Next;
+        }
+    }
+
     public class AssertSystemFunction : FixedAritySystemFunction {
 
         public AssertSystemFunction( Runlet next ) : base( next ) { }
 
-        public override int Nargs => 1;
+        public override int Nargs => 3;
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            var position = runtimeEngine.PopValue();
+            var unit = runtimeEngine.PopValue();
             switch ( runtimeEngine.PopValue() ) {
                 case Boolean b:
                     if (b) return this.Next;
@@ -335,7 +351,7 @@ namespace NutmegRunner {
                 default:
                     break;
             }
-            throw new NutmegTestFailException();
+            throw new NutmegTestFailException( "assert failed", unit, position );
         }
 
     }
@@ -372,6 +388,7 @@ namespace NutmegRunner {
             .Add( "*", r => new MulSystemFunction( r ), "mul" )
             .Add( "-", r => new SubtractSystemFunction( r ), "sub" )
             .Add( "sum", r => new SumSystemFunction( r ) )
+            .Add( "==", r => new EqualsSystemFunction( r ) )
             .Add( "<=", r => new LTESystemFunction( r ), "lessThanOrEqualTo" )
             .Add( "<", r => new LTSystemFunction( r ), "lessThan" )
             .Add( ">=", r => new GTESystemFunction( r ), "greaterThanOrEqualTo" )
