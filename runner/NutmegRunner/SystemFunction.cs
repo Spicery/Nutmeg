@@ -335,6 +335,20 @@ namespace NutmegRunner {
         }
     }
 
+    public class NotEqualsSystemFunction : FixedAritySystemFunction {
+
+        public NotEqualsSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 2;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            var y = runtimeEngine.PopValue();
+            var x = runtimeEngine.PopValue();
+            runtimeEngine.PushValue( !( x?.Equals( y ) ?? y == null ) );
+            return this.Next;
+        }
+    }
+
     public class AssertSystemFunction : FixedAritySystemFunction {
 
         public AssertSystemFunction( Runlet next ) : base( next ) { }
@@ -389,6 +403,7 @@ namespace NutmegRunner {
             .Add( "-", r => new SubtractSystemFunction( r ), "sub" )
             .Add( "sum", r => new SumSystemFunction( r ) )
             .Add( "==", r => new EqualsSystemFunction( r ) )
+            .Add( "!=", r => new NotEqualsSystemFunction( r ) )
             .Add( "<=", r => new LTESystemFunction( r ), "lessThanOrEqualTo" )
             .Add( "<", r => new LTSystemFunction( r ), "lessThan" )
             .Add( ">=", r => new GTESystemFunction( r ), "greaterThanOrEqualTo" )

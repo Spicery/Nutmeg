@@ -275,6 +275,7 @@ token_spec = {
         TokenType( r"(?P<LT>\<)", prec=590, make=IdToken.make ),
         TokenType( r"(?P<GT>\>)", prec=590, make=IdToken.make ),
         TokenType( r"(?P<EQUALS>==)", prec=590, make=IdToken.make ),
+        TokenType( r"(?P<NOTEQUALS>!=)", prec=590, make=IdToken.make ),
 
         # keywords
         TokenType( r"(?P<TERMINATE_STATEMENT>;)", make=PunctuationToken.make ),
