@@ -330,7 +330,7 @@ namespace NutmegRunner {
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             var y = runtimeEngine.PopValue();
             var x = runtimeEngine.PopValue();
-            runtimeEngine.PushValue( x == y );
+            runtimeEngine.PushValue( x?.Equals( y ) ?? y == null );
             return this.Next;
         }
     }
