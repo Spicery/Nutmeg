@@ -76,8 +76,7 @@ def traceFile( bundle_file ):
         c = conn.cursor()
         c.execute( '''BEGIN TRANSACTION''' )
         c.execute( '''DELETE FROM DependsOn''' )
-        entry_points = set( row[0] for row in c.execute( '''SELECT IdName FROM EntryPoints''' ) )
-        entry_points |= set( row[ 0 ] for row in c.execute( """SELECT IdName FROM Annotations WHERE AnnotationKey='unittest'""" ) )
+        entry_points = set( row[ 0 ] for row in c.execute( """SELECT IdName FROM Annotations WHERE AnnotationKey in ('unittest', 'command')""" ) )
         all_sysfns = set()
         deep_finder = DeepFinder( c )
         for e in entry_points:
