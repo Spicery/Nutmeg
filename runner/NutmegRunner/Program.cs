@@ -202,7 +202,7 @@ namespace NutmegRunner {
 
         private SQLiteCommand GetCommandForBindingsToLoad( SQLiteConnection connection ) {
             if ( this._test ) {
-                var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [Annotations] A ON A.IdName = B.IdName JOIN [DependsOn] E ON E.[Needs] = B.[IdName] WHERE A.AnnotationKey='unittest'", connection );
+                var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] JOIN [Annotations] A ON A.[IdName] = E.[IdName] WHERE A.AnnotationKey='unittest'", connection );
                 cmd.Prepare();
                 return cmd;
             } else {
