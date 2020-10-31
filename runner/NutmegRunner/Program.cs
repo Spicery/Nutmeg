@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace NutmegRunner {
 
@@ -183,9 +184,11 @@ namespace NutmegRunner {
                         var r_a_g = failures.Count == 0 ? "GREEN" : "RED";
                         Console.WriteLine( $"{r_a_g}: {passes.Count} passed, {failures.Count} failed" );
                         if (failures.Count > 0) {
+                            int n = 0;
                             foreach (var f in failures) {
+                                n += 1;
                                 string msg = GetAssertFailureMessage( connection, f.Item2 );
-                                Console.WriteLine( $" * {f.Item1}: {msg}" );
+                                Console.WriteLine( $"[{n}] {f.Item1}, {msg}" );
                             }
                         }
                     }
@@ -220,13 +223,16 @@ namespace NutmegRunner {
         private bool TryGetLine( SQLiteConnection connection, string unit, int posn, out string line ) {
             line = null;
             if (unit == null) return false;
-            using (SQLiteCommand cmd = new SQLiteCommand( "SELECT substr( Contents, @Posn, 80 ) FROM SourceFiles WHERE FileName = @Unit", connection )) {
+            using (SQLiteCommand cmd = new SQLiteCommand( "SELECT 1 + length(substr(Contents, 0, @Posn)) - length(replace(substr(Contents, 0, @Posn), CHAR(10), '')), substr( Contents, @Posn, 80 ) FROM SourceFiles WHERE FileName = @Unit", connection )) {
                 cmd.Parameters.AddWithValue( "@Posn", posn + 1 );   //  Add 1 to compensate for the 1-indexing of substr.
                 cmd.Parameters.AddWithValue( "@Unit", unit );
                 cmd.Prepare();
                 var reader = cmd.ExecuteReader();
                 if ( reader.Read() ) {
-                    line = reader.GetString( 0 );
+                    var lineno = reader.GetInt32( 0 );
+                    var text = reader.GetString( 1 );
+                    var fname = unit.Substring( unit.LastIndexOf( '/' ) + 1 );
+                    line = $"line {lineno} of {fname}: {text}";
                 }
             }
             return line != null;
