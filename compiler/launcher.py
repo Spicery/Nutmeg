@@ -116,6 +116,7 @@ def main():
             it can be used to run any single part of the toolchain.	
             """,
     )
+    parser.add_argument( "--developer", "-D", action='store_true', default=False )
 
     subparsers = parser.add_subparsers(
         help="Selects which part(s) of the nutmeg system to use"
