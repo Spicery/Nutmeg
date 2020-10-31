@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace NutmegRunner {
 
@@ -36,13 +35,8 @@ namespace NutmegRunner {
         }
 
         private void ProcessRunnerOptions( LinkedList<string> args ) {
-            //Console.WriteLine( $"Show Options" );
-            //foreach (var arg in args) {
-            //    Console.WriteLine( $"arg = {arg}" );
-            //}
             while (args.Count > 0 && args.First.Value.Length >= 2 && args.First.Value.StartsWith( "-" )) {
                 var option = args.First.Value;
-                //Console.WriteLine( $"option = {option}" );
                 args.RemoveFirst();
                 var n = option.IndexOf( '=' );
                 if (option.StartsWith( "--" )) {
@@ -94,7 +88,7 @@ namespace NutmegRunner {
         }
 
         private IEnumerable<string> GetEntryPoints( SQLiteConnection connection ) {
-            var cmd = new SQLiteCommand( "SELECT [IdName] FROM [EntryPoints]", connection );
+            var cmd = new SQLiteCommand( "SELECT [IdName] FROM [Annotations] WHERE AnnotationKey='command'", connection );
             var reader = cmd.ExecuteReader();
             while (reader.Read()) {
                 yield return reader.GetString( 0 );
@@ -168,29 +162,19 @@ namespace NutmegRunner {
                     using (SQLiteConnection connection = GetConnection()) {
                         connection.Open();
                         var tests_to_run = GetTestsToRun( connection );
-                        var passes = new List<string>();
-                        var failures = new List<Tuple<string, Exception>>();
+                        UnitTestResults utresults = new UnitTestResults( connection );
                         foreach (var idName in tests_to_run) {
                             if (this._debug) Console.WriteLine( $"Running unit test for {idName}" );
                             try {
                                 runtimeEngine.Start( idName, useEvaluate: false, usePrint: this._print );
-                                passes.Add( idName );
+                                utresults.AddPass( idName );
                             } catch (Exception ex) {
-                                failures.Add( new Tuple<string, Exception>( idName, ex ) );
+                                utresults.AddFailure( idName, ex );
                             } finally {
                                 runtimeEngine.Reset();
                             }
                         }
-                        var r_a_g = failures.Count == 0 ? "GREEN" : "RED";
-                        Console.WriteLine( $"{r_a_g}: {passes.Count} passed, {failures.Count} failed" );
-                        if (failures.Count > 0) {
-                            int n = 0;
-                            foreach (var f in failures) {
-                                n += 1;
-                                string msg = GetAssertFailureMessage( connection, f.Item2 );
-                                Console.WriteLine( $"[{n}] {f.Item1}, {msg}" );
-                            }
-                        }
+                        utresults.ShowResults();
                     }
                 } else {
                     runtimeEngine.Start( this._entryPoint, useEvaluate: false, usePrint: this._print );
@@ -202,40 +186,6 @@ namespace NutmegRunner {
                 }
                 throw nme;  // rethrow
             }
-        }
-
-        private string GetAssertFailureMessage( SQLiteConnection connection, Exception ex ) {
-            var msg = ex.Message;
-            if (ex is NutmegTestFailException exn ) {
-                int pos = (int)exn.Position;
-                if (TryGetLine( connection, exn.Unit, pos, out var line )) {
-                    int n = line.IndexOf( '\n' );
-                    if ( n < 0 ) {
-                        n = line.Length;
-                    }
-                    msg = line.Substring( 0, n );
-                }
-            }
-
-            return msg;
-        }
-
-        private bool TryGetLine( SQLiteConnection connection, string unit, int posn, out string line ) {
-            line = null;
-            if (unit == null) return false;
-            using (SQLiteCommand cmd = new SQLiteCommand( "SELECT 1 + length(substr(Contents, 0, @Posn)) - length(replace(substr(Contents, 0, @Posn), CHAR(10), '')), substr( Contents, @Posn, 80 ) FROM SourceFiles WHERE FileName = @Unit", connection )) {
-                cmd.Parameters.AddWithValue( "@Posn", posn + 1 );   //  Add 1 to compensate for the 1-indexing of substr.
-                cmd.Parameters.AddWithValue( "@Unit", unit );
-                cmd.Prepare();
-                var reader = cmd.ExecuteReader();
-                if ( reader.Read() ) {
-                    var lineno = reader.GetInt32( 0 );
-                    var text = reader.GetString( 1 );
-                    var fname = unit.Substring( unit.LastIndexOf( '/' ) + 1 );
-                    line = $"line {lineno} of {fname}: {text}";
-                }
-            }
-            return line != null;
         }
 
         private List<string> GetTestsToRun( SQLiteConnection connection ) {
