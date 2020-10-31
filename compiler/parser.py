@@ -271,6 +271,8 @@ def annotationPrefixMiniParser( parser, token, source ):
             raise Mishap( 'Invalid expression following annotation, needed binding' )
         if t.value() == "unittest":
             e.setAnnotation( unittest=True )
+        elif t.value() == "command":
+            e.setAnnotation( command=True )
         else:
             raise Mishap( 'Unknown annotation', name=t.value() )
         return e
