@@ -14,8 +14,8 @@ Nutmeg is a teaching-oriented imperative programming language that aims to provi
 
 While we are still developing Nutmeg, this guide is very far from complete. However, here are a few in-progress documents you may find useful.
 
-* [Tokenisation Rules as EBNF Grammar](Tokens.ebnf.txt) and as a [railroad diagram](Tokens.pdf).
-* [Nutmeg Syntax as EBNF Grammar](Nutmeg.ebnf.txt) and as a [railroad diagram](Nutmeg-prototype-grammar.pdf).
+* [Tokenisation Rules as EBNF Grammar](Tokens.ebnf.txt) and as a [railroad diagram](Tokens.ebnf.pdf).
+* [Nutmeg Syntax as EBNF Grammar](Nutmeg.ebnf.txt) and as a [railroad diagram](Nutmeg.ebnf.pdf).
 * [Assignments](assignments.md) - a page on assignment in Nutmeg.
 * [Comments](comments.md) - a page on comments in Nutmeg.
 * [Compiling and Running Programs](compiling-and-running.md) - a page on how to use the nutmeg and nutmegc commands.

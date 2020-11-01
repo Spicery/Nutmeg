@@ -6,7 +6,10 @@ Statement ::= Expression | Binding
 
 Binding ::= 
     Pattern ':=' Expression |
-    ('def'|'function'|'finesse') Identifier '(' Pattern ')' ('=>>'|':') Statements ('enddef'|'end')
+    Annotation* ('def'|'function'|'finesse') Identifier '(' Pattern ')' ('=>>'|':') Statements ('enddef'|'end')
+
+Annotation ::=
+    '@' ('command'|'unittest')
 
 Pattern ::= 
     LiteralConstant |
@@ -27,7 +30,8 @@ Expression ::=
     IfExpression |
     SwitchExpression |
     LoopExpression |
-    LambdaExpression
+    LambdaExpression |
+    AssertExpression
      
 
 LetExpression ::= 'let' Statements 'in' Statements ('endlet'|'end')
@@ -39,6 +43,8 @@ SwitchExpression ::= 'switch' Expression ':'? ( ( 'case' Pattern )+ ('then'|':')
 LoopExpression ::= 'for' Queries ('do'|':') Statements ('endfor'|'end')
 
 LambdaExpression ::= 'fn' Identifier? Pattern ('=>>'|':') Statements ('endfn'|'end')
+
+AssertExpression ::= 'assert' Expression
 
 Queries ::= 
     Query ('&&' Query)* |
