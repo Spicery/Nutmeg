@@ -18,9 +18,11 @@ While we are still developing Nutmeg, this guide is very far from complete. Howe
 * [Nutmeg Syntax as EBNF Grammar](Nutmeg.ebnf.txt) and as a [railroad diagram](Nutmeg-prototype-grammar.pdf).
 * [Assignments](assignments.md) - a page on assignment in Nutmeg.
 * [Comments](comments.md) - a page on comments in Nutmeg.
+* [Compiling and Running Programs](compiling-and-running.md) - a page on how to use the nutmeg and nutmegc commands.
 * [For syntax](for-syntax.md) - a page on of `for` loops i Nutmeg.
 * [If Syntax](if-syntax.md) - a page on the `if` conditional in Nutmeg.
 * [Ranges](ranges.md) - a page on ranges in Nutmeg.
 * [Statements](statements.md) - a page on the syntax of statements.
+* [Unit tests](unittest.md) - a page on the built-in unit-test framework.
 * [Variables](variables.md) - a page on the different kinds of variables.
 
