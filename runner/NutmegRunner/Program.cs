@@ -63,7 +63,7 @@ namespace NutmegRunner {
                         case "--graphviz":
                             this._graphviz = parameter;
                             break;
-                        case "--test":
+                        case "--unittest":
                             this._test = true;
                             break;
                         default:

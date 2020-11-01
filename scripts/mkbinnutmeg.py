@@ -9,9 +9,9 @@ case $1 in
     compile|parse|resolve|optimize|codegen|bundle|trace)
         exec /opt/nutmeg/libexec/nutmeg/compiler/nutmeg $*
         ;;
-    test)
+    unittest)
         shift
-        exec $(INSTALL_DIR)/runner/NutmegRunner --test $*
+        exec $(INSTALL_DIR)/runner/NutmegRunner --unittest $*
         ;;
     run)
         shift
