@@ -108,10 +108,6 @@ class Codelet( abc.ABC ):
 		self.serialize( stream )
 		return json.loads( stream.getvalue() )
 
-	# @abc.abstractmethod
-	# def subExpressions( self ):
-	# 	raise Exception( 'Not defined' )
-
 	@abc.abstractmethod
 	def visit( self, visitor, *args, **kwargs ):
 		raise Exception( 'Not defined' )
