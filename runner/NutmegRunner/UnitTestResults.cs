@@ -40,15 +40,22 @@ namespace NutmegRunner {
                 int n = 0;
                 foreach (var f in _failures) {
                     n += 1;
-                    string msg = GetAssertFailureMessage( _connection, f.Item2 );
+                    Exception e = f.Item2;
+                    string msg = GetAssertFailureMessage( _connection, e );
                     Console.WriteLine( $"[{n}] {f.Item1}, {msg}" );
+                    if (e is AssertionFailureException exn) {
+                        foreach (var culprit in exn.Culprits) {
+                            Console.WriteLine( $"  - {culprit.Key}: {culprit.Value}" );
+                        }
+                    }
                 }
             }
         }
 
         private string GetAssertFailureMessage( SQLiteConnection connection, Exception ex ) {
             var msg = ex.Message;
-            if (ex is NutmegTestFailException exn) {
+
+            if (ex is AssertionFailureException exn) {
                 int pos = (int)exn.Position;
                 if (TryGetLine( connection, exn.Unit, pos, out var line )) {
                     int n = line.IndexOf( '\n' );

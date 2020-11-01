@@ -3,12 +3,12 @@ using System.Collections.Generic;
 
 namespace NutmegRunner {
 
-    public class NutmegTestFailException : ApplicationException {
+    public class AssertionFailureException : NutmegException {
 
         public string Unit { get; set; }
         public long Position { get; set; }
 
-        public NutmegTestFailException( string message, object unit, object position, Exception exn = null ) : base( message, exn ) {
+        public AssertionFailureException( string message, object unit, object position, Exception exn = null ) : base( message, exn ) {
             switch ( position ) {
                 case long posn:
                     this.Position = posn;

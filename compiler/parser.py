@@ -186,7 +186,6 @@ def tryRead( source, *categories ):
         source.pop()
     return ok
 
-
 ################################################################################
 ### Set up the tables
 ################################################################################
@@ -279,12 +278,29 @@ def annotationPrefixMiniParser( parser, token, source ):
     else:
         raise Mishap( "Invalid name for annotation", name=t )
 
+def tryMatchSyscall( name, expr ):
+    while isinstance( expr, codetree.SeqCodelet ) and len( expr.body() ) == 1:
+        expr = expr.body()[0]
+    if isinstance( expr, codetree.SyscallCodelet ) and expr.name() == name:
+        return expr
+    else:
+        return None
+
 def assertPrefixMiniParser( parser, token, source ):
-    test_expr = parser.tryReadExpr( math.inf, source, checkNewlines=False )
+    expr = parser.tryReadExpr( math.inf, source, checkNewlines=False )
     position = codetree.IntCodelet( token.span()[0] )
     unit = codetree.StringCodelet( parser.unit() )
-    args = codetree.SeqCodelet( test_expr, unit, position )
-    return codetree.SyscallCodelet( name="assert", arguments=args )
+    e = tryMatchSyscall( "==", expr )
+    if e:
+        args = codetree.SeqCodelet( *e.arguments(), unit, position )
+        return codetree.SyscallCodelet( name="assertEquals", arguments=args )
+    e = tryMatchSyscall( "!=", expr )
+    if e:
+        args = codetree.SeqCodelet( *e.arguments(), unit, position )
+        return codetree.SyscallCodelet( name="assertNotEquals", arguments=args )
+    args = codetree.SeqCodelet( expr, unit, position )
+    return codetree.SyscallCodelet( name="assertTrue", arguments=args )
+
 
 PREFIX_TABLE = {
     "ANNOTATION": annotationPrefixMiniParser,
