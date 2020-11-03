@@ -14,11 +14,15 @@ class TableDrivenParser:
     to look up in tables what we should do next.
     """
 
-    def __init__( self, prefix_table, postfix_table ):
+    def __init__( self, prefix_table, postfix_table, unit=None ):
         self._prefix_table = prefix_table
         self._postfix_table = postfix_table
         self._non_breakable = True
         self._non_breakable_dump = []
+        self._unit = unit
+
+    def unit( self ):
+        return self._unit
 
     def isNonBreakable( self ):
         return self._non_breakable
@@ -37,10 +41,10 @@ class TableDrivenParser:
         self._non_breakable = self._non_breakable_dump.pop()
 
     def tryRunPrefixMiniParser( self, token, source ):
+        # print( "PREFIX", token, token.category() )
         try:
             self.pushNonBreakableOr( token.isOutfixer() )
             minip = self._prefix_table[ token.category() ]
-            # print( "PREFIX", token )
             return minip( self, token, source )
         except KeyError:
             return None
@@ -70,6 +74,7 @@ class TableDrivenParser:
 
     def tryReadExpr( self, prec, source, checkNewlines=True ):
         token = source.popOrElse()
+        # print( 'TRYREADEXPR', token.value(), checkNewlines )
         if not token:
             return None
         elif checkNewlines:
@@ -158,9 +163,9 @@ class TableDrivenParser:
             self.popNonBreakable()
 
     def parseFromFileObject(self, file_object):
-        return self.parseFromString( file_object.read() )
+        return self.parseFromString( file_object.read(), origin=str(file_object) )
 
-    def parseFromString( self, text ):
+    def parseFromString( self, text, origin=None ):
         source = PeekablePushable( tokenizer( text ) )
         yield from self.readStatementsGenerator( source )
         if not source.isEmpty():
@@ -180,7 +185,6 @@ def tryRead( source, *categories ):
     if ok:
         source.pop()
     return ok
-
 
 ################################################################################
 ### Set up the tables
@@ -258,8 +262,49 @@ def varPrefixMiniParser( parser, token, source ):
     else:
         raise Exception( f"Unexpected token: {t}")
 
+def annotationPrefixMiniParser( parser, token, source ):
+    t = source.pop()
+    if t.category() == IdToken:
+        e = parser.tryReadExpr( math.inf, source, checkNewlines=False )
+        if not isinstance( e, codetree.BindingCodelet ):
+            raise Mishap( 'Invalid expression following annotation, needed binding' )
+        if t.value() == "unittest":
+            e.setAnnotation( unittest=True )
+        elif t.value() == "command":
+            e.setAnnotation( command=True )
+        else:
+            raise Mishap( 'Unknown annotation', name=t.value() )
+        return e
+    else:
+        raise Mishap( "Invalid name for annotation", name=t )
+
+def tryMatchSyscall( name, expr ):
+    while isinstance( expr, codetree.SeqCodelet ) and len( expr.body() ) == 1:
+        expr = expr.body()[0]
+    if isinstance( expr, codetree.SyscallCodelet ) and expr.name() == name:
+        return expr
+    else:
+        return None
+
+def assertPrefixMiniParser( parser, token, source ):
+    expr = parser.tryReadExpr( math.inf, source, checkNewlines=False )
+    position = codetree.IntCodelet( token.span()[0] )
+    unit = codetree.StringCodelet( parser.unit() )
+    e = tryMatchSyscall( "==", expr )
+    if e:
+        args = codetree.SeqCodelet( *e.arguments(), unit, position )
+        return codetree.SyscallCodelet( name="assertEquals", arguments=args )
+    e = tryMatchSyscall( "!=", expr )
+    if e:
+        args = codetree.SeqCodelet( *e.arguments(), unit, position )
+        return codetree.SyscallCodelet( name="assertNotEquals", arguments=args )
+    args = codetree.SeqCodelet( expr, unit, position )
+    return codetree.SyscallCodelet( name="assertTrue", arguments=args )
+
 
 PREFIX_TABLE = {
+    "ANNOTATION": annotationPrefixMiniParser,
+    "ASSERT": assertPrefixMiniParser,
     "LPAREN": lparenPrefixMiniParser,
     "LBRACKET": lbracketPrefixMiniParser,
     "DEC_FUNCTION_1": defPrefixMiniParser,
@@ -326,11 +371,11 @@ POSTFIX_TABLE = {
     "IN": inPostfixMiniParser,
 }
 
-def standardParser():
-    return TableDrivenParser( PREFIX_TABLE, POSTFIX_TABLE )
+def standardParser( unit=None ):
+    return TableDrivenParser( PREFIX_TABLE, POSTFIX_TABLE, unit=unit )
 
 def parseFromString( text ):
     return standardParser().parseFromString( text )
 
-def parseFromFileObject( file_object ):
-    return standardParser().parseFromFileObject( file_object )
+def parseFromFileObject( file_object, unit=None ):
+    return standardParser( unit=unit ).parseFromFileObject( file_object )

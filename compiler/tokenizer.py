@@ -24,6 +24,13 @@ class Token( abc.ABC ):
     def __init__( self, value ):
         self._value = value
         self._followsNewLine = False
+        self._span = None
+
+    def span( self ):
+        return self._span
+
+    def setSpan( self, start, finish ):
+        self._span = ( start, finish )
 
     def followsNewLine( self ):
         return self._followsNewLine
@@ -249,6 +256,7 @@ token_spec = {
         TokenType( r"(?P<WS>\s+)" ),
 
         # operators
+        TokenType( r"(?P<ANNOTATION>@)", make=SyntaxToken.make ),
         TokenType( r"(?P<BIND>:=)", prec=990, make=SyntaxToken.make ),
         TokenType( r"(?P<ASSIGN><-)", prec=990, make=SyntaxToken.make ),
         TokenType( r"(?P<UPDATE_ELEMENT><--)" ),
@@ -266,6 +274,8 @@ token_spec = {
         TokenType( r"(?P<GTE>>=)", prec=590, make=IdToken.make ),
         TokenType( r"(?P<LT>\<)", prec=590, make=IdToken.make ),
         TokenType( r"(?P<GT>\>)", prec=590, make=IdToken.make ),
+        TokenType( r"(?P<EQUALS>==)", prec=595, make=IdToken.make ),
+        TokenType( r"(?P<NOT_EQUALS>!=)", prec=595, make=IdToken.make ),
 
         # keywords
         TokenType( r"(?P<TERMINATE_STATEMENT>;)", make=PunctuationToken.make ),
@@ -288,6 +298,7 @@ token_spec = {
         TokenType( r"(?P<IN>in)", prec=900, prefix=False, make=SyntaxToken.make ),
         TokenType( r"(?P<DO>do)", make=PunctuationToken.make ),
         TokenType( r"(?P<ENDFOR>endfor)", make=PunctuationToken.make ),
+        TokenType( r"(?P<ASSERT>assert)", make=SyntaxToken.make ),
 
         TokenType( r"(?P<END>end)", make=PunctuationToken.make ),  # MUST come after all other end... token types.
 
@@ -366,6 +377,7 @@ def tokenizer( text : str ):
                 if follows_newline:
                     tok.setFollowsNewLine()
                     follows_newline = False
+                tok.setSpan( old_position, position )
                 yield tok
         else:
             n = text.find("\n", position)

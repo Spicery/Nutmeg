@@ -13,7 +13,7 @@ from nutmeg_extensions import NutmegParserExtension
 from codetree import StringCodelet, IdCodelet, BindingCodelet
 
 @NutmegParserExtension(r'(.*)\.txt$')
-def dot_txt_parser( file_object, match ):
+def dot_txt_parser( file_object, match, unit=None ):
     varname = match.group(1)
     contents = file_object.read()
     rhs = StringCodelet( value = contents )

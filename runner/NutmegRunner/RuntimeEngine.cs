@@ -59,6 +59,11 @@ namespace NutmegRunner {
             this.Debug = debug;
         }
 
+        public void Reset() {
+            this._callStack = new UncheckedLayeredStack<object>();
+            this._valueStack = new CheckedLayeredStack<object>();
+        }
+
         public void LockValueStack() {
             this._valueStack.Lock();
         }

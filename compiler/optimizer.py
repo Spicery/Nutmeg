@@ -2,8 +2,6 @@ import codetree
 from codetree import CallCodelet, SyscallCodelet, IdCodelet
 import syscalls
 
-
-
 class ReplaceIdsWithSysconsts( codetree.CodeletVisitor ):
 
     def __call__( self, tree ):
@@ -34,6 +32,22 @@ class Simplify( codetree.CodeletVisitor ):
     def visitCodelet( self, codelet ):
         return codelet.transform( self )
 
+    def visitSeqCodelet( self, code_let ):
+        if len( code_let.body() ) == 1:
+            return code_let.body()[ 0 ].visit( self )
+        else:
+            body = []
+            for i in code_let.body():
+                t = i.visit( self )
+                if isinstance( t, codetree.SeqCodelet ):
+                    body.extend( t.body() )
+                else:
+                    body.append( t )
+            if len( body ) == 1:
+                return body[ 0 ]
+            else:
+                return codetree.SeqCodelet( body=body )
+
     def visitIfCodelet( self, if_codelet ):
         test_part = if_codelet.testPart()
         if isinstance( test_part, codetree.BoolCodelet ):
@@ -47,7 +61,7 @@ class Simplify( codetree.CodeletVisitor ):
     def visitSyscallCodelet( self, syscall_codelet ):
         name = syscall_codelet.name()
         args = syscall_codelet.arguments()
-        if isinstance( args, codetree.SyscallCodelet ):
+        if name == "newImmutableList" and isinstance( args, codetree.SyscallCodelet ):
             args_name = args.name()
             if args_name == "..<" or args_name == "...":
                 transformed_args = args.arguments().visit( self )
@@ -56,7 +70,6 @@ class Simplify( codetree.CodeletVisitor ):
                 return self.visitCodelet( syscall_codelet )
         else:
             return self.visitCodelet( syscall_codelet )
-
 
 
 def replaceIdsWithSysconsts( tree ):

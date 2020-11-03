@@ -321,6 +321,99 @@ namespace NutmegRunner {
 
     }
 
+    public class EqualsSystemFunction : FixedAritySystemFunction {
+
+        public EqualsSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 2;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            var y = runtimeEngine.PopValue();
+            var x = runtimeEngine.PopValue();
+            runtimeEngine.PushValue( x?.Equals( y ) ?? y == null );
+            return this.Next;
+        }
+    }
+
+    public class NotEqualsSystemFunction : FixedAritySystemFunction {
+
+        public NotEqualsSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 2;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            var y = runtimeEngine.PopValue();
+            var x = runtimeEngine.PopValue();
+            runtimeEngine.PushValue( !( x?.Equals( y ) ?? y == null ) );
+            return this.Next;
+        }
+    }
+
+    public class AssertTrueSystemFunction : FixedAritySystemFunction {
+
+        public AssertTrueSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 3;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            var position = runtimeEngine.PopValue();
+            var unit = runtimeEngine.PopValue();
+            switch (runtimeEngine.PopValue()) {
+                case Boolean b:
+                    if (b) return this.Next;
+                    break;
+                default:
+                    break;
+            }
+            throw new AssertionFailureException( "assert failed", unit, position );
+        }
+
+    }
+
+    public class AssertEqualsSystemFunction : FixedAritySystemFunction {
+
+        public AssertEqualsSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 4;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            var position = runtimeEngine.PopValue();
+            var unit = runtimeEngine.PopValue();
+            var y = runtimeEngine.PopValue();
+            var x = runtimeEngine.PopValue();
+            if (x?.Equals( y ) ?? y == null) {
+                return this.Next;
+            } else {
+                throw new AssertionFailureException( "assert equal failed", unit, position )
+                    .Culprit( "Left Value", $"{x}" )
+                    .Culprit( "Right Value", $"{y}" );
+            }
+        }
+
+    }
+
+    public class AssertNotEqualsSystemFunction : FixedAritySystemFunction {
+
+        public AssertNotEqualsSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 4;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            var position = runtimeEngine.PopValue();
+            var unit = runtimeEngine.PopValue();
+            var y = runtimeEngine.PopValue();
+            var x = runtimeEngine.PopValue();
+            if ( !( x?.Equals( y ) ?? y == null ) ) {
+                return this.Next;
+            } else {
+                throw new AssertionFailureException( "assert not equals failed", unit, position )
+                    .Culprit( "Left Value", $"{x}" )
+                    .Culprit( "Right Value", $"{y}" );
+            }
+        }
+
+    }
+
     public delegate SystemFunction SystemFunctionMaker( Runlet next );
 
     public class LookupTableBuilder {
@@ -337,6 +430,8 @@ namespace NutmegRunner {
 
     }
 
+
+
     public class NutmegSystem {
 
         static readonly Dictionary<string, SystemFunctionMaker> SYSTEM_FUNCTION_TABLE =
@@ -351,11 +446,16 @@ namespace NutmegRunner {
             .Add( "*", r => new MulSystemFunction( r ), "mul" )
             .Add( "-", r => new SubtractSystemFunction( r ), "sub" )
             .Add( "sum", r => new SumSystemFunction( r ) )
+            .Add( "==", r => new EqualsSystemFunction( r ) )
+            .Add( "!=", r => new NotEqualsSystemFunction( r ) )
             .Add( "<=", r => new LTESystemFunction( r ), "lessThanOrEqualTo" )
             .Add( "<", r => new LTSystemFunction( r ), "lessThan" )
             .Add( ">=", r => new GTESystemFunction( r ), "greaterThanOrEqualTo" )
             .Add( ">", r => new GTSystemFunction( r ), "greaterThan" )
             .Add( "newImmutableList", r => new ListSystemFunction( r ) )
+            .Add( "assertTrue", r => new AssertTrueSystemFunction( r ) )
+            .Add( "assertEquals", r => new AssertEqualsSystemFunction( r ) )
+            .Add( "assertNotEquals", r => new AssertNotEqualsSystemFunction( r ) )
             .Table;
 
         public static SystemFunctionMaker Find( string name ) {

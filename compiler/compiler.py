@@ -31,12 +31,12 @@ class Compiler:
     def processOneFile( self, filename ):
         text = self.getAndAddSource( filename )
         fname = filename.name
-        (match, parser) = nutmeg_extensions.findMatchingParser( fname  )
-        for codelet in parser( io.StringIO( text ), match ):
+        (match, parser) = nutmeg_extensions.findMatchingParser( fname )
+        for codelet in parser( io.StringIO( text ), match, unit=str(filename.absolute()) ):
             resolver.resolveCodeTree( codelet )                                 # Edits in place.
             codelet = optimizer.optimizeCodeTree( codelet )
             codegen.codeGenCodeTree( codelet )                                  # Also edits in place
-            bundler.bundleCodeTree( self._bundle, codelet )
+            bundler.bundleCodeTree( self._bundle, codelet, filename )
 
     def compile( self ):
         if not self._bundle.exists():

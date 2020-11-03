@@ -92,33 +92,6 @@ class CompilerLauncher(Launcher):
         cmplr = compiler.Compiler( self._args.entry_point, self._args.bundle, tuple( map( Path, self._args.files ) ), keep=self._args.keep  )
         cmplr.compile()
 
-
-class RunLauncher( Launcher ):
-
-    def __init__( self, args ):
-        super().__init__( args )
-        if self._args.bundle is None:
-            if self._args.others:
-                self._args.bundle = Path( self._args.others[ 0 ] )
-                self._args.others = self._args.others[ 1: ]
-            else:
-                raise Exception( 'RUN: No bundle file provided' )
-        if self._args.entry_point is None:
-            if self._args.others:
-                self._args.entry_point = Path( self._args.others[ 0 ] )
-                self._args.others = self._args.others[ 1: ]
-            else:
-                raise Exception( 'RUN: No entry point provided' )
-
-    def launch( self ):
-        """
-        Exec into the runner monolith
-        """
-        # This is only intended for developers, for when the developer sets $NUTMEG_HOME.
-        executable = Path( Path( os.environ[ 'NUTMEG_HOME' ] ), Path( "runner/NutmegRunner" ) )
-        command = [ executable, f"--entry-point={self._args.entry_point}", self._args.bundle ]
-        subprocess.run( command )
-
 ###############################################################################
 # Main entry point - parses the options and launches the right phase.
 ###############################################################################
@@ -131,7 +104,6 @@ COMMANDS = {
     "bundler" : "bundle",
     "tracer" : "trace",
     "compiler" : "compile",
-    "runner": "run",            # Arguably we should remove 'run' from the compiler.
 }
 
 def main():
@@ -144,7 +116,6 @@ def main():
             it can be used to run any single part of the toolchain.	
             """,
     )
-    parser.set_defaults(mode=RunLauncher)
     parser.add_argument( "--developer", "-D", action='store_true', default=False )
 
     subparsers = parser.add_subparsers(
@@ -202,30 +173,7 @@ def main():
     mode_compile.add_argument( "--keep", "-k", action='store_true', default=False, help="If bundle file exists keep records (i.e. do not clear tables)" )
     mode_compile.add_argument( 'files', nargs = argparse.REMAINDER )
 
-    mode_run = subparsers.add_parser( COMMANDS[ "runner" ], help="Runs a bundle-file" )
-    mode_run.set_defaults( mode=RunLauncher )
-    mode_run.add_argument( "--bundle", "-b", type=Path )
-    mode_run.add_argument( "--entry-point", "-e", type=str )
-    mode_run.add_argument( 'others', nargs = argparse.REMAINDER )
-
-    # Find the first argument not starting with '-'
-    argv = []
-    seen_subcommand = False
-    for i in range( 1, len( sys.argv ) ):
-        arg = sys.argv[i]
-        if seen_subcommand:
-            pass
-        elif arg.startswith( '-' ):
-            pass
-        elif arg in COMMANDS.values():
-            seen_subcommand = True
-        else:
-            # Handle the case when the subparser command is omitted.
-            argv.append( COMMANDS[ "runner" ] )
-            seen_subcommand = True
-        argv.append( arg )
-
-    args = parser.parse_args( args=argv )
+    args = parser.parse_args( args=sys.argv[1:] )
     try:
         args.mode(args).launch()
     except Mishap as m:
