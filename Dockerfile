@@ -1,25 +1,36 @@
 FROM ubuntu:20.04 AS nutmeg-base
-# ENV TZ=Europe/London
 ARG DEBIAN_FRONTEND=noninteractive
-# RUN apt-get install -y systemd && timedatectl set-timezone Europe/London
 RUN apt-get update 
 RUN apt-get install -y apt-transport-https
 RUN apt-get install -y tar gzip zip wget curl 
-RUN apt-get install -y ca-certificates build-essential python3 python3-pip git-all
-
+RUN apt-get install -y ca-certificates build-essential software-properties-common python3 python3-pip git-all
+# Dotnet deb packages in dedicated repo; update to get fresh data.
 RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-RUN apt-get install -y software-properties-common
 RUN apt-add-repository https://packages.microsoft.com/ubuntu/20.04/prod
-RUN apt-get update
+RUN apt-get update 
 RUN apt-get install -y --no-install-recommends dotnet-sdk-3.1 
 
+########################################
+# For vscode development
+# 
 FROM nutmeg-base AS nutmeg-vscode
-ENV TZ=Europe/London
 ARG DEBIAN_FRONTEND=noninteractive
+ARG INSTALL_ZSH="true"
+ARG UPGRADE_PACKAGES="true"
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
 RUN bash -c "$(curl -fsSL "https://raw.githubusercontent.com/microsoft/vscode-dev-containers/v0.140.1/script-library/common-debian.sh")"
     # && apt-get clean -y \
     # && rm -rf /var/lib/apt/lists/*
+RUN pip3 install pytest pylint black
+# This may not be ideal, but global install latest seems OK for these tools
+# Cannot install requirements.txt because cannot start 
+# Could we do better if we assume pipenv?
 
+########################################
+# For running from command line: docker run -it --rm <image_id>:live-install
+# 
 FROM nutmeg-base AS live-install
 ARG DEBIAN_FRONTEND=noninteractive
 RUN pip3 install str2bool pyinstaller
@@ -32,7 +43,12 @@ RUN make build RID=linux-x64
 RUN make install RID=linux-x64
 WORKDIR /tmp
 
-# or FROM vscode ???
+########################################
+# For use in Circle CI pipeline.
+# Circle CI expects to pull container image from a repo.
+# Currently publishing to philallen117 account in Docker Hub.
+# Make a Spicery account in Docker Hub? Or in GitHub Container Repos?
+# 
 FROM nutmeg-base AS circleci
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get install -y --no-install-recommends openssh-client
@@ -51,6 +67,4 @@ RUN groupadd --gid 3434 circleci \
 
 USER circleci
 ENV PATH /home/circleci/.local/bin:/home/circleci/bin:${PATH}
-
 CMD ["/bin/sh"]
-
