@@ -16,8 +16,10 @@ RUN apt-get install -y python3-pip
 RUN pip3 install str2bool pyinstaller
 RUN make build RID=linux-x64
 RUN make install RID=linux-x64
-RUN useradd -ms /bin/bash coder
-RUN apt-get install -y sudo nano vim less
-RUN usermod -aG sudo coder
+# Set up basic dev environment.
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y sudo nano vim less file
 USER coder
+RUN useradd -ms /bin/bash coder
+RUN usermod -aG sudo coder
+RUN echo 'coder:nutmeg<3' | chpasswd
 WORKDIR /home/coder
