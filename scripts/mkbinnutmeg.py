@@ -3,8 +3,7 @@
 import os
 import argparse
 
-TEMPLATE = """
-#!/bin/bash
+TEMPLATE = """#!/bin/bash
 case $1 in
     compile|parse|resolve|optimize|codegen|bundle|trace)
         exec /opt/nutmeg/libexec/nutmeg/compiler/nutmeg $*
