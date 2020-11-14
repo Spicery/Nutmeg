@@ -18,3 +18,4 @@ RUN make build RID=linux-x64
 RUN make install RID=linux-x64
 RUN useradd -ms /bin/bash coder
 USER coder
+WORKDIR /home/coder
