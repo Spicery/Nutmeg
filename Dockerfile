@@ -24,3 +24,4 @@ RUN echo 'coder:nutmeg<3' | chpasswd
 # Switch to the unprivileged user 'coder'
 USER coder
 WORKDIR /home/coder
+RUN touch /home/coder/.sudo_as_admin_successful
