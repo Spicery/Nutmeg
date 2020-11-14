@@ -216,7 +216,7 @@ namespace NutmegRunner {
         private SqliteConnection GetConnection() {
             try {
                 return new SqliteConnection( new SqliteConnectionStringBuilder() { DataSource = this._bundleFile, Mode = SqliteOpenMode.ReadOnly }.ToString() );
-            } catch (System.Data.SQLite.SQLiteException) {
+            } catch (Microsoft.Data.Sqlite.SqliteException) {
                 throw new NutmegException( "Cannot find/open bundle" ).Culprit( "Filename", this._bundleFile );
             }
         }
