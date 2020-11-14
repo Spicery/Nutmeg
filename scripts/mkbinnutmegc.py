@@ -3,8 +3,7 @@
 import os
 import argparse
 
-TEMPLATE = """
-#!/bin/bash
+TEMPLATE = """#!/bin/bash
 exec $(INSTALL_DIR)/compiler/nutmeg compile $*
 """
 

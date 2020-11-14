@@ -3,6 +3,25 @@ using System.Collections.Generic;
 
 namespace NutmegRunner {
 
+    public class AssertionFailureException : NutmegException {
+
+        public string Unit { get; set; }
+        public long Position { get; set; }
+
+        public AssertionFailureException( string message, object unit, object position, Exception exn = null ) : base( message, exn ) {
+            switch ( position ) {
+                case long posn:
+                    this.Position = posn;
+                    break;
+            }
+            switch (unit) {
+                case string u:
+                    this.Unit = u;
+                    break;
+            }
+        }
+    }
+
     public class NutmegException : ApplicationException {
 
         protected Dictionary<string, string> _culprits = new Dictionary<string, string>();

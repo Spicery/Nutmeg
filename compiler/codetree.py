@@ -41,10 +41,19 @@ class CodeletVisitor( abc.ABC ):
 	def visitIfCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
+	def visitInCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitForCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
 	def visitSeqCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
 	def visitBindingCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitAssignCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
 	def visitFunctionCodelet( self, code_let, *args, **kwargs ):
@@ -99,10 +108,6 @@ class Codelet( abc.ABC ):
 		self.serialize( stream )
 		return json.loads( stream.getvalue() )
 
-	# @abc.abstractmethod
-	# def subExpressions( self ):
-	# 	raise Exception( 'Not defined' )
-
 	@abc.abstractmethod
 	def visit( self, visitor, *args, **kwargs ):
 		raise Exception( 'Not defined' )
@@ -111,6 +116,9 @@ class Codelet( abc.ABC ):
 		for m in self.members():
 			m.declarationMode()
 
+	def assignMode( self ):
+		for m in self.members():
+			m.assignMode()
 
 class ConstantCodelet( Codelet, ABC ):
 	"""
@@ -183,6 +191,9 @@ class BoolCodelet( ConstantCodelet ):
 	def valueAsString( self ):
 		return 'true' if self._value else 'false'
 
+	def valueAsBool( self ):
+		return self._value
+
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitBoolCodelet( self, *args, **kwargs )
 
@@ -250,6 +261,7 @@ class IdCodelet( Codelet ):
 
 	def setAsGlobal( self ):
 		self._scope = "global"
+		self._nonassignable = True
 
 	def setAsLocal( self, * , label, nonassignable, immutable, **kwargs ):
 		self._scope = "local"
@@ -267,6 +279,11 @@ class IdCodelet( Codelet ):
 	def declarationMode( self ):
 		if self._reftype == "get":
 			self._reftype = "val"
+
+	def assignMode( self ):
+		if self._reftype == "get":
+			self._reftype = "set"
+
 
 class SysfnCodelet( Codelet ):
 
@@ -299,6 +316,12 @@ class SyscallCodelet( Codelet ):
 
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, name=self._name, arguments=self._arguments, **self._kwargs )
+
+	def name( self ):
+		return self._name
+
+	def arguments( self ):
+		return self._arguments
 
 	def members( self ):
 		yield self._arguments
@@ -337,6 +360,63 @@ class CallCodelet( Codelet ):
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitCallCodelet( self, *args, **kwargs )
 
+class InCodelet( Codelet ):
+
+	KIND = "in"
+
+	def __init__( self, *, pattern, streamable, **kwargs ):
+		self._streamSlot = kwargs.pop( "streamSlot", None )
+		super().__init__( **kwargs )
+		self._pattern = pattern
+		self._streamable = streamable
+
+	def pattern( self ):
+		return self._pattern
+
+	def streamable( self ):
+		return self._streamable
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, pattern=self._pattern, streamable=self._streamable, streamSlot=self._streamSlot, **self._kwargs )
+
+	def members( self ):
+		yield self._pattern
+		yield self._streamable
+
+	def transform( self, f ):
+		return InCodelet( pattern=f(self._pattern), streamable=f(self._streamable), **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitInCodelet( self, *args, **kwargs )
+
+class ForCodelet( Codelet ):
+
+	KIND = "for"
+
+	def __init__( self, *, query, body, **kwargs ):
+		super().__init__( **kwargs )
+		self._query = query
+		self._body = body
+
+	def query( self ):
+		return self._query
+
+	def body( self ):
+		return self._body
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, query=self._query, body=self._body, **self._kwargs )
+
+	def members( self ):
+		yield self._query
+		yield self._body
+
+	def transform( self, f ):
+		return ForCodelet( query=f( self._query ), body=f( self._body ), **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitForCodelet( self, *args, **kwargs )
+
 
 class IfCodelet( Codelet ):
 
@@ -344,11 +424,30 @@ class IfCodelet( Codelet ):
 
 	# Slightly awkward because the constructor for an if-codelet uses a Python
 	# reserved word (else) as a keyword-argument.
-	def __init__( self, *, test, then, **kwargs ):
-		self._else = kwargs.pop( 'else', None )
+	def __init__( self, *, test=None, then=None, testPart=None, thenPart=None, elsePart=None, **kwargs ):
+		self._else = kwargs.pop( 'else', elsePart )
 		super().__init__( **kwargs )
-		self._test = test
-		self._then = then
+		self._test = test or testPart
+		self._then = then or thenPart
+		if self._test is None:
+			raise Exception( 'Test part is not specified' )
+		if self._then is None:
+			raise Exception( 'Then part is not specified' )
+
+	def members( self ):
+		yield self.testPart()
+		yield self.thenPart()
+		yield self.elsePart()
+
+	def transform( self, f ):
+		return IfCodelet( 
+			test=f( self.testPart() ), 
+			then=f( self.thenPart() ), 
+			**{
+				'else': f(self.elsePart())
+			},
+			**self._kwargs
+		)
 
 	def members( self ):
 		yield self.testPart()
@@ -399,16 +498,16 @@ class SeqCodelet( Codelet ):
 	def body( self ):
 		return self._body
 
+	def __getitem__(self, item):
+		return self._body[ item ]
+
 	def transform( self, f ):
 		return SeqCodelet( *map( f, self._body ), **self._kwargs )
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitSeqCodelet( self, *args, **kwargs )
 
-
-class BindingCodelet( Codelet ):
-
-	KIND = "binding"
+class AssignLikeCodelet( Codelet, ABC ):
 
 	def __init__( self, *, lhs, rhs, **kwargs ):
 		super().__init__( **kwargs )
@@ -419,20 +518,47 @@ class BindingCodelet( Codelet ):
 		yield self.lhs()
 		yield self.rhs()
 
-	def transform( self, f ):
-		return BindingCodelet( lhs=f( self.lhs() ), rhs=f( self.rhs() ), **self._kwargs )
-
 	def lhs( self ):
 		return self._lhs
 
 	def rhs( self ):
 		return self._rhs
 
+class AssignCodelet( AssignLikeCodelet ):
+
+	KIND = "assign"
+
+	def transform( self, f ):
+		return AssignCodelet( lhs=f( self.lhs() ), rhs=f( self.rhs() ), **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitAssignCodelet( self, *args, **kwargs )
+
 	def encodeAsJSON( self, encoder ):
 		return dict( kind=self.KIND, lhs=self._lhs, rhs=self._rhs, **self._kwargs )
 
+class BindingCodelet( AssignLikeCodelet ):
+
+	KIND = "binding"
+
+	def __init__( self, *, lhs, rhs, annotations=None, **kwargs ):
+		super().__init__( lhs=lhs, rhs=rhs, **kwargs )
+		self._annotations = annotations or {}
+
+	def transform( self, f ):
+		return BindingCodelet( lhs=f( self.lhs() ), rhs=f( self.rhs() ), annotations=self._annotations, **self._kwargs )
+
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitBindingCodelet( self, *args, **kwargs )
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, lhs=self._lhs, rhs=self._rhs, annotations=self._annotations, **self._kwargs )
+
+	def setAnnotation( self, **kwargs ):
+		self._annotations.update( kwargs )
+
+	def annotations( self ):
+		return self._annotations
 
 
 class LambdaCodelet( Codelet ):

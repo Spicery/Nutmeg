@@ -3,15 +3,22 @@
 import os
 import argparse
 
-TEMPLATE = """
-#!/bin/bash
+TEMPLATE = """#!/bin/bash
 case $1 in
     compile|parse|resolve|optimize|codegen|bundle|trace)
-    exec /opt/nutmeg/libexec/nutmeg/compiler/nutmeg $*
-    ;;
+        exec /opt/nutmeg/libexec/nutmeg/compiler/nutmeg $*
+        ;;
+    unittest)
+        shift
+        exec $(INSTALL_DIR)/runner/NutmegRunner --unittest $*
+        ;;
+    run)
+        shift
+        exec $(INSTALL_DIR)/runner/NutmegRunner $*
+        ;;
     *)
-    exec $(INSTALL_DIR)/runner/NutmegRunner $*
-    ;;
+        exec $(INSTALL_DIR)/runner/NutmegRunner $*
+        ;;
 esac
 """
 
