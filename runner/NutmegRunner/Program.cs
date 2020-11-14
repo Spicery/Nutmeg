@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.IO;
 using System.Linq;
 
@@ -87,8 +87,8 @@ namespace NutmegRunner {
             }
         }
 
-        private IEnumerable<string> GetEntryPoints( SQLiteConnection connection ) {
-            var cmd = new SQLiteCommand( "SELECT [IdName] FROM [Annotations] WHERE AnnotationKey='command'", connection );
+        private IEnumerable<string> GetEntryPoints( SqliteConnection connection ) {
+            var cmd = new SqliteCommand( "SELECT [IdName] FROM [Annotations] WHERE AnnotationKey='command'", connection );
             var reader = cmd.ExecuteReader();
             while (reader.Read()) {
                 yield return reader.GetString( 0 );
@@ -106,7 +106,7 @@ namespace NutmegRunner {
             }
             try {
                 RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
-                using (SQLiteConnection connection = GetConnection()) {
+                using (SqliteConnection connection = GetConnection()) {
                     connection.Open();
                     if (this._entryPoint == null && !this._test) {
                         //  If the entry-point is not specified, and we need an entry-point (i.e. not a test run), check if
@@ -120,7 +120,7 @@ namespace NutmegRunner {
                             throw new NutmegException( "Cannot determine the entry-point" ).Hint( n == 0 ? "No default entry-point" : "More than one entry-point" );
                         }
                     }
-                    SQLiteCommand cmd = GetCommandForBindingsToLoad( connection );
+                    SqliteCommand cmd = GetCommandForBindingsToLoad( connection );
                     var reader = cmd.ExecuteReader();
                     var bindings = new Dictionary<string, Codelet>();
                     var initialisations = new List<KeyValuePair<string, Codelet>>();
@@ -159,7 +159,7 @@ namespace NutmegRunner {
                 if (this._graphviz != null) {
                     runtimeEngine.GraphViz( this._graphviz );
                 } else if ( this._test ) {
-                    using (SQLiteConnection connection = GetConnection()) {
+                    using (SqliteConnection connection = GetConnection()) {
                         connection.Open();
                         var tests_to_run = GetTestsToRun( connection );
                         UnitTestResults utresults = new UnitTestResults( connection );
@@ -188,9 +188,9 @@ namespace NutmegRunner {
             }
         }
 
-        private List<string> GetTestsToRun( SQLiteConnection connection ) {
+        private List<string> GetTestsToRun( SqliteConnection connection ) {
             var sofar = new List<string>();
-            using (var cmd = new SQLiteCommand( "SELECT B.[IdName] FROM [Bindings] B JOIN [Annotations] A ON A.IdName = B.IdName WHERE A.AnnotationKey='unittest'", connection )) {
+            using (var cmd = new SqliteCommand( "SELECT B.[IdName] FROM [Bindings] B JOIN [Annotations] A ON A.IdName = B.IdName WHERE A.AnnotationKey='unittest'", connection )) {
                 var reader = cmd.ExecuteReader();
                 while (reader.Read()) {
                     string idName = reader.GetString( 0 );
@@ -200,22 +200,22 @@ namespace NutmegRunner {
             }
         }
 
-        private SQLiteCommand GetCommandForBindingsToLoad( SQLiteConnection connection ) {
+        private SqliteCommand GetCommandForBindingsToLoad( SqliteConnection connection ) {
             if ( this._test ) {
-                var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] JOIN [Annotations] A ON A.[IdName] = E.[IdName] WHERE A.AnnotationKey='unittest'", connection );
+                var cmd = new SqliteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] JOIN [Annotations] A ON A.[IdName] = E.[IdName] WHERE A.AnnotationKey='unittest'", connection );
                 cmd.Prepare();
                 return cmd;
             } else {
-                var cmd = new SQLiteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] WHERE E.[IdName]=@EntryPoint", connection );
+                var cmd = new SqliteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] WHERE E.[IdName]=@EntryPoint", connection );
                 cmd.Parameters.AddWithValue( "@EntryPoint", this._entryPoint );
                 cmd.Prepare();
                 return cmd;
             }
         }
 
-        private SQLiteConnection GetConnection() {
+        private SqliteConnection GetConnection() {
             try {
-                return new SQLiteConnection( $"Data Source={this._bundleFile}; Read Only=True;" );
+                return new SqliteConnection( new SqliteConnectionStringBuilder() { DataSource = this._bundleFile, Mode = SqliteOpenMode.ReadOnly }.ToString() );
             } catch (System.Data.SQLite.SQLiteException) {
                 throw new NutmegException( "Cannot find/open bundle" ).Culprit( "Filename", this._bundleFile );
             }

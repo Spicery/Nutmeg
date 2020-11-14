@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 
 namespace NutmegRunner {
 
@@ -10,11 +10,11 @@ namespace NutmegRunner {
         private const string amber = "AMBER";
         private const string green = "GREEN";
 
-        private SQLiteConnection _connection;
+        private SqliteConnection _connection;
         private List<string> _passes = new List<string>();
         private List<Tuple<string, Exception>> _failures = new List<Tuple<string, Exception>>();
 
-        public UnitTestResults( SQLiteConnection connection ) {
+        public UnitTestResults( SqliteConnection connection ) {
             this._connection = connection;
         }
 
@@ -52,7 +52,7 @@ namespace NutmegRunner {
             }
         }
 
-        private string GetAssertFailureMessage( SQLiteConnection connection, Exception ex ) {
+        private string GetAssertFailureMessage( SqliteConnection connection, Exception ex ) {
             var msg = ex.Message;
 
             if (ex is AssertionFailureException exn) {
@@ -69,10 +69,10 @@ namespace NutmegRunner {
             return msg;
         }
 
-        private bool TryGetLine( SQLiteConnection connection, string unit, int posn, out string line ) {
+        private bool TryGetLine( SqliteConnection connection, string unit, int posn, out string line ) {
             line = null;
             if (unit == null) return false;
-            using (SQLiteCommand cmd = new SQLiteCommand( "SELECT 1 + length(substr(Contents, 0, @Posn)) - length(replace(substr(Contents, 0, @Posn), CHAR(10), '')), substr( Contents, @Posn, 80 ) FROM SourceFiles WHERE FileName = @Unit", connection )) {
+            using (SqliteCommand cmd = new SqliteCommand( "SELECT 1 + length(substr(Contents, 0, @Posn)) - length(replace(substr(Contents, 0, @Posn), CHAR(10), '')), substr( Contents, @Posn, 80 ) FROM SourceFiles WHERE FileName = @Unit", connection )) {
                 cmd.Parameters.AddWithValue( "@Posn", posn + 1 );   //  Add 1 to compensate for the 1-indexing of substr.
                 cmd.Parameters.AddWithValue( "@Unit", unit );
                 cmd.Prepare();
