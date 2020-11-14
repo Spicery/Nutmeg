@@ -1,0 +1,5 @@
+pyinstaller==4.0
+altgraph==0.17
+macholib==1.14
+pyinstaller-hooks-contrib==2020.7
+setuptools>=47.1.0

@@ -34,14 +34,25 @@ RUN pip3 install pytest pylint black
 FROM nutmeg-base AS live-install
 ARG DEBIAN_FRONTEND=noninteractive
 RUN pip3 install str2bool pyinstaller
+# TODO: #66 change to install from requirements files - pyinstaller in separate build_requirements
 RUN mkdir -p /tmp/nutmeg
+COPY compiler/ /tmp/nutmeg/compiler/
+COPY runner/ /tmp/nutmeg/runner/
+COPY scripts/ /tmp/nutmeg/scripts
+COPY Makefile /tmp/nutmeg/
 WORKDIR /tmp/nutmeg
-RUN wget https://github.com/Spicery/Nutmeg/archive/integration.zip
-RUN unzip integration.zip
-WORKDIR /tmp/nutmeg/Nutmeg-integration
 RUN make build RID=linux-x64
 RUN make install RID=linux-x64
 WORKDIR /tmp
+# Set up basic dev environment.
+RUN apt-get install -y sudo nano vim less file
+RUN useradd -ms /bin/bash coder
+RUN usermod -aG sudo coder
+RUN echo 'coder:nutmeg<3' | chpasswd
+# Switch to the unprivileged user 'coder'
+USER coder
+WORKDIR /home/coder
+RUN touch /home/coder/.sudo_as_admin_successful
 
 ########################################
 # For use in Circle CI pipeline.
