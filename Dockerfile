@@ -17,5 +17,7 @@ RUN pip3 install str2bool pyinstaller
 RUN make build RID=linux-x64
 RUN make install RID=linux-x64
 RUN useradd -ms /bin/bash coder
+RUN apt-get install -y sudo nano vim less
+RUN usermod -aG sudo coder
 USER coder
 WORKDIR /home/coder
