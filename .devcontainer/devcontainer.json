@@ -3,7 +3,7 @@
 	"build": {
 		"context": "..",
 		"dockerfile": "../Dockerfile",
-		"target": "nutmeg-vscode"
+		"target": "vscode"
 	},
 
 	// Set *default* container specific settings.json values on container create.
