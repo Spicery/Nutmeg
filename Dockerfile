@@ -12,26 +12,7 @@ RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
 RUN apt-add-repository https://packages.microsoft.com/ubuntu/20.04/prod
 RUN apt-get update 
 RUN apt-get install -y --no-install-recommends dotnet-sdk-3.1 
-
-
-########################################
-# For vscode development
-# 
-FROM base AS vscode
-ARG DEBIAN_FRONTEND=noninteractive
-ARG INSTALL_ZSH="true"
-ARG UPGRADE_PACKAGES="true"
-ARG USERNAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-RUN bash -c "$(curl -fsSL "https://raw.githubusercontent.com/microsoft/vscode-dev-containers/v0.140.1/script-library/common-debian.sh")"
-    # && apt-get clean -y \
-    # && rm -rf /var/lib/apt/lists/*
-RUN pip3 install pytest pylint black
-# Global install latest for dev tools not ideal but acceptable. Pin versions?
-# Cannot install requirements.txt unless know location of user's venv and it is mounted.
-# Could we do better if we assume pipenv?
-
+# TODO 67 - factor out common base image that devcontainer can share
 
 ########################################
 # For running from command line: 
@@ -40,7 +21,7 @@ RUN pip3 install pytest pylint black
 FROM base AS packaged
 ARG DEBIAN_FRONTEND=noninteractive
 RUN pip3 install str2bool pyinstaller
-# TODO: #66 change to install from requirements files - pyinstaller in separate build_requirements
+# TODO: #66 change to install from requirements files - with pyinstaller in separate build_requirements
 RUN mkdir -p /tmp/nutmeg
 COPY compiler/ /tmp/nutmeg/compiler/
 COPY runner/ /tmp/nutmeg/runner/
