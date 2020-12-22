@@ -1,0 +1,11 @@
+def summation( n ):
+    if n <= 0 then
+        0
+    else
+        n + summation( n - 1 )
+    endif
+enddef 
+
+def main():
+    println( summation( 10 ) )  ### Expects 55
+enddef
