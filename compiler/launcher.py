@@ -76,7 +76,6 @@ class TracerLauncher( Launcher ):
         bundle_file = self._args.bundle
         traceFile( bundle_file )
 
-
 class CompilerLauncher(Launcher):
 
     def __init__( self, args ):
@@ -92,6 +91,11 @@ class CompilerLauncher(Launcher):
         cmplr = compiler.Compiler( self._args.entry_point, self._args.bundle, tuple( map( Path, self._args.files ) ), keep=self._args.keep  )
         cmplr.compile()
 
+def DummyLauncher(Launcher):
+    def launch( self ):
+        # You should never get here in the ordinary way, only to support help command.
+        pass
+
 ###############################################################################
 # Main entry point - parses the options and launches the right phase.
 ###############################################################################
@@ -104,6 +108,12 @@ COMMANDS = {
     "bundler" : "bundle",
     "tracer" : "trace",
     "compiler" : "compile",
+
+    # Only here to provide on-line help.
+    "help": "help",
+    "run": "run",
+    "unittest": "unittest",
+    "script": "script",
 }
 
 def main():
@@ -172,6 +182,25 @@ def main():
     mode_compile.add_argument( "--entry-point", "-e", action='append' )
     mode_compile.add_argument( "--keep", "-k", action='store_true', default=False, help="If bundle file exists keep records (i.e. do not clear tables)" )
     mode_compile.add_argument( 'files', nargs = argparse.REMAINDER )
+
+    mode_run = subparsers.add_parser(
+        COMMANDS[ "run" ], help="Runs a bundle-file"
+    )
+    mode_run.set_defaults( mode=DummyLauncher )
+    mode_run.add_argument( "--bundle", "-b", type=Path )
+    mode_run.add_argument( "--entry-point", "-e", action='append' )
+
+    mode_script = subparsers.add_parser(
+        COMMANDS[ "script" ], help="Compiles and immediately runs a bundle-file"
+    )
+    mode_script.add_argument( "--entry-point", "-e", action='append' )
+    mode_script.add_argument( "--keep", "-k", action='store_true', default=False, help="If bundle file exists keep records (i.e. do not clear tables)" )
+    mode_script.add_argument( 'files', nargs=argparse.REMAINDER )
+
+    mode_unittest = subparsers.add_parser(
+        COMMANDS[ "unittest" ], help="Runs the unit-tests of a bundle-file"
+    )
+    mode_unittest.add_argument( 'file', nargs=1, help="The bundle file" )
 
     args = parser.parse_args( args=sys.argv[1:] )
     try:

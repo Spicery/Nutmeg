@@ -5,6 +5,10 @@ import argparse
 
 TEMPLATE = """#!/bin/bash
 case $1 in
+    run)
+        shift
+        exec $(INSTALL_DIR)/runner/NutmegRunner $*
+        ;;
     compile|parse|resolve|optimize|codegen|bundle|trace)
         exec $(INSTALL_DIR)/compiler/nutmeg $*
         ;;
@@ -18,9 +22,12 @@ case $1 in
         shift
         exec $(INSTALL_DIR)/runner/NutmegRunner --unittest $*
         ;;
-    run)
+    --help|-h)
+        exec $(INSTALL_DIR)/compiler/nutmeg --help
+        ;;
+    help)
         shift
-        exec $(INSTALL_DIR)/runner/NutmegRunner $*
+        exec $(INSTALL_DIR)/compiler/nutmeg $1 --help
         ;;
     *)
         exec $(INSTALL_DIR)/runner/NutmegRunner $*
