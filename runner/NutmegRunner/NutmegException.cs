@@ -47,6 +47,13 @@ namespace NutmegRunner {
             return this.Culprit( "Hint", v );
         }
 
+        public void WriteMessage() {
+            Console.Error.WriteLine( $"MISHAP: {this.Message}" );
+            foreach (var culprit in this.Culprits) {
+                Console.Error.WriteLine( $" {culprit.Key}: {culprit.Value}" );
+            }
+        }
+
     }
 
     public class UsageNutmegException : NutmegException {
