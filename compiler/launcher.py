@@ -180,27 +180,31 @@ def main():
     mode_compile.set_defaults( mode=CompilerLauncher )
     mode_compile.add_argument( "--bundle", "-b", type=Path )
     mode_compile.add_argument( "--entry-point", "-e", action='append' )
-    mode_compile.add_argument( "--keep", "-k", action='store_true', default=False, help="If bundle file exists keep records (i.e. do not clear tables)" )
-    mode_compile.add_argument( 'files', nargs = argparse.REMAINDER )
+    mode_compile.add_argument( "--keep", "-k", action='store_true', default=False, help="If bundle file exists then keep records (i.e. do not clear tables)" )
+    mode_compile.add_argument( 'files', nargs='+', metavar='FILE', help="One or more Nutmeg files to compile" )
 
     mode_run = subparsers.add_parser(
         COMMANDS[ "run" ], help="Runs a bundle-file"
     )
     mode_run.set_defaults( mode=DummyLauncher )
-    mode_run.add_argument( "--bundle", "-b", type=Path )
-    mode_run.add_argument( "--entry-point", "-e", action='append' )
+    mode_run.add_argument( "--entry-point", "-e", action='append', help="Run the program starting from this entry-point, which must be a command" )
+    mode_run.add_argument( "--print", "-p", action='store_true', help="On exit print any results returned by the program" )
+    mode_run.add_argument( "--debug", "-d", action='store_true', help="Run in debug mode (developer option)" )
+    mode_run.add_argument( "--graphviz", type=str, metavar='VAR', help="Generate a graphviz diagram of the compiled tree for a variable (developer option)" )
+    mode_run.add_argument( "--unittest", action='store_true', help="Run unit-tests instead of executing a program (developer option)" )
+    mode_run.add_argument( 'bundle-file', nargs = 1, help="Bundle file to run" )
 
     mode_script = subparsers.add_parser(
         COMMANDS[ "script" ], help="Compiles and immediately runs a bundle-file"
     )
     mode_script.add_argument( "--entry-point", "-e", action='append' )
     mode_script.add_argument( "--keep", "-k", action='store_true', default=False, help="If bundle file exists keep records (i.e. do not clear tables)" )
-    mode_script.add_argument( 'files', nargs=argparse.REMAINDER )
+    mode_script.add_argument( 'files', nargs='+', metavar='FILE', help="One or more Nutmeg files to compile" )
 
     mode_unittest = subparsers.add_parser(
         COMMANDS[ "unittest" ], help="Runs the unit-tests of a bundle-file"
     )
-    mode_unittest.add_argument( 'file', nargs=1, help="The bundle file" )
+    mode_unittest.add_argument( 'file', nargs=1, help="The bundle file to search for unit tests" )
 
     args = parser.parse_args( args=sys.argv[1:] )
     try:
