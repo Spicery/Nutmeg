@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NutmegRunner;
+using NutmegRunner.Modules.Ranges;
+using NutmegRunner.Modules.Strings;
 using Xunit;
 
-
-namespace NutmegRunnerTests
-{
+namespace NutmegRunnerTests {
 
     public class HalfOpenRangeSystemFunction_Tests
     {
@@ -239,6 +238,22 @@ namespace NutmegRunnerTests
                 Assert.Equal(n++, i);
             }
             Assert.Equal(16L, n);
+        }
+
+
+        [Fact]
+        public void String_Get_Test() {
+            //  Arrange
+            var runtime = new RuntimeEngine( false );
+            runtime.LockValueStack();
+            runtime.PushValue( "foo" );
+            runtime.PushValue( 0L );
+            var empty = new StringGet( null );
+            //  Act
+            empty.ExecuteRunlet( runtime );
+            var c = runtime.PopValue1();
+            //  Assert
+            Assert.Equal( "foo"[0], c );
         }
 
     }

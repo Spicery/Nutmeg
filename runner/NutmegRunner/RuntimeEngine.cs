@@ -85,6 +85,10 @@ namespace NutmegRunner {
             return this._callStack[slot];
         }
 
+        public object GetItem( int n ) {
+            return this._valueStack[n];
+        }
+
         public void PushSlot( int slot ) {
             this._valueStack.Push( this._callStack[slot] );
         }
@@ -149,8 +153,16 @@ namespace NutmegRunner {
             return this._valueStack.PeekItemOrElse( n, orElse: orElse );
         }
 
+        public void Update( int n, Func<object, object> f ) {
+            this._valueStack.Update( n, f );
+        }
+
         public int ValueStackLength() {
             return this._valueStack.Size();
+        }
+
+        public void ClearValueStack() {
+            this._valueStack.Clear();
         }
 
         public void Bind( string idName, Codelet codelet ) {
