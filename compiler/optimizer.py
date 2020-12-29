@@ -20,7 +20,7 @@ class ReplaceIdsWithSysconsts( codetree.CodeletVisitor ):
         f = call_codelet.function()
         if isinstance( f, IdCodelet ) and syscalls.isSysconst( f.name() ) and f.scope() == "global":
             # TODO: do we need to be concerned about call_codelet._kwargs?
-            return SyscallCodelet( name=f.name(), arguments=call_codelet.arguments() )
+            return SyscallCodelet( name=f.name(), arguments=call_codelet.arguments().visit( self ) )
         else:
             return call_codelet
 
@@ -52,9 +52,12 @@ class Simplify( codetree.CodeletVisitor ):
         test_part = if_codelet.testPart()
         if isinstance( test_part, codetree.BoolCodelet ):
             if test_part.valueAsBool():
-                return if_codelet.thenPart()
+                return if_codelet.thenPart().visit( self )
             else:
-                return if_codelet.elsePart()
+                return if_codelet.elsePart().visit( self )
+        elif isinstance( test_part, codetree.SyscallCodelet ) and test_part.name() == "not":
+            simplified_if = codetree.IfCodelet( testPart=test_part.arguments(), thenPart=if_codelet.elsePart(), elsePart=if_codelet.thenPart() )
+            return simplified_if.visit( self )
         else:
             return self.visitCodelet( if_codelet )
 
