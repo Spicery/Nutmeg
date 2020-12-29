@@ -3,7 +3,7 @@ parser -- parser module for the Nutmeg compiler
 """
 
 import codetree
-from tokenizer import tokenizer, IdToken, BasicToken, IntToken, StringToken, BoolToken
+from tokenizer import tokenizer, IdToken, BasicToken, IntToken, StringToken, BoolToken, Token
 from peekablepushable import PeekablePushable
 import math
 from mishap import Mishap
@@ -229,30 +229,43 @@ def forPrefixMiniParser( parser, token, source ):
     return codetree.ForCodelet( query=query, body=body )
 
 def ifPrefixMiniParser( parser, token, source ):
-    # if ^ EXPR then STMNTS ... endif
+    return ifXXXPrefixMiniParser( parser, token, source, negatedForm=False, closingKeyword="END_IF" )
+
+def ifnotPrefixMiniParser( parser, token, source ):
+    return ifXXXPrefixMiniParser( parser, token, source, negatedForm=True, closingKeyword="END_IFNOT" )
+
+def ifXXXPrefixMiniParser( parser, token, source, *, negatedForm, closingKeyword ):
+    # ifXXX ^ EXPR then STMNTS ... endifXXX
     testPart = parser.readExpr( math.inf, source )
-    # if EXPR ^ then STMNTS ... endif
+    if negatedForm:
+        testPart = codetree.SyscallCodelet(name="not",arguments=testPart)
+    # ifXXX EXPR ^ then STMNTS ... endifXXX
     mustRead( source, "THEN", 'END_PHRASE' )
-    # if EXPR then ^ STMNTS ... endif
+    # ifXXX EXPR then ^ STMNTS ... endifXXX
     thenPart = parser.readStatements( source )
-    # if EXPR then STMNTS ^ (elseif EXPR then STATEMENTS ... | else STMNTS | )  endif
+    # ifXXX EXPR then STMNTS ^ (elseif EXPR then STATEMENTS ... | else STMNTS | )  endifXXX
     if tryRead( source, "ELSE_IF" ):
-        # if EXPR then STMNTS elseif ^ EXPR then STATEMENTS ... endif
-        elsePart = ifPrefixMiniParser( parser, None, source )
-        # if EXPR then STMNTS elseif EXPR then STATEMENTS .... endif ^
+        # ifXXX EXPR then STMNTS elseif ^ EXPR then STATEMENTS ... endifXXX
+        elsePart = ifXXXPrefixMiniParser( parser, None, source, negatedForm=False, closingKeyword=closingKeyword )
+        # ifXXX EXPR then STMNTS elseif EXPR then STATEMENTS .... endifXXX ^
+        return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=elsePart )
+    elif tryRead( source, "ELSE_IFNOT" ):
+        # ifXXX EXPR then STMNTS elseif ^ EXPR then STATEMENTS ... endifXXX
+        elsePart = ifXXXPrefixMiniParser( parser, None, source, negatedForm=True, closingKeyword=closingKeyword )
+        # ifXXX EXPR then STMNTS elseif EXPR then STATEMENTS .... endifXXX ^
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=elsePart )
     elif tryRead( source, "ELSE" ):
-        tryRead( source, 'END_PHRASE' )                 ### Discard optional colon
-        # if EXPR then STMNTS else ^ STMNTS endif
+        tryRead( source, 'END_PHRASE' )  ### Discard optional colon
+        # ifXXX EXPR then STMNTS else ^ STMNTS endifXXX
         elsePart = parser.readStatements( source )
-        # if EXPR then STMNTS else STMNTS ^ endif
-        mustRead( source, "END_IF" )
-        # if EXPR then STMNTS else STMNTS endif ^
+        # ifXXX EXPR then STMNTS else STMNTS ^ endifXXX
+        mustRead( source, closingKeyword, "END" )
+        # ifXXX EXPR then STMNTS else STMNTS endifXXX ^
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=elsePart )
     else:
-        # if EXPR then STMNTS ^ endif
-        mustRead( source, "END_IF", "END" )
-        # if EXPR then STMNTS endif ^
+        # ifXXX EXPR then STMNTS ^ endifXXX
+        mustRead( source, closingKeyword, "END" )
+        # ifXXX EXPR then STMNTS endifXXX ^
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=codetree.SeqCodelet() )
 
 def varPrefixMiniParser( parser, token, source ):
@@ -309,6 +322,7 @@ PREFIX_TABLE = {
     "LBRACKET": lbracketPrefixMiniParser,
     "DEC_FUNCTION_1": defPrefixMiniParser,
     "IF": ifPrefixMiniParser,
+    "IFNOT": ifnotPrefixMiniParser,
     "FOR": forPrefixMiniParser,
     BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
     IdToken: lambda parser, token, source: codetree.IdCodelet( name=token.value(), reftype="get" ),
@@ -361,9 +375,22 @@ def inPostfixMiniParser( parser, p, lhs, token, source ):
     rhs = parser.readExpr( math.inf, source )
     return codetree.InCodelet( pattern = lhs, streamable = rhs )
 
+def dotPostfixMiniParser( parser : TableDrivenParser, p, lhs, token, source : PeekablePushable ):
+    rhs = parser.readExpr( p, source )
+    if isinstance( rhs, codetree.IdCodelet ):
+        return codetree.CallCodelet(function=rhs, arguments=lhs)
+    elif isinstance( rhs, codetree.CallCodelet ):
+        args = codetree.SeqCodelet(lhs, rhs.arguments())
+        return codetree.CallCodelet(function=rhs.function(),arguments=args)
+    elif isinstance( rhs, codetree.SyscallCodelet ):
+        args = codetree.SeqCodelet( lhs, rhs.arguments() )
+        return codetree.SyscallCodelet(name=rhs.name(), arguments=args)
+    else:
+        raise Exception( "Unexpected expression after '.'" )
 
 POSTFIX_TABLE = {
     "SEQ": commaPostfixMiniParser,
+    "DOT": dotPostfixMiniParser,
     "LPAREN": lparenPostfixMiniParser,
     IdToken: idPostfixMiniParser,
     "BIND": bindPostfixMiniParser,
