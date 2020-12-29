@@ -195,7 +195,7 @@ namespace NutmegRunner.Modules.Strings {
             Add( "get", r => new StringGet( r ) );
             Add( "startsWith", r => new StringStartsWith( r ) );
             Add( "endsWith", r => new StringEndsWith( r ) );
-            Add( "isSubstring", r => new StringIsSubstring( r ), "contains" );
+            Add( "contains", r => new StringIsSubstring( r ) );
             Add( "trim", r => new StringTrim( r ) );
             Add( "++", r => new StringAppend( r ) );
         }
