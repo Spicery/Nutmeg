@@ -28,6 +28,7 @@ Expression ::=
     Expression InfixOperator Expression |
     LetExpression |
     IfExpression |
+    IfNotExpression |
     SwitchExpression |
     LoopExpression |
     LambdaExpression |
@@ -36,7 +37,9 @@ Expression ::=
 
 LetExpression ::= 'let' Statements 'in' Statements ('endlet'|'end')
 
-IfExpression ::= 'if' Expression ('then'|':') Statements ( 'elseif' Expression ('then'|':') Statments )* ('else' ':'? Statements)? ('endif'|'end')
+IfExpression ::= 'if' Expression ('then'|':') Statements ( ('elseif'|'elseifnot') Expression ('then'|':') Statments )* ('else' ':'? Statements)? ('endif'|'end')
+
+IfNotExpression ::= 'ifnot' Expression ('then'|':') Statements ( ('elseif'|'elseifnot') Expression ('then'|':') Statments )* ('else' ':'? Statements)? ('endifnot'|'end')
 
 SwitchExpression ::= 'switch' Expression ':'? ( ( 'case' Pattern )+ ('then'|':') Statements )* ('else' ':'? Statements)? ('endswitch'|'end')
 
