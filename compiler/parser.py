@@ -376,7 +376,7 @@ def inPostfixMiniParser( parser, p, lhs, token, source ):
     return codetree.InCodelet( pattern = lhs, streamable = rhs )
 
 def dotPostfixMiniParser( parser : TableDrivenParser, p, lhs, token, source : PeekablePushable ):
-    rhs = parser.readExpr( p, source )
+    rhs = parser.readExpr( p-1, source )
     if isinstance( rhs, codetree.IdCodelet ):
         return codetree.CallCodelet(function=rhs, arguments=lhs)
     elif isinstance( rhs, codetree.CallCodelet ):
