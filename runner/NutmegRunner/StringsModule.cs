@@ -12,7 +12,7 @@ namespace NutmegRunner.Modules.Strings {
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             string x = (string)runtimeEngine.PopValue();
-            runtimeEngine.PushValue( x.Length );
+            runtimeEngine.PushValue( (long)x.Length );
             return this.Next;
         }
 
