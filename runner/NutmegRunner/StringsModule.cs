@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace NutmegRunner.Modules.Strings {
@@ -195,6 +196,114 @@ namespace NutmegRunner.Modules.Strings {
         }
     }
 
+    public class StringSplit : FixedAritySystemFunction {
+
+        public StringSplit( Runlet next ) : base( next ) {
+        }
+
+        public override int Nargs => 1;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            string s = (string)runtimeEngine.PopValue();
+            foreach ( var i in s.Split() ) {
+                runtimeEngine.PushValue( i );
+            }
+            return this.Next;
+        }
+
+    }
+
+    public class StringJoin : VariadicSystemFunction {
+
+        public StringJoin( Runlet next ) : base( next ) {
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            StringBuilder b = new StringBuilder();
+            int n = runtimeEngine.ValueStackLength();
+            string sep = (string)runtimeEngine.GetItem( 0 );
+            for ( int i = 1; i < n; i++ ) {
+                if ( i > 1 ) {
+                    b.Append( sep );
+                }
+                string t = (string)runtimeEngine.GetItem( i );
+                b.Append( t );
+            }
+            runtimeEngine.ClearValueStack();
+            runtimeEngine.PushValue( b.ToString() );
+            return this.Next;
+        }
+    }
+
+    public class StringSubstring : VariadicSystemFunction {
+
+        public StringSubstring( Runlet next ) : base( next ) {
+        }
+
+        private static void GeneralAppend( StringBuilder b, string s, object x ) {
+            switch (x) {
+                case long n:
+                    b.Append( s[(int)n] );
+                    break;
+                case HalfOpenRangeList r:
+                    b.Append( s, (int)r.Low, (int)(r.High - r.Low) );
+                    break;
+                default:
+                    var stream = StreamSystemFunction.ToStream( x );
+                    while (stream.MoveNext()) {
+                        var index = (int)(long)stream.Current;
+                        b.Append( s[index] );
+                    }
+                    break;
+            }
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            int N = runtimeEngine.ValueStackLength();
+            switch (N) {
+                case 0:
+                    throw new NutmegException( "No arguments supplied to substring" ).Hint( "At least one is required" );
+                case 1:
+                    runtimeEngine.ClearValueStack();
+                    runtimeEngine.PushValue( "" );
+                    break;
+                case 2:
+                    //  This will be the common case and it has an important efficiency advantage, so has to be broken out.
+                    {
+                        object x = runtimeEngine.PopValue();
+                        string s = (string)runtimeEngine.PopValue();
+                        switch (x) {
+                            case HalfOpenRangeList r:
+                                var t = s.Substring( (int)r.Low, (int)(r.High - r.Low) );
+                                runtimeEngine.PushValue( t );
+                                break;
+                            default:
+                                var b = new StringBuilder();
+                                GeneralAppend( b, s, x );
+                                runtimeEngine.PushValue( b.ToString() );
+                                break;
+                        }
+                    }
+                    break;
+                default:
+                    {
+                        var b = new StringBuilder();
+                        var s = (string)runtimeEngine.GetItem( 0 );
+                        for (int i = 1; i < N; i++) {
+                            var x = runtimeEngine.GetItem( i );
+                            GeneralAppend( b, s, x );
+                        }
+                        runtimeEngine.ClearValueStack();
+                        runtimeEngine.PushValue( b.ToString() );
+                    }
+                    break;
+            }
+            return this.Next;
+        }
+
+    }
+
+
     public class StringsModule : SystemFunctionsModule {
 
         public override void AddAll() {
@@ -206,6 +315,9 @@ namespace NutmegRunner.Modules.Strings {
             Add( "contains", r => new StringIsSubstring( r ) );
             Add( "trim", r => new StringTrim( r ) );
             Add( "++", r => new StringAppend( r ) );
+            Add( "split", r => new StringSplit( r ) );
+            Add( "join", r => new StringJoin( r ) );
+            Add( "substring", r => new StringSubstring( r ) );
         }
 
     }

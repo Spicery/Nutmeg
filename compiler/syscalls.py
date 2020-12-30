@@ -23,6 +23,8 @@ SYSCONSTS = (
         "contains",
         "trim", "indexOf",
         "++", "newString",
+        "split", "join",
+        "substring",
     ))
 )
 

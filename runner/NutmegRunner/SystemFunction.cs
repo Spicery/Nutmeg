@@ -178,18 +178,19 @@ namespace NutmegRunner {
 
         public override int Nargs => 1;
 
-        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            object x = runtimeEngine.PopValue();
+        public static IEnumerator<object> ToStream( object x ) {
             switch (x) {
                 case IEnumerable<object> e:
-                    runtimeEngine.PushValue( e.GetEnumerator() );
-                    break;
+                    return e.GetEnumerator();
                 case string s:
-                    runtimeEngine.PushValue( new StringToEnumerator( s.GetEnumerator() ) );
-                    break;
+                    return new StringToEnumerator( s.GetEnumerator() );
                 default:
                     throw new NutmegException( $"Cannot stream this object: {x}" );
             }
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.PushValue( ToStream( runtimeEngine.PopValue() ) );
             return this.Next;
         }
 
