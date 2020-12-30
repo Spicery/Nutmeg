@@ -16,6 +16,7 @@ SYSCONSTS = (
         # Not in a module
         "<=", "<", ">=", ">",
         "==", "!=", "not",
+        "countArguments",
         # String functions - which will need to be promoted to methods soon enough.
         "get", "length",
         "startsWith", "endsWith",

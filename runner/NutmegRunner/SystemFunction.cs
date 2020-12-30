@@ -309,6 +309,17 @@ namespace NutmegRunner {
 
     }
 
+    public class CountArgumentsSystemFunction : VariadicSystemFunction {
+        public CountArgumentsSystemFunction( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            int n = runtimeEngine.ValueStackLength();
+            runtimeEngine.ClearValueStack();
+            runtimeEngine.PushValue( (long)n );
+            return this.Next;
+        }
+    }
+
     public class NutmegSystem {
 
         static readonly Dictionary<string, SystemFunctionMaker> SYSTEM_FUNCTION_TABLE =
@@ -324,6 +335,7 @@ namespace NutmegRunner {
             .Add( ">", r => new GTSystemFunction( r ), "greaterThan" )
             .Add( "not", r => new NotSystemFunction( r ) )
             .Add( "newImmutableList", r => new ListSystemFunction( r ) )
+            .Add( "countArguments", r => new CountArgumentsSystemFunction( r ) )
             .Add( new ArithModule() )
             .Add( new RangesModule() )
             .Add( new AssertModule() )
