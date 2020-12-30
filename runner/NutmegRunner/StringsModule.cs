@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace NutmegRunner.Modules.Strings {
 
@@ -17,17 +18,24 @@ namespace NutmegRunner.Modules.Strings {
 
     }
 
-    public class StringGet : FixedAritySystemFunction {
+    public class StringGet : VariadicSystemFunction {
 
         public StringGet( Runlet next ) : base( next ) {
         }
 
-        public override int Nargs => 2;
-
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            long n = (long)runtimeEngine.PopValue();
-            string x = (string)runtimeEngine.PopValue();
-            runtimeEngine.PushValue( x[(int)n] );
+            int length = runtimeEngine.ValueStackLength();
+            if (length >= 1) {
+                string x = (string)runtimeEngine.GetItem( 0 );
+                for (int i = 1; i < length; i++) {
+                    long index = (long)runtimeEngine.GetItem( i );
+                    runtimeEngine.SetItem( i - 1, x[(int)index] );
+                }
+                //  Discard one value.
+                runtimeEngine.PopValue();
+            } else {
+                throw new Exception( "No arguments for get (at least 1 needed)" );
+            }
             return this.Next;
         }
 

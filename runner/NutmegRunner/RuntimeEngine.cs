@@ -89,6 +89,10 @@ namespace NutmegRunner {
             return this._valueStack[n];
         }
 
+        public void SetItem( int n, object v ) {
+            this._valueStack[n] = v;
+        }
+
         public void PushSlot( int slot ) {
             this._valueStack.Push( this._callStack[slot] );
         }
