@@ -267,7 +267,7 @@ namespace NutmegRunnerTests {
             //  Arrange
             var stack = new UncheckedLayeredStack<string>();
             //  Assert
-            Assert.Throws<NutmegException>( () => stack.Peek() );
+            Assert.Throws<System.IndexOutOfRangeException>( () => stack.Peek() );
         }
 
         [Fact]

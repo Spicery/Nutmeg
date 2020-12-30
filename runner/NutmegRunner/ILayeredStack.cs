@@ -9,11 +9,13 @@ namespace NutmegRunner {
         public T Pop();
         public bool IsEmpty();
         public int Size();
+        public void Clear();
 
         public T Peek();
         public T PeekOrElse( T orElse = default( T ) );
         public T PeekItem( int n );
         public T PeekItemOrElse( int n, T orElse = default( T ) );
+        public void Update( int n, Func<T, T> f );
 
         public void Lock();
         public void Unlock();
@@ -85,6 +87,10 @@ namespace NutmegRunner {
             top -= 1;
         }
 
+        public void Clear() {
+            this.top = this.layer;
+        }
+
         public bool IsEmpty() {
             return this.top == this.layer;
         }
@@ -97,14 +103,6 @@ namespace NutmegRunner {
             this.dump.Push( this.layer );
             this.layer = this.top;
         }
-
-        //public void Lock( int n ) {
-        //    this.EnsureRoom( n );
-        //    this.dump.Push( this.layer );
-        //    this.layer = this.top;
-        //    Array.Fill( this.items, default( T ), this.top, n );
-        //    this.top += n;
-        //}
 
         public void Unlock() {
             try {
@@ -150,6 +148,15 @@ namespace NutmegRunner {
             }
         }
 
+        public void Update( int n, Func<T, T> f ) {
+            int index = this.top - n - 1;
+            if (this.top > this.layer + n) {
+                this.items[index] = f.Invoke( this.items[index] );
+            } else {
+                throw new NutmegException( "Not enough items on stack" );
+            }
+        }
+
         public T this[int n] {
             get {
                 if (this.layer + n < this.top) {
@@ -166,6 +173,8 @@ namespace NutmegRunner {
                 }
             }
         }
+
+
 
         public List<object> PopAllAndUnlock() {
             var all = this.PopAll();
@@ -242,6 +251,10 @@ namespace NutmegRunner {
             this.top -= 1;
         }
 
+        public void Clear() {
+            this.top = this.layer;
+        }
+
         public bool IsEmpty() {
             return this.top == this.layer;
         }
@@ -254,14 +267,6 @@ namespace NutmegRunner {
             this.dump.Push( this.layer );
             this.layer = this.top;
         }
-
-        //public void Lock( int n ) {
-        //    this.EnsureRoom( n );
-        //    this.dump.Push( this.layer );
-        //    this.layer = this.top;
-        //    Array.Fill( this.items, default( T ), this.top, n );
-        //    this.top += n;
-        //}
 
         public int RawLock( int nlocals, CheckedLayeredStack<T> src ) {
             this.EnsureRoom( nlocals );
@@ -290,11 +295,7 @@ namespace NutmegRunner {
         }
 
         public T Peek() {
-            try {
-                return this.items[this.top - 1];
-            } catch (IndexOutOfRangeException) {
-                throw new NutmegException( "Peeking at empty stack" );
-            }
+            return this.items[this.top - 1];
         }
 
         public T PeekOrElse( T orElse = default( T ) ) {
@@ -311,10 +312,15 @@ namespace NutmegRunner {
 
         public T PeekItemOrElse( int n, T orElse = default( T ) ) {
             if (this.top > this.layer + n + 1) {
-                return this.items[this.top - n];
+                return this.items[this.top - n - 1];
             } else {
                 return orElse;
             }
+        }
+
+        public void Update( int n, Func<T, T> f ) {
+            int index = this.top - n - 1;
+            this.items[index] = f.Invoke( this.items[index] );
         }
 
         public T this[int n] {

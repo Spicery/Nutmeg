@@ -158,7 +158,7 @@ namespace NutmegRunner {
                 }
                 if (this._graphviz != null) {
                     runtimeEngine.GraphViz( this._graphviz );
-                } else if ( this._test ) {
+                } else if (this._test) {
                     using (SqliteConnection connection = GetConnection()) {
                         connection.Open();
                         var tests_to_run = GetTestsToRun( connection );
@@ -179,12 +179,14 @@ namespace NutmegRunner {
                 } else {
                     runtimeEngine.Start( this._entryPoint, useEvaluate: false, usePrint: this._print );
                 }
-            } catch (NutmegException nme) {
-                if ( this._debug ) Console.Error.WriteLine( $"MISHAP: {nme.Message}" );
-                foreach (var culprit in nme.Culprits) {
-                    Console.Error.WriteLine( $" {culprit.Key}: {culprit.Value}" );
+            } catch (SqliteException sqlexn) {
+                if (sqlexn.SqliteErrorCode == 26) {
+                    throw new NutmegException( "Supplied bundle-file has wrong format" )
+                        .Culprit( "File", this._bundleFile )
+                        .Hint( "Bundle files are SQLITE databases" );
+                } else {
+                    throw new NutmegException( "Problem with the bundle file", sqlexn );
                 }
-                throw nme;  // rethrow
             }
         }
 
@@ -202,7 +204,7 @@ namespace NutmegRunner {
 
         private SqliteCommand GetCommandForBindingsToLoad( SqliteConnection connection ) {
             if ( this._test ) {
-                var cmd = new SqliteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] JOIN [Annotations] A ON A.[IdName] = E.[IdName] WHERE A.AnnotationKey='unittest'", connection );
+                var cmd = new SqliteCommand( "SELECT DISTINCT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] JOIN [Annotations] A ON A.[IdName] = E.[IdName] WHERE A.AnnotationKey='unittest'", connection );
                 cmd.Prepare();
                 return cmd;
             } else {
@@ -221,8 +223,13 @@ namespace NutmegRunner {
             }
         }
 
-        static void Main(string[] args) {
-            new Program( new LinkedList<string>( args ) ).Run();
+        static void Main( string[] args ) {
+            try {
+                new Program( new LinkedList<string>( args ) ).Run();
+            } catch (NutmegException nme) {
+                nme.WriteMessage();
+                throw;
+            }
         }
     }
 }

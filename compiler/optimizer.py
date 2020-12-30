@@ -12,7 +12,7 @@ class ReplaceIdsWithSysconsts( codetree.CodeletVisitor ):
 
     def visitIdCodelet( self, id_codelet ):
         if syscalls.isSysconst( id_codelet.name() ):
-            raise Exception( f"sysconsts not implemented yet: {id_codelet}" )
+            raise Exception( f"sysconsts not implemented yet: {id_codelet.name()}" )
         else:
             return id_codelet
 
@@ -22,7 +22,7 @@ class ReplaceIdsWithSysconsts( codetree.CodeletVisitor ):
             # TODO: do we need to be concerned about call_codelet._kwargs?
             return SyscallCodelet( name=f.name(), arguments=call_codelet.arguments().visit( self ) )
         else:
-            return call_codelet
+            return call_codelet.transform( self )
 
 class Simplify( codetree.CodeletVisitor ):
 
