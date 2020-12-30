@@ -204,7 +204,7 @@ namespace NutmegRunner {
 
         private SqliteCommand GetCommandForBindingsToLoad( SqliteConnection connection ) {
             if ( this._test ) {
-                var cmd = new SqliteCommand( "SELECT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] JOIN [Annotations] A ON A.[IdName] = E.[IdName] WHERE A.AnnotationKey='unittest'", connection );
+                var cmd = new SqliteCommand( "SELECT DISTINCT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] JOIN [Annotations] A ON A.[IdName] = E.[IdName] WHERE A.AnnotationKey='unittest'", connection );
                 cmd.Prepare();
                 return cmd;
             } else {

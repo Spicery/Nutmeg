@@ -282,7 +282,7 @@ token_spec = {
         TokenType( r"(?P<TERMINATE_STATEMENT>;)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_PHRASE>:)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_PARAMETERS>=>>)", make=PunctuationToken.make ),
-        TokenType( r"(?P<DOT>\.)", prec=10, make=SyntaxToken.make ),
+        TokenType( r"(?P<DOT>\.)", prec=11, make=SyntaxToken.make ),
         TokenType( r"(?P<LPAREN>\()", prec=10, outfix=True, make=SyntaxToken.make ),
         TokenType( r"(?P<RPAREN>\))", make=PunctuationToken.make ),
         TokenType( r"(?P<LBRACKET>\[)", outfix=True, make=SyntaxToken.make ),
