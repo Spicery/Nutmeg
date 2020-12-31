@@ -10,7 +10,8 @@ SYSCONSTS = (
         "[x...y]",
         # Arith module
         "+",
-        "sum",
+        "sum", "product",
+        "min", "max",
         "-",
         "*",
         # Not in a module
