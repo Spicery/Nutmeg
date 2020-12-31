@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using NutmegRunner.Modules.Arith;
 using NutmegRunner.Modules.Assert;
+using NutmegRunner.Modules.Characters;
 using NutmegRunner.Modules.Ranges;
 using NutmegRunner.Modules.Strings;
 
@@ -341,6 +342,7 @@ namespace NutmegRunner {
             .Add( new RangesModule() )
             .Add( new AssertModule() )
             .Add( new StringsModule() )
+            .Add( new CharactersModule() )
             .Table;
 
         public static SystemFunctionMaker Find( string name ) {

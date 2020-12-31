@@ -25,6 +25,9 @@ SYSCONSTS = (
         "++", "newString",
         "split", "join",
         "substring",
+        # Character functions
+        "isLowercase", "isUppercase",
+        "lowercase", "uppercase",
     ))
 )
 
