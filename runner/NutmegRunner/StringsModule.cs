@@ -25,7 +25,7 @@ namespace NutmegRunner.Modules.Strings {
         private static void GeneralPush( RuntimeEngine runtimeEngine, string x, object pos ) {
             switch (pos) {
                 case long index:
-                    runtimeEngine.PushValue( x[(int)pos] );
+                    runtimeEngine.PushValue( x[(int)index] );
                     break;
                 default:
                     var stream = StreamSystemFunction.ToStream( pos );
