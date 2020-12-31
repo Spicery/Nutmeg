@@ -24,18 +24,44 @@ namespace NutmegRunner.Modules.Strings {
         public StringGet( Runlet next ) : base( next ) {
         }
 
+        private static void GeneralPush( RuntimeEngine runtimeEngine, string x, object pos ) {
+            switch (pos) {
+                case long index:
+                    runtimeEngine.PushValue( x[(int)pos] );
+                    break;
+                default:
+                    var stream = StreamSystemFunction.ToStream( pos );
+                    while (stream.MoveNext()) {
+                        runtimeEngine.PushValue( x[(int)(long)stream.Current] );
+                    }
+                    break;
+            }
+        }
+
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int length = runtimeEngine.ValueStackLength();
-            if (length >= 1) {
-                string x = (string)runtimeEngine.GetItem( 0 );
-                for (int i = 1; i < length; i++) {
-                    long index = (long)runtimeEngine.GetItem( i );
-                    runtimeEngine.SetItem( i - 1, x[(int)index] );
-                }
-                //  Discard one value.
-                runtimeEngine.PopValue();
-            } else {
-                throw new Exception( "No arguments for get (at least 1 needed)" );
+            int N = runtimeEngine.ValueStackLength();
+            switch (N) {
+                case 0:
+                    throw new NutmegException( "No arguments for get" ).Hint( "At least 1 is needed" );
+                case 1:
+                    runtimeEngine.ClearValueStack();
+                    break;
+                case 2: {
+                        //  This is the common case that merits optimisation.
+                        object pos = runtimeEngine.PopValue();
+                        string x = (string)runtimeEngine.PopValue();
+                        GeneralPush( runtimeEngine, x, pos );
+                    }
+                    break;
+                default: {
+                        var args = runtimeEngine.PopMany( N - 1 );
+                        string x = (string)runtimeEngine.PopValue1();
+                        foreach ( var arg in args ) {
+                            GeneralPush( runtimeEngine, x, arg );
+                        }
+                    }
+                    break;
+
             }
             return this.Next;
         }
@@ -74,9 +100,9 @@ namespace NutmegRunner.Modules.Strings {
 
     }
 
-    public class StringIsSubstring : FixedAritySystemFunction {
+    public class StringContains : FixedAritySystemFunction {
 
-        public StringIsSubstring( Runlet next ) : base( next ) {
+        public StringContains( Runlet next ) : base( next ) {
         }
 
         public override int Nargs => 2;
@@ -312,7 +338,7 @@ namespace NutmegRunner.Modules.Strings {
             Add( "get", r => new StringGet( r ) );
             Add( "startsWith", r => new StringStartsWith( r ) );
             Add( "endsWith", r => new StringEndsWith( r ) );
-            Add( "contains", r => new StringIsSubstring( r ) );
+            Add( "contains", r => new StringContains( r ) );
             Add( "trim", r => new StringTrim( r ) );
             Add( "++", r => new StringAppend( r ) );
             Add( "split", r => new StringSplit( r ) );

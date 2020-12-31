@@ -271,6 +271,10 @@ namespace NutmegRunner {
             return immutable ? (IList<object>)this._valueStack.ImmutablePopAll() : (IList<object>)this._valueStack.PopAll();
         }
 
+        public IList<object> PopMany( int m ) {
+            return (IList<object>)this._valueStack.PopMany(m);
+        }
+
     }
 
 }

@@ -205,6 +205,20 @@ namespace NutmegRunner {
             return all;
         }
 
+        public List<object> PopMany( int m ) {
+            var all = new List<object>();
+            var n = this.Size();
+            if (0 <= m && m < n) {
+                for (int i = n - m; i < n; i++) {
+                    all.Add( this.items[this.layer + i] );
+                }
+                this.top -= m;
+                return all;
+            } else {
+                throw new NutmegException( "Internal error" );
+            }
+        }
+
     }
 
     public class UncheckedLayeredStack<T> : ILayeredStack<T> {
