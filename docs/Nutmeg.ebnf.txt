@@ -64,5 +64,5 @@ InfixOperator ::= ',' | '+' | '*' | '-' | '/' | '//' | 'and' | 'or' | '..' | '..
 /* This is not quite right */
 Identifier ::= [http://www.w3.org/TR/xml-names/#NT-NCName]
 
-LiteralConstant ::= String | Number | Boolean | Null
+LiteralConstant ::= Character | String | Number | Boolean | Null
 

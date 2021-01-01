@@ -54,6 +54,7 @@ namespace NutmegRunner {
                 case "sysfn": return new SysfnCodelet();
                 case "string": return new StringCodelet();
                 case "int": return new IntCodelet();
+                case "char": return new CharCodelet();
                 case "bool": return new BoolCodelet();
                 case "if": return new If3Codelet();
                 case "call": return new CallCodelet();
@@ -415,10 +416,33 @@ namespace NutmegRunner {
         public string Value { get; set; }
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            if (long.TryParse( this.Value, out var n ) ) {
+            if (long.TryParse( this.Value, out var n )) {
                 return new PushQRunlet( n, continuation );
             } else {
                 throw new Exception( $"Invalid int value: {Value}" );
+            }
+        }
+
+    }
+
+    public class CharCodelet : Codelet {
+
+        public CharCodelet() {
+            //  Used by deserialisation.
+        }
+
+        public CharCodelet( string value ) {
+            this.Value = value;
+        }
+
+        [JsonProperty( "value" )]
+        public string Value { get; set; }
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            if (Char.TryParse( this.Value, out var n )) {
+                return new PushQRunlet( n, continuation );
+            } else {
+                throw new Exception( $"Invalid char value: {Value}" );
             }
         }
 

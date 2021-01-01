@@ -1,3 +1,5 @@
+/* Prototype Lexis for Nutmeg - developed with the help of https://bottlecaps.de/rr/ui */
+
 Identifier ::= [_a-zA-Z] [_a-zA-Z0-9]*
 
 DecimalNumber ::=
@@ -11,6 +13,11 @@ BinaryNumber ::=
     
 RadixNumber ::=
     [-+]? ([2-9]|[12][0-9]|[3][0-6]) 'r' '_'* RadixDigit RadixDigitPlus* ( '.' RadixDigitPlus* )? 
+
+Character ::=
+    '`' BackQuotedCharacter '`'
+
+BackQuotedCharacter ::= QuotedCharacter - '`'
 
 String ::=
     '"' DoubleQuotedCharacter* '"' |

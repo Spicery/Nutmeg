@@ -20,6 +20,9 @@ class CodeletVisitor( abc.ABC ):
 	def visitStringCodelet( self, code_let, *args, **kwargs ):
 		return self.visitConstantCodelet( code_let, *args, **kwargs )
 
+	def visitCharCodelet( self, code_let, *args, **kwargs ):
+		return self.visitConstantCodelet( code_let, *args, **kwargs )
+
 	def visitIntCodelet( self, code_let, *args, **kwargs ):
 		return self.visitConstantCodelet( code_let, *args, **kwargs )
 
@@ -157,6 +160,22 @@ class StringCodelet( ConstantCodelet ):
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitStringCodelet( self, *args, **kwargs )
 
+class CharCodelet( ConstantCodelet ):
+
+	KIND = "char"
+
+	def __init__( self, *args, value = 0, radix=10, **kwargs ):
+		super().__init__( **kwargs )
+		if args:
+			if len(args) == 1:
+				self._value = str(args[0])
+			else:
+				raise Exception( 'Too many arguments for CharCodelet' )
+		else:
+			self._value = str( value )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitCharCodelet( self, *args, **kwargs )
 
 class IntCodelet( ConstantCodelet ):
 	KIND = "int"
@@ -167,7 +186,7 @@ class IntCodelet( ConstantCodelet ):
 			if len(args) == 1:
 				self._value = int(args[0])
 			else:
-				raise Exception( 'Too many arguments for StringCodelet' )
+				raise Exception( 'Too many arguments for IntCodelet' )
 		else:
 			self._value = int( value, radix )
 
@@ -184,7 +203,7 @@ class BoolCodelet( ConstantCodelet ):
 			if len(args) == 1:
 				self._value = bool(args[0])
 			else:
-				raise Exception( 'Too many arguments for StringCodelet' )
+				raise Exception( 'Too many arguments for BoolCodelet' )
 		else:
 			self._value = str2bool( value )
 
