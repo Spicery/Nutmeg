@@ -28,11 +28,7 @@ namespace NutmegRunner.Modules.Strings {
                     runtimeEngine.PushValue( x[(int)index] );
                     break;
                 default:
-                    var stream = StreamSystemFunction.ToStream( pos );
-                    while (stream.MoveNext()) {
-                        runtimeEngine.PushValue( x[(int)(long)stream.Current] );
-                    }
-                    break;
+                    throw new NutmegException( "Invalid argument for get" ).Hint( "Integer position needed" ).Culprit( "Argument", $"{pos}" );
             }
         }
 
@@ -266,9 +262,6 @@ namespace NutmegRunner.Modules.Strings {
 
         private static void GeneralAppend( StringBuilder b, string s, object x ) {
             switch (x) {
-                case long n:
-                    b.Append( s[(int)n] );
-                    break;
                 case HalfOpenRangeList r:
                     b.Append( s, (int)r.Low, (int)(r.High - r.Low) );
                     break;
