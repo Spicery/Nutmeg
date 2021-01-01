@@ -3,7 +3,7 @@ parser -- parser module for the Nutmeg compiler
 """
 
 import codetree
-from tokenizer import tokenizer, IdToken, BasicToken, IntToken, StringToken, BoolToken, Token
+from tokenizer import tokenizer, IdToken, BasicToken, CharToken, IntToken, StringToken, BoolToken, Token
 from peekablepushable import PeekablePushable
 import math
 from mishap import Mishap
@@ -326,6 +326,7 @@ PREFIX_TABLE = {
     "FOR": forPrefixMiniParser,
     BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
     IdToken: lambda parser, token, source: codetree.IdCodelet( name=token.value(), reftype="get" ),
+    CharToken: lambda parser, token, source: codetree.CharCodelet( value=token.literalValue() ),
     IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() ),
     BoolToken: lambda parser, token, source: codetree.BoolCodelet( value=token.value() ),
     StringToken: lambda parser, token, source: codetree.StringCodelet( value=token.literalValue() ),
