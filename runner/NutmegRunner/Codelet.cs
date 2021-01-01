@@ -57,6 +57,8 @@ namespace NutmegRunner {
                 case "char": return new CharCodelet();
                 case "bool": return new BoolCodelet();
                 case "if": return new If3Codelet();
+                case "and": return new AndCodelet();
+                case "or": return new OrCodelet();
                 case "call": return new CallCodelet();
                 case "seq": return new SeqCodelet();
                 case "id": return new IdCodelet();
@@ -259,6 +261,50 @@ namespace NutmegRunner {
         }
 
     }
+
+    public abstract class ShortCircuitCodelet : Codelet {
+        [JsonProperty( "lhs" )]
+        public Codelet LeftPart { get; set; }
+
+        [JsonProperty( "rhs" )]
+        public Codelet RightPart { get; set; }
+    }
+
+    public class AndCodelet : ShortCircuitCodelet {
+
+        public AndCodelet() {
+            //  Used by deserialisation
+        }
+
+        public AndCodelet( Codelet leftPart, Codelet rightPart ) {
+            this.LeftPart = leftPart;
+            this.RightPart = rightPart;
+        }
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            return LeftPart.Weave( new AndRunlet( RightPart.Weave( continuation, g ), continuation ), g );
+        }
+
+    }
+
+    public class OrCodelet : ShortCircuitCodelet {
+
+        public OrCodelet() {
+            //  Used by deserialisation
+        }
+
+        public OrCodelet( Codelet leftPart, Codelet rightPart ) {
+            LeftPart = leftPart;
+            RightPart = rightPart;
+        }
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            return LeftPart.Weave( new OrRunlet( RightPart.Weave( continuation, g ), continuation ), g );
+
+        }
+
+    }
+
 
     public class If3Codelet : Codelet {
 

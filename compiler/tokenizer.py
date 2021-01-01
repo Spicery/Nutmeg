@@ -284,12 +284,14 @@ token_spec = {
         TokenType( r"(?P<SEQ>,)", prec=1000, prefix=False, make=SyntaxToken.make ),
 
         # Warning! Short tokens must come AFTER long ones.
-        TokenType( r"(?P<LTE><=)", prec=590, make=IdToken.make ),
-        TokenType( r"(?P<GTE>>=)", prec=590, make=IdToken.make ),
-        TokenType( r"(?P<LT>\<)", prec=590, make=IdToken.make ),
-        TokenType( r"(?P<GT>\>)", prec=590, make=IdToken.make ),
-        TokenType( r"(?P<EQUALS>==)", prec=595, make=IdToken.make ),
-        TokenType( r"(?P<NOT_EQUALS>!=)", prec=595, make=IdToken.make ),
+        TokenType( r"(?P<LTE><=)", prec=570, make=IdToken.make ),
+        TokenType( r"(?P<GTE>>=)", prec=570, make=IdToken.make ),
+        TokenType( r"(?P<LT>\<)", prec=570, make=IdToken.make ),
+        TokenType( r"(?P<GT>\>)", prec=570, make=IdToken.make ),
+        TokenType( r"(?P<EQUALS>==)", prec=580, make=IdToken.make ),
+        TokenType( r"(?P<NOT_EQUALS>!=)", prec=580, make=IdToken.make ),
+        TokenType( r"(?P<AND>\band\b)", prec=590, prefix=False, outfix=False, make=SyntaxToken.make ),
+        TokenType( r"(?P<OR>\bor\b)", prec=595, prefix=False, outfix=False, make=SyntaxToken.make ),
 
         # keywords
         TokenType( r"(?P<TERMINATE_STATEMENT>;)", make=PunctuationToken.make ),

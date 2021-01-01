@@ -11,29 +11,17 @@
 
 ### Determine if walk is valid.
 def is_valid_walk(walk):
-    if walk.length == 10 then
-        if 
-            sum( 
-                for d in walk:
-                    if d == 'n' then 1 
-                    elseif d == 's' then -1
-                    endif
-                endfor
-            ) == 0
-        then
-            sum( 
-                for d in walk:
-                    if d == 'e' then 1 
-                    elseif d == 'w' then -1
-                    endif
-                endfor
-            ) == 0            
-        else
-            false
+    walk.length == 10 and
+    for d in walk:
+        if d == 'n' then 1 
+        elseif d == 's' then -1
         endif
-    else
-        false
-    endif
+    endfor.sum == 0 and
+    for d in walk:
+        if d == 'e' then 1 
+        elseif d == 'w' then -1
+        endif
+    endfor.sum == 0   
 enddef
 
 @unittest

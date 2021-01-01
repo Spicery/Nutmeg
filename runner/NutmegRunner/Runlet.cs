@@ -456,6 +456,52 @@ namespace NutmegRunner {
         }
     }
 
+    public abstract class ShortCircuitRunlet : Runlet {
+        protected Runlet RhsPart { get; set; }
+        protected Runlet NextPart { get; set; }
+
+        public ShortCircuitRunlet( Runlet rhsPart, Runlet nextPart ) {
+            RhsPart = rhsPart;
+            NextPart = nextPart;
+        }
+
+        public override void UpdateLinkNotification() {
+            while (this.RhsPart is JumpRunlet rhsj && rhsj != null) {
+                this.RhsPart = rhsj;
+            }
+            while (this.NextPart is JumpRunlet nextj && nextj != null) {
+                this.NextPart = nextj;
+            }
+        }
+
+        public override IEnumerable<Runlet> Neighbors() {
+            return new List<Runlet> { this.RhsPart, this.NextPart };
+        }
+
+    }
+
+    public class AndRunlet : ShortCircuitRunlet {
+        
+        public AndRunlet( Runlet rhsPart, Runlet nextPart ) : base( rhsPart, nextPart ) {
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            return runtimeEngine.PopBoolIf( true ) ? this.RhsPart : this.NextPart;
+        }
+
+    }
+
+    public class OrRunlet : ShortCircuitRunlet {
+
+        public OrRunlet( Runlet rhsPart, Runlet nextPart ) : base( rhsPart, nextPart ) {
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            return runtimeEngine.PopBoolIf( false ) ? this.RhsPart : this.NextPart;
+        }
+
+    }
+
     public class ForkRunlet : Runlet
     {
 
