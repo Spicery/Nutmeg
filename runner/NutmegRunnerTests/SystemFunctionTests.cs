@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using NutmegRunner;
 using NutmegRunner.Modules.Ranges;
+using NutmegRunner.Modules.Seqs;
 using NutmegRunner.Modules.Strings;
 using Xunit;
 
@@ -248,12 +249,27 @@ namespace NutmegRunnerTests {
             runtime.LockValueStack();
             runtime.PushValue( "foo" );
             runtime.PushValue( 0L );
-            var empty = new StringGet( null );
+            var empty = new Get( null );
             //  Act
             empty.ExecuteRunlet( runtime );
             var c = runtime.PopValue1();
             //  Assert
             Assert.Equal( "foo"[0], c );
+        }
+
+        [Fact]
+        public void List_Get_Test() {
+            //  Arrange
+            var runtime = new RuntimeEngine( false );
+            runtime.LockValueStack();
+            runtime.PushValue( new List<object> { 0L, 100L, 200L, 300L } );
+            runtime.PushValue( 1L );
+            var empty = new Get( null );
+            //  Act
+            empty.ExecuteRunlet( runtime );
+            var c = runtime.PopValue1();
+            //  Assert
+            Assert.Equal( 100L, c );
         }
 
     }

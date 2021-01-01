@@ -55,7 +55,7 @@ class TableDrivenParser:
         try:
             self.pushNonBreakableOr( token.isOutfixer() )
             try:
-                # print( 'TOKEN', token, token.category() )
+                # print( 'TOKEN', token, token.category(), token.isOutfixer(), self.isBreakable() )
                 minip = self._postfix_table[ token.category() ]
             except KeyError:
                 raise Mishap( f'Unexpected token in infix/postfix position', token=token )
@@ -64,7 +64,7 @@ class TableDrivenParser:
             self.popNonBreakable()
 
     def readExpr( self, prec, source ):
-        e = self.tryReadExpr( prec, source )
+        e = self.tryReadExpr( prec, source, checkNewlines=False )
         if e:
             return e
         elif source.isEmpty():
@@ -74,7 +74,7 @@ class TableDrivenParser:
 
     def tryReadExpr( self, prec, source, checkNewlines=True ):
         token = source.popOrElse()
-        # print( 'TRYREADEXPR', token.value(), checkNewlines )
+        # print( 'TRYREADEXPR', token.value(), checkNewlines,token.followsNewLine() and self.isBreakable(), prec )
         if not token:
             return None
         elif checkNewlines:
@@ -86,7 +86,7 @@ class TableDrivenParser:
             return None
         while True:
             token = source.peekOrElse()
-            # print( 'PEEK', token, token and token.isPostfixer() )
+            # print( 'PEEK', token, token and token.isPostfixer(), token.followsNewLine() and self.isBreakable() )
             if not token or not token.isPostfixer(): break
             if token.followsNewLine() and self.isBreakable(): break
             p = token.precedence()
@@ -389,6 +389,11 @@ def dotPostfixMiniParser( parser : TableDrivenParser, p, lhs, token, source : Pe
     else:
         raise Exception( "Unexpected expression after '.'" )
 
+def andOrPostfixMiniParser( parser : TableDrivenParser, p, lhs, token, source : PeekablePushable ):
+    rhs = parser.readExpr( p, source )
+    make = codetree.AndCodelet if token.category() == "AND" else codetree.OrCodelet
+    return make( lhs=lhs, rhs=rhs )
+
 POSTFIX_TABLE = {
     "SEQ": commaPostfixMiniParser,
     "DOT": dotPostfixMiniParser,
@@ -397,6 +402,8 @@ POSTFIX_TABLE = {
     "BIND": bindPostfixMiniParser,
     "ASSIGN": assignPostfixMiniParser,
     "IN": inPostfixMiniParser,
+    "AND": andOrPostfixMiniParser,
+    "OR": andOrPostfixMiniParser,
 }
 
 def standardParser( unit=None ):

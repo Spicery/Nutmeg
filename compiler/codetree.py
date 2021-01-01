@@ -41,6 +41,12 @@ class CodeletVisitor( abc.ABC ):
 	def visitCallCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
+	def visitAndCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitOrCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
 	def visitIfCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
@@ -436,6 +442,57 @@ class ForCodelet( Codelet ):
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitForCodelet( self, *args, **kwargs )
 
+
+class ShortCircuitOperatorAbstractCodelet( Codelet, ABC ):
+
+	def __init__( self, *, lhs : Codelet, rhs : Codelet, **kwargs ):
+		super().__init__( **kwargs )
+		self._lhs = lhs
+		self._rhs = rhs
+
+	def members( self ):
+		yield self._lhs
+		yield self._rhs
+
+	def transform( self, f ):
+		return AndCodelet(
+			lhs=f( self._lhs ),
+			rhs=f( self._rhs )
+		)
+
+	def lhs( self ):
+		return self._lhs
+
+	def rhs( self ):
+		return self._rhs
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, lhs=self._lhs, rhs=self._rhs )
+
+
+class AndCodelet( ShortCircuitOperatorAbstractCodelet ):
+	KIND = "and"
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitAndCodelet( self, *args, **kwargs )
+
+	def transform( self, f ):
+		return AndCodelet(
+			lhs=f( self._lhs ),
+			rhs=f( self._rhs )
+		)
+
+class OrCodelet( ShortCircuitOperatorAbstractCodelet ):
+	KIND = "or"
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitOrCodelet( self, *args, **kwargs )
+
+	def transform( self, f ):
+		return OrCodelet(
+			lhs=f( self._lhs ),
+			rhs=f( self._rhs )
+		)
 
 class IfCodelet( Codelet ):
 

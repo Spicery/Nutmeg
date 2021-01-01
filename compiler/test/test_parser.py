@@ -213,6 +213,22 @@ def test_optional_semi_required():
     body = rhs.body()
     assert isinstance( body, codetree.SeqCodelet )
 
+def test_optional_semi_infix():
+    text = """
+    def foo():
+        a +
+        b
+    enddef
+    """
+    # Do we need a semi-colon? Should NOT throw an exception.
+    codelet = parseOne( text )
+    assert isinstance( codelet, codetree.BindingCodelet )
+    rhs = codelet.rhs()
+    assert isinstance( rhs, codetree.LambdaCodelet )
+    body = rhs.body()
+    assert isinstance( body, codetree.SyscallCodelet )
+
+
 def test_explicit_semi():
     text = """
     def foo():

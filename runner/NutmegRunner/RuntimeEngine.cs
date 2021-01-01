@@ -149,6 +149,14 @@ namespace NutmegRunner {
             return (Boolean)this._valueStack.Pop();
         }
 
+        public bool PopBoolIf(bool sense) {
+            bool doPop = sense == (bool)this._valueStack.Peek();
+            if (doPop) {
+                this._valueStack.Pop();
+            }
+            return doPop;
+        }
+
         public object PeekOrElse( object orElse = null ) {
             return this._valueStack.PeekOrElse( orElse: orElse );
         }

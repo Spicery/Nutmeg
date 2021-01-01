@@ -126,7 +126,6 @@ class Resolver( codetree.CodeletVisitor ):
         in_codelet.pattern().visit( self, scopes )
         in_codelet.streamable().visit( self, scopes )
 
-
     def visitCallCodelet( self, codelet, scopes ):
         for c in codelet.members():
             c.visit( self, scopes )
@@ -149,6 +148,14 @@ class Resolver( codetree.CodeletVisitor ):
         if_codelet.testPart().visit( self, scopes )
         if_codelet.thenPart().visit( self, LexicalScope( previous = scopes ) )
         if_codelet.elsePart().visit( self, LexicalScope( previous = scopes ) )
+
+    def visitAndCodelet( self, codelet: codetree.AndCodelet, scopes ):
+        for c in codelet.members():
+            c.visit( self, scopes )
+
+    def visitOrCodelet( self, codelet: codetree.AndCodelet, scopes ):
+        for c in codelet.members():
+            c.visit( self, scopes )
 
     def visitFunctionCodelet( self, fun_codelet, scopes ):
         new_scopes = LexicalScope( previous = scopes, is_lambda=True )

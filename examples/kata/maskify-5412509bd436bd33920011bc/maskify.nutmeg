@@ -20,7 +20,7 @@ def maskify( s ):
     L4 := max( 0, s.length - 4 )
     newString(
         for i in [ 0 ..< L4 ] do 
-            "#"
+            `#`
         endfor,
         s.substring( [ L4 ..< s.length ] )
     )
