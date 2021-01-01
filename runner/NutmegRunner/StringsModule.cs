@@ -2,65 +2,65 @@
 
 namespace NutmegRunner.Modules.Strings {
 
-    public class StringLength : FixedAritySystemFunction {
+    //public class StringLength : FixedAritySystemFunction {
 
-        public StringLength( Runlet next ) : base( next ) {
-        }
+    //    public StringLength( Runlet next ) : base( next ) {
+    //    }
 
-        public override int Nargs => 1;
+    //    public override int Nargs => 1;
 
-        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            string x = (string)runtimeEngine.PopValue();
-            runtimeEngine.PushValue( (long)x.Length );
-            return this.Next;
-        }
+    //    public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+    //        string x = (string)runtimeEngine.PopValue();
+    //        runtimeEngine.PushValue( (long)x.Length );
+    //        return this.Next;
+    //    }
 
-    }
+    //}
 
-    public class StringGet : VariadicSystemFunction {
+    //public class StringGet : VariadicSystemFunction {
 
-        public StringGet( Runlet next ) : base( next ) {
-        }
+    //    public StringGet( Runlet next ) : base( next ) {
+    //    }
 
-        private static void GeneralPush( RuntimeEngine runtimeEngine, string x, object pos ) {
-            switch (pos) {
-                case long index:
-                    runtimeEngine.PushValue( x[(int)index] );
-                    break;
-                default:
-                    throw new NutmegException( "Invalid argument for get" ).Hint( "Integer position needed" ).Culprit( "Argument", $"{pos}" );
-            }
-        }
+    //    private static void GeneralPush( RuntimeEngine runtimeEngine, string x, object pos ) {
+    //        switch (pos) {
+    //            case long index:
+    //                runtimeEngine.PushValue( x[(int)index] );
+    //                break;
+    //            default:
+    //                throw new NutmegException( "Invalid argument for get" ).Hint( "Integer position needed" ).Culprit( "Argument", $"{pos}" );
+    //        }
+    //    }
 
-        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int N = runtimeEngine.ValueStackLength();
-            switch (N) {
-                case 0:
-                    throw new NutmegException( "No arguments for get" ).Hint( "At least 1 is needed" );
-                case 1:
-                    runtimeEngine.ClearValueStack();
-                    break;
-                case 2: {
-                        //  This is the common case that merits optimisation.
-                        object pos = runtimeEngine.PopValue();
-                        string x = (string)runtimeEngine.PopValue();
-                        GeneralPush( runtimeEngine, x, pos );
-                    }
-                    break;
-                default: {
-                        var args = runtimeEngine.PopMany( N - 1 );
-                        string x = (string)runtimeEngine.PopValue1();
-                        foreach ( var arg in args ) {
-                            GeneralPush( runtimeEngine, x, arg );
-                        }
-                    }
-                    break;
+    //    public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+    //        int N = runtimeEngine.ValueStackLength();
+    //        switch (N) {
+    //            case 0:
+    //                throw new NutmegException( "No arguments for get" ).Hint( "At least 1 is needed" );
+    //            case 1:
+    //                runtimeEngine.ClearValueStack();
+    //                break;
+    //            case 2: {
+    //                    //  This is the common case that merits optimisation.
+    //                    object pos = runtimeEngine.PopValue();
+    //                    string x = (string)runtimeEngine.PopValue();
+    //                    GeneralPush( runtimeEngine, x, pos );
+    //                }
+    //                break;
+    //            default: {
+    //                    var args = runtimeEngine.PopMany( N - 1 );
+    //                    string x = (string)runtimeEngine.PopValue1();
+    //                    foreach ( var arg in args ) {
+    //                        GeneralPush( runtimeEngine, x, arg );
+    //                    }
+    //                }
+    //                break;
 
-            }
-            return this.Next;
-        }
+    //        }
+    //        return this.Next;
+    //    }
 
-    }
+    //}
 
     public class StringStartsWith : FixedAritySystemFunction {
 
@@ -325,8 +325,8 @@ namespace NutmegRunner.Modules.Strings {
 
         public override void AddAll() {
             Add( "newString", r => new StringNewString( r ) );
-            Add( "length", r => new StringLength( r ) );
-            Add( "get", r => new StringGet( r ) );
+            //Add( "length", r => new StringLength( r ) );
+            //Add( "get", r => new StringGet( r ) );
             Add( "startsWith", r => new StringStartsWith( r ) );
             Add( "endsWith", r => new StringEndsWith( r ) );
             Add( "contains", r => new StringContains( r ) );
