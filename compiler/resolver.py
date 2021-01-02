@@ -134,8 +134,15 @@ class Resolver( codetree.CodeletVisitor ):
         """
         Fix up bindings e.g.  x := EXPR
         """
-        binding_codelet.lhs().visit( self, scopes )
-        binding_codelet.rhs().visit( self, scopes )
+        bound_id = binding_codelet.lhs()
+        try:
+            bound_id.visit( self, scopes )
+            binding_codelet.rhs().visit( self, scopes )
+        except Mishap as m:
+            # Decorate the exception with additional context.
+            if isinstance(bound_id, codetree.IdCodelet):
+                m.addDetails( inside=bound_id.name() )
+            raise m
 
     def visitAssignCodelet( self, assign_codelet, scopes ):
         assign_codelet.lhs().visit( self, scopes )
