@@ -11,9 +11,12 @@ namespace NutmegRunner {
         string _bundleFile;
         string _entryPoint = null;
         bool _debug = false;
+        bool _trace = false;
         string _graphviz = null;
         bool _print = false;
         bool _test = false;
+
+        public bool Trace => this._trace;
 
         /// <summary>
         /// This constructor is responsible for parsing the arguments into instance variables.
@@ -59,6 +62,10 @@ namespace NutmegRunner {
                             break;
                         case "--debug":
                             this._debug = true;
+                            this._trace = true;
+                            break;
+                        case "--trace":
+                            this._trace = true;
                             break;
                         case "--graphviz":
                             this._graphviz = parameter;
@@ -78,6 +85,9 @@ namespace NutmegRunner {
                             compactOption = compactOption.Substring( 1 );
                         } else if (compactOption.StartsWith( "d" )) {
                             args.AddBefore( args.First, "--debug" );
+                            compactOption = compactOption.Substring( 1 );
+                        } else if (compactOption.StartsWith( "t" )) {
+                            args.AddBefore( args.First, "--trace" );
                             compactOption = compactOption.Substring( 1 );
                         } else {
                             throw new NutmegException( $"Cannot parse compact command-line option: {compactOption}" ).Culprit( "Option", option );
@@ -224,11 +234,13 @@ namespace NutmegRunner {
         }
 
         static void Main( string[] args ) {
+            var program = new Program( new LinkedList<string>( args ) );
             try {
-                new Program( new LinkedList<string>( args ) ).Run();
+                program.Run();
             } catch (NutmegException nme) {
                 nme.WriteMessage();
-                throw;
+                if (program.Trace) throw;
+                Environment.Exit( -1 );
             }
         }
     }
