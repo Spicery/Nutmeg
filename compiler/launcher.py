@@ -210,9 +210,9 @@ def main():
     try:
         args.mode(args).launch()
     except Mishap as m:
-        message = 'Mishap'
-        print( message, ':', str( m ), file=sys.stderr )
-        max_width = max( len(message), *map( lambda kv: len( kv[ 0 ] ), m.items() ) )
+        message = 'MISHAP'
+        max_width = max( len( message ), *map( lambda kv: len( kv[ 0 ] ), m.items() ) )
+        print( message, (max_width - len(message)) * ' ', ' : ', str( m ), file=sys.stderr, sep='' )
         for (key, value) in m.items():
             title_key = str( key ).title()
             width_padding = (max_width - len( title_key )) * ' '

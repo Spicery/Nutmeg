@@ -19,18 +19,61 @@ def literalStringTranslation( token_text : str ):
     # TODO - decode any escape sequences.
     return token_text
 
+def positionInSourceText( source_text, span ):
+    ( start, finish ) = span
+    lineCount = 1
+    countSinceLastNewline = 0
+    countAllChars = 0
+    for ch in source_text:
+        if countAllChars >= start:
+            break
+        countAllChars += 1
+        countSinceLastNewline += 1
+        if ch == '\n':
+            lineCount += 1
+            countSinceLastNewline = 0
+    cxt = createContext( countSinceLastNewline, source_text, start )
+    # Limit the context to 60 characters, inserting '...' if either end is truncated
+    return f"line:{lineCount}, character:{countSinceLastNewline+1}, context:{cxt}"
+
+CONTEXT_RADIUS = 30
+def createContext( countSinceLastNewline, source_text, start ):
+    startOfCurrentLine = start - countSinceLastNewline
+    endOfCurrentLine = source_text.find( "\n", startOfCurrentLine )
+    line = source_text[ startOfCurrentLine: endOfCurrentLine ]
+    # Grab the surrounding context
+    low = max( countSinceLastNewline - CONTEXT_RADIUS, 0 )
+    cxt_lhs = line[ low:countSinceLastNewline ]
+    if low != 0:
+        cxt_lhs = '...' + cxt_lhs
+    high = min( countSinceLastNewline + CONTEXT_RADIUS, len( line ) )
+    cxt_rhs = line[ countSinceLastNewline:high ]
+    if high != len( line ):
+        cxt_rhs = cxt_rhs + '...'
+    # Insert '^' to indicate current position.
+    cxt = cxt_lhs + "^" + cxt_rhs
+    return cxt
+
+
 class Token( abc.ABC ):
 
     def __init__( self, value ):
         self._value = value
         self._followsNewLine = False
         self._span = None
+        self._sourceText = None
+
+    def positionInText( self ):
+        return positionInSourceText( self._sourceText, self._span )
 
     def span( self ):
         return self._span
 
     def setSpan( self, start, finish ):
         self._span = ( start, finish )
+
+    def setSourceText( self, txt ):
+        self._sourceText = txt
 
     def followsNewLine( self ):
         return self._followsNewLine
@@ -398,6 +441,7 @@ def tokenizer( text : str ):
                     tok.setFollowsNewLine()
                     follows_newline = False
                 tok.setSpan( old_position, position )
+                tok.setSourceText( text )
                 yield tok
         else:
             n = text.find("\n", position)
