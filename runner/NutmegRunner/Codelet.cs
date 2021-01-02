@@ -131,7 +131,7 @@ namespace NutmegRunner {
         }
 
         public override Runlet WeaveLoopInit( Runlet continuation, GlobalDictionary g ) {
-            var pop = new PopValue1IntoSlotRunlet( this.InStreamSlot, continuation );
+            var pop = new PopValueIntoSlotRunlet( this.InStreamSlot, continuation );
             var inExpr = this.InExpr.Weave1( new StreamSystemFunction( pop ), g );
             return inExpr;
         }
@@ -346,7 +346,7 @@ namespace NutmegRunner {
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
             switch (this.lhs) {
                 case IdCodelet lhs_id:
-                    var c4 = new PopValue1IntoSlotRunlet( lhs_id.Slot, continuation );
+                    var c4 = new PopValueIntoSlotRunlet( lhs_id.Slot, continuation );
                     var c3 = new CheckedUnlockRunlet( 1, c4 );
                     var c2 = this.rhs.Weave( c3, g );
                     return new LockRunlet( c2 );

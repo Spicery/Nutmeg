@@ -120,14 +120,8 @@ namespace NutmegRunner {
         }
 
 
-        public void PopValue1IntoSlot( int slot ) {
-            if (this._valueStack.Size() == 1) {
-                this._callStack[slot] = this._valueStack.Pop();
-            } else if (this._valueStack.IsEmpty()) {
-                throw new NutmegException( "Required value is missing" ).Hint( "Exactly one value needed but none supplied" );
-            } else {
-                throw new NutmegException( "Too many values" ).Hint( "Exactly one value needed but too many are supplied" );
-            }
+        public void PopValueIntoSlot( int slot ) {
+            this._callStack[slot] = this._valueStack.Pop();
         }
 
         public bool TryPop( out object d ) {

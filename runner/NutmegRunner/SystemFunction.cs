@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using NutmegRunner.Modules.Arith;
 using NutmegRunner.Modules.Assert;
 using NutmegRunner.Modules.Characters;
@@ -92,6 +93,27 @@ namespace NutmegRunner {
 
         public PrintlnSystemFunction( Runlet next ) : base( next ) { }
 
+        private static void GeneralPrint( object item ) {
+            switch ( item ) {
+                case ICollection<object> list:
+                    Console.Write( "[" );
+                    var sep = ",";
+                    var first = true;
+                    foreach ( var i in list ) {
+                        if (!first) {
+                            Console.Write( sep );
+                        }
+                        GeneralPrint( i );
+                        first = false;
+                    }
+                    Console.Write( "]" );
+                    break;
+                default:
+                    Console.Write( $"{item}" );
+                    break;
+            }
+        }
+
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             var sep = " ";
             var first = true;
@@ -110,33 +132,40 @@ namespace NutmegRunner {
 
     public class ShowMeSystemFunction : VariadicSystemFunction {
 
-        public ShowMeSystemFunction( Runlet next ) : base( next ) { }
-
-        static public void ShowMe( HalfOpenRangeList horl ) {
-            Console.Write( $"[{horl.Low}..<{horl.High}]" );
+        static public string ShowMeAsString( object item ) {
+            var to_string = new StringWriter();
+            ShowMe( to_string, item );
+            return to_string.ToString();
         }
 
-        static public void ShowMe( IReadOnlyList<object> list ) {
-            Console.Write( "[" );
-            var first = true;
-            foreach (var i in list) {
-                if (!first) {
-                    Console.Write( ", " );
-                }
-                ShowMe( i );
-                first = false;
+        static public void ShowMe( TextWriter t, object item ) {
+            switch (item) {
+                case string s:
+                    t.Write( $"\"{s}\"" );
+                    break;
+                case HalfOpenRangeList horl:
+                    t.Write( $"[{horl.Low}..<{horl.High}]" );
+                    break;
+                case ICollection<object> collection:
+                    t.Write( "[" );
+                    var sep = ",";
+                    var first = true;
+                    foreach (var i in collection) {
+                        if (!first) {
+                            t.Write( sep );
+                        }
+                        ShowMe( t, i );
+                        first = false;
+                    }
+                    t.Write( "]" );
+                    break;
+                default:
+                    t.Write( $"{item}" );
+                    break;
             }
-            Console.Write( "]" );
         }
 
-        static public void ShowMe( string s ) {
-            //  TODO - escape quotes etc
-            Console.Write( $"\"{s}\"" );
-        }
-
-        static public void ShowMe( object item ) {
-            Console.Write( $"{item}" );
-        }
+        public ShowMeSystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             var sep = " ";
@@ -145,7 +174,7 @@ namespace NutmegRunner {
                 if (!first) {
                     Console.Write( sep );
                 }
-                ShowMe( (dynamic)item );
+                ShowMe( Console.Out, item );
                 first = false;
             }
             Console.WriteLine();
@@ -277,12 +306,34 @@ namespace NutmegRunner {
 
         public override int Nargs => 2;
 
+        public static bool GeneralEquals( object x, object y ) {
+            switch ( x ) {
+                case null:
+                    return y == null;
+                case IList<object> xlist:
+                    if (y is IList<object> ylist) {
+                        if (xlist.Count != ylist.Count) return false;
+                        for ( int i = 0; i < xlist.Count; i++ ) {
+                            var xmember = xlist[i];
+                            var ymember = ylist[i];
+                            if (!GeneralEquals( xmember, ymember )) return false;
+                        }
+                        return true;
+                    } else {
+                        return false;
+                    }
+                default:
+                    return x.Equals( y );
+            }
+        }
+
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             var y = runtimeEngine.PopValue();
             var x = runtimeEngine.PopValue();
-            runtimeEngine.PushValue( x?.Equals( y ) ?? y == null );
+            runtimeEngine.PushValue( GeneralEquals( x, y ) );
             return this.Next;
         }
+
     }
 
     public class NotEqualsSystemFunction : FixedAritySystemFunction {
@@ -294,7 +345,7 @@ namespace NutmegRunner {
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             var y = runtimeEngine.PopValue();
             var x = runtimeEngine.PopValue();
-            runtimeEngine.PushValue( !(x?.Equals( y ) ?? y == null) );
+            runtimeEngine.PushValue( !EqualsSystemFunction.GeneralEquals( x, y ) );
             return this.Next;
         }
     }
@@ -323,6 +374,21 @@ namespace NutmegRunner {
         }
     }
 
+    public class DupSystemFunction : FixedAritySystemFunction {
+        public DupSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 2;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            int ncopies = (int)(long)runtimeEngine.PopValue();
+            object obj = runtimeEngine.PopValue();
+            for ( int i = 0; i < ncopies; i++ ) {
+                runtimeEngine.PushValue( obj );
+            }
+            return this.Next;
+        }
+    }
+
     public class NutmegSystem {
 
         static readonly Dictionary<string, SystemFunctionMaker> SYSTEM_FUNCTION_TABLE =
@@ -339,6 +405,7 @@ namespace NutmegRunner {
             .Add( "not", r => new NotSystemFunction( r ) )
             .Add( "newImmutableList", r => new ListSystemFunction( r ) )
             .Add( "countArguments", r => new CountArgumentsSystemFunction( r ) )
+            .Add( "dup", r => new DupSystemFunction( r ) )
             .Add( new ArithModule() )
             .Add( new RangesModule() )
             .Add( new AssertModule() )

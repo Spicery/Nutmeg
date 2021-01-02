@@ -34,12 +34,12 @@ namespace NutmegRunner.Modules.Assert {
             var unit = runtimeEngine.PopValue();
             var y = runtimeEngine.PopValue();
             var x = runtimeEngine.PopValue();
-            if (x?.Equals( y ) ?? y == null) {
+            if (EqualsSystemFunction.GeneralEquals( x, y ) ) {
                 return this.Next;
             } else {
                 throw new AssertionFailureException( "assert equal failed", unit, position )
-                    .Culprit( "Left Value", $"{x}" )
-                    .Culprit( "Right Value", $"{y}" );
+                    .Culprit( "Left Value", ShowMeSystemFunction.ShowMeAsString( x ) )
+                    .Culprit( "Right Value", ShowMeSystemFunction.ShowMeAsString( y ) );
             }
         }
 

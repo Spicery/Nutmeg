@@ -172,7 +172,7 @@ namespace NutmegRunner {
                     var count = i + 1;
                     var item = runtimeEngine.PeekItemOrElse(N1 - i);
                     Console.Write($"{count}: ");
-                    ShowMeSystemFunction.ShowMe(item);
+                    ShowMeSystemFunction.ShowMe(Console.Out, item);
                     Console.WriteLine();
                 }
             }
@@ -321,15 +321,15 @@ namespace NutmegRunner {
         }
     }
 
-    public class PopValue1IntoSlotRunlet : RunletWithNext {
+    public class PopValueIntoSlotRunlet : RunletWithNext {
 
         int _slot;
 
-        public PopValue1IntoSlotRunlet( int slot, Runlet next ) : base( next ) {
+        public PopValueIntoSlotRunlet( int slot, Runlet next ) : base( next ) {
             this._slot = slot;
         }
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            runtimeEngine.PopValue1IntoSlot( this._slot );
+            runtimeEngine.PopValueIntoSlot( this._slot );
             return _next;
         }
 

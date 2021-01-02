@@ -1,0 +1,30 @@
+### Write an algorithm that takes an array and moves all of the zeros to the end, 
+### preserving the order of the other elements.
+
+def move_zeros( L ):
+    var n := 0
+    [
+        for i in L:
+            if i == 0 then 
+                n <- n + 1
+            else
+                i
+            endif
+        endfor,
+        ### dup makes n duplicates of an item.
+        0.dup( n )
+    ]
+enddef
+
+@unittest
+def test():
+    assert [false,1,0,1,2,0,1,3,"a"].move_zeros == [false,1,1,2,1,3,"a",0,0]
+    assert move_zeros([1,2,0,1,0,1,0,3,0,1]) == [ 1, 2, 1, 1, 3, 1, 0, 0, 0, 0 ]
+    assert move_zeros(["a",0,0,"b","c","d",0,1,0,1,0,3,0,1,9,0,0,0,0,9]) == ["a","b","c","d",1,1,3,1,9,9,0,0,0,0,0,0,0,0,0,0]
+    assert move_zeros(["a","b"]) == ["a","b"]
+    assert move_zeros(["a"]) == ["a"]
+    assert move_zeros([0,0]) == [0,0]
+    assert move_zeros([0]) == [0]
+    assert move_zeros([false]) == [false]
+    assert move_zeros([]) == []
+enddef
