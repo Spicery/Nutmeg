@@ -58,7 +58,7 @@ class TableDrivenParser:
                 # print( 'TOKEN', token, token.category(), token.isOutfixer(), self.isBreakable() )
                 minip = self._postfix_table[ token.category() ]
             except KeyError:
-                raise Mishap( f'Unexpected token in infix/postfix position', token=token )
+                raise Mishap( f'Unexpected token in infix/postfix position', token=token.value(), position=token.span() )
             return minip( self, prec, lhs, token, source )
         finally:
             self.popNonBreakable()
@@ -70,7 +70,8 @@ class TableDrivenParser:
         elif source.isEmpty():
             raise Mishap( 'Unexpected end of input' )
         else:
-            raise Mishap( f'No continuation because of unexpected token', token=source.pop().value())
+            t = source.pop()
+            raise Mishap( f'No continuation because of unexpected token', token=t.value(), position=t.span() )
 
     def tryReadExpr( self, prec, source, checkNewlines=True ):
         token = source.popOrElse()
@@ -169,15 +170,22 @@ class TableDrivenParser:
         source = PeekablePushable( tokenizer( text ) )
         yield from self.readStatementsGenerator( source )
         if not source.isEmpty():
-            raise Mishap( 'Unexpected token after end of statements', token=source.peekOrElse() )
+            t : Token = source.peekOrElse()
+            raise Mishap( 'Unexpected token after end of statements', token=t.value(), position=t.positionInText() )
 
-def mustRead( source, *categories ):
+def mustRead( source, *categories, **kwargs ):
     token = source.popOrElse()
     if token:
         if token.category() not in categories:
-            raise Mishap( f'Required keyword not found', found=token, wanted=str(categories) )
+            m = Mishap( f'Required keyword not found', found=token.value(), position=token.positionInText() )
+        else:
+            # Only clean exit
+            return
     else:
-        raise Mishap( 'Unexpected end of file' )
+        m = Mishap( 'Unexpected end of file' )
+    if kwargs:
+        m.addDetails( **kwargs )
+    raise m
 
 def tryRead( source, *categories ):
     token = source.peekOrElse()
@@ -195,7 +203,7 @@ def lparenPrefixMiniParser( parser, token, source ):
         return codetree.SeqCodelet()
     else:
         e = parser.readExpr( math.inf, source )
-        mustRead( source, "RPAREN" )
+        mustRead( source, "RPAREN", expected=')', hint='Missing comma before this token?' )
         return e
 
 def lbracketPrefixMiniParser( parser, token, source ):
@@ -203,15 +211,15 @@ def lbracketPrefixMiniParser( parser, token, source ):
         kernel = codetree.SeqCodelet()
     else:
         kernel = parser.readExpr( math.inf, source )
-        mustRead( source, "RBRACKET" )
+        mustRead( source, "RBRACKET", expected=')', hint='Missing comma?' )
     return codetree.SyscallCodelet( name="newImmutableList", arguments=kernel )
 
 def defPrefixMiniParser( parser, token, source ):
     funcArgs = parser.readFuncArgs( source )
     funcArgs.declarationMode()
-    mustRead( source, 'END_PARAMETERS', 'END_PHRASE' )
+    mustRead( source, 'END_PARAMETERS', 'END_PHRASE', expected=': or =>>' )
     b = parser.readStatements( source )
-    mustRead( source, 'END_DEC_FUNCTION_1', 'END' )
+    mustRead( source, 'END_DEC_FUNCTION_1', 'END', expected='end or enddef' )
     func = funcArgs.function()
     args = funcArgs.arguments()
     id = codetree.IdCodelet( name=func.name(), reftype="val" )
@@ -222,10 +230,10 @@ def forPrefixMiniParser( parser, token, source ):
     # for ^ QUERY do STMNTS endfor
     query = parser.readExpr( math.inf, source )
     # for QUERY ^ do STMNTS endfor
-    mustRead( source, 'DO', 'END_PHRASE' )
+    mustRead( source, 'DO', 'END_PHRASE', expected=': or do' )
     # for QUERY do ^ STMNTS endfor
     body = parser.readStatements( source )
-    mustRead( source, "ENDFOR", "END" )
+    mustRead( source, "ENDFOR", "END", expected='end or endfor' )
     return codetree.ForCodelet( query=query, body=body )
 
 def ifPrefixMiniParser( parser, token, source ):
@@ -240,7 +248,7 @@ def ifXXXPrefixMiniParser( parser, token, source, *, negatedForm, closingKeyword
     if negatedForm:
         testPart = codetree.SyscallCodelet(name="not",arguments=testPart)
     # ifXXX EXPR ^ then STMNTS ... endifXXX
-    mustRead( source, "THEN", 'END_PHRASE' )
+    mustRead( source, "THEN", 'END_PHRASE', expected=': or then' )
     # ifXXX EXPR then ^ STMNTS ... endifXXX
     thenPart = parser.readStatements( source )
     # ifXXX EXPR then STMNTS ^ (elseif EXPR then STATEMENTS ... | else STMNTS | )  endifXXX
@@ -264,7 +272,7 @@ def ifXXXPrefixMiniParser( parser, token, source, *, negatedForm, closingKeyword
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=elsePart )
     else:
         # ifXXX EXPR then STMNTS ^ endifXXX
-        mustRead( source, closingKeyword, "END" )
+        mustRead( source, closingKeyword, "END", expected=("end or endif" if closingKeyword == "END_IF" else 'end or endifnot') )
         # ifXXX EXPR then STMNTS endifXXX ^
         return codetree.IfCodelet( testPart=testPart, thenPart=thenPart, elsePart=codetree.SeqCodelet() )
 
@@ -358,7 +366,7 @@ def lparenPostfixMiniParser( parser, p, lhs, token, source ):
         return codetree.CallCodelet( function=lhs, arguments=codetree.SeqCodelet() )
     else:
         rhs = parser.readExpr( math.inf, source )
-        mustRead( source, "RPAREN" )
+        mustRead( source, "RPAREN", expected=')', hint='Missing comma before this token?' )
         return codetree.CallCodelet( function=lhs, arguments=rhs )
 
 def bindPostfixMiniParser( parser, p, lhs, token, source ):
