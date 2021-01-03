@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NutmegRunner;
 using Xunit;
 
@@ -17,7 +18,7 @@ namespace NutmegRunnerTests {
             var s = Encapsulate( new StringCodelet( arbitraryString ) );
             var rte = new RuntimeEngine(false);
             //  Act
-            rte.StartFromCodelet(s, useEvaluate: false, usePrint: false);
+            rte.StartFromCodelet(s, new List<string>(), useEvaluate: false, usePrint: false);
             //  Assert
             Assert.Equal( 1, rte.ValueStackLength() );
             Assert.Equal( arbitraryString, rte.PeekOrElse() );

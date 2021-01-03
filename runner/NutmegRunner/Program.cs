@@ -15,6 +15,7 @@ namespace NutmegRunner {
         string _graphviz = null;
         bool _print = false;
         bool _test = false;
+        LinkedList<string> _args;
 
         public bool Trace => this._trace;
 
@@ -29,6 +30,7 @@ namespace NutmegRunner {
         private Program(LinkedList<string> args) {
             ProcessRunnerOptions( args );
             ProcessBundleFile( args );
+            this._args = args;
         }
 
         private void ProcessBundleFile( LinkedList<string> args ) {
@@ -176,7 +178,7 @@ namespace NutmegRunner {
                         foreach (var idName in tests_to_run) {
                             if (this._debug) Console.WriteLine( $"Running unit test for {idName}" );
                             try {
-                                runtimeEngine.Start( idName, useEvaluate: false, usePrint: this._print );
+                                runtimeEngine.Start( idName, new List<string>(), useEvaluate: false, usePrint: this._print );
                                 utresults.AddPass( idName );
                             } catch (Exception ex) {
                                 utresults.AddFailure( idName, ex );
@@ -187,7 +189,7 @@ namespace NutmegRunner {
                         utresults.ShowResults();
                     }
                 } else {
-                    runtimeEngine.Start( this._entryPoint, useEvaluate: false, usePrint: this._print );
+                    runtimeEngine.Start( this._entryPoint, this._args, useEvaluate: false, usePrint: this._print );
                 }
             } catch (SqliteException sqlexn) {
                 if (sqlexn.SqliteErrorCode == 26) {
