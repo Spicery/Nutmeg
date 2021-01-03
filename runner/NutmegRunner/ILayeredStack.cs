@@ -286,8 +286,11 @@ namespace NutmegRunner {
             this.EnsureRoom( nlocals );
             this.Lock();
             var nargs = src.RawSend( this );
-            Array.Fill( this.items, default( T ), this.top + nargs, nlocals - nargs );
-            this.top += nlocals;
+            if (nlocals >= nargs) {
+                //  If this branch is not taken then an error will be raised when nargs is detected to be wrong.
+                Array.Fill( this.items, default( T ), this.top + nargs, nlocals - nargs );
+                this.top += nlocals;
+            } 
             return nargs;
         }
 

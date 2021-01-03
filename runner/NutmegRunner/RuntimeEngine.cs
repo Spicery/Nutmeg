@@ -186,10 +186,10 @@ namespace NutmegRunner {
             return (Runlet)this._callStack.Pop();   //  And continue from the return runlet.
         }
 
-        public void Start( string idName, bool useEvaluate, bool usePrint ) {
+        public void Start( string idName, IEnumerable<string> args, bool useEvaluate, bool usePrint ) {
             switch ( this._dictionary.Get( idName ).Value ) {
                 case Runlet codelet:
-                    this.StartFromCodelet( codelet, useEvaluate, usePrint );
+                    this.StartFromCodelet( codelet, args, useEvaluate, usePrint );
                     break;
                 case object obj:
                     this.StartFromConstant( usePrint, obj );
@@ -215,13 +215,21 @@ namespace NutmegRunner {
             }
         }
 
+        private static Runlet ListToPushQChain( IEnumerable<string> args, Runlet continuation ) {
+            var stack = new Stack<string>( args );
+            Runlet sofar = continuation;
+            while (stack.Count > 0) { 
+                sofar = new PushQRunlet( stack.Pop(), sofar );
+            }
+            return sofar;
+        }
 
-        public void StartFromCodelet( Runlet runlet, bool useEvaluate, bool usePrint ) {
+        public void StartFromCodelet( Runlet runlet, IEnumerable<string> args, bool useEvaluate, bool usePrint ) {
             TextWriter stdErr = Console.Error;
             if (runlet is FunctionRunlet fwc) {
                 if (Debug) stdErr.WriteLine( $"Running codelet ..." );
                 try {
-                    Runlet currentInstruction = new LockRunlet( new CallQRunlet( fwc, new HaltRunlet( usePrint ) ) );
+                    Runlet currentInstruction = new LockRunlet( ListToPushQChain( args, new CallQRunlet( fwc, new HaltRunlet( usePrint ) ) ) );
                     if (Debug) {
                         while (true) {
                             Console.WriteLine( $"Instruction: {currentInstruction}" );
