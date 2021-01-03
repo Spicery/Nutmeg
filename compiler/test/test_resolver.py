@@ -70,7 +70,7 @@ def test_resolveFunction():
     assert "local" == codelet.body().scope()
     assert codelet.parameters().label() == codelet.body().label()
     assert codelet.parameters().nonassignable() and codelet.body().nonassignable()
-    assert not codelet.parameters().immutable() and not codelet.body().immutable()
+    assert not codelet.parameters().const() and not codelet.body().const()
 
 def test_resolveFunction2Variables():
     # Arrange
@@ -106,9 +106,9 @@ def test_resolveFunction2Variables():
     assert params[0].label() == codelet.body().label()
     assert params[1].label() != codelet.body().label()
     assert params[0].nonassignable() and codelet.body().nonassignable()
-    assert not params[0].immutable() and not codelet.body().immutable()
+    assert not params[0].const() and not codelet.body().const()
     assert not params[1].nonassignable()
-    assert not params[1].immutable()
+    assert not params[1].const()
     assert params[0].scope() == "local"
     assert params[1].scope() == "local"
     assert params[0].reftype() == "new"
