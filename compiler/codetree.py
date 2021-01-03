@@ -227,7 +227,7 @@ class IdCodelet( Codelet ):
 
 	KIND = "id"
 
-	def __init__( self, *, name, reftype, slot=None, immutable=None, nonassignable=None, scope=None, label=None, **kwargs ):
+	def __init__( self, *, name, reftype, slot=None, const=None, nonassignable=None, scope=None, label=None, **kwargs ):
 		super().__init__( **kwargs )
 		self._name = name
 		self._reftype = reftype
@@ -235,7 +235,7 @@ class IdCodelet( Codelet ):
 		self._scope = scope
 		self._label = label
 		self._nonassignable = nonassignable
-		self._immutable = immutable
+		self._const = const
 
 	def members( self ):
 		yield from ()
@@ -261,8 +261,8 @@ class IdCodelet( Codelet ):
 	def nonassignable( self ):
 		return self._nonassignable
 
-	def immutable( self ):
-		return self._immutable
+	def const( self ):
+		return self._const
 
 	def label( self ):
 		return self._label
@@ -275,8 +275,8 @@ class IdCodelet( Codelet ):
 			d[ 'label' ] = self._label
 		if self._nonassignable is not None:
 			d[ 'nonassignable' ] = self._nonassignable
-		if self._immutable is not None:
-			d[ 'immutable' ] = self._immutable
+		if self._const is not None:
+			d[ 'const' ] = self._const
 		if self._slot is not None:
 			d[ 'slot' ] = self._slot
 		return d
@@ -287,19 +287,20 @@ class IdCodelet( Codelet ):
 	def setAsGlobal( self ):
 		self._scope = "global"
 		self._nonassignable = True
+		self._const = self._reftype == "const"
 
-	def setAsLocal( self, * , label, nonassignable, immutable, **kwargs ):
+	def setAsLocal( self, *, label, nonassignable, const, **kwargs ):
 		self._scope = "local"
 		self._label = label
 		self._nonassignable = nonassignable
-		self._immutable = immutable
+		self._const = const
 
-	def declareAsLocal( self, *, label, nonassignable, immutable, **kwargs ):
+	def declareAsLocal( self, *, label, nonassignable, const, **kwargs ):
 		self._scope = "local"
 		self._reftype = "new"
 		self._label = label
 		self._nonassignable = nonassignable
-		self._immutable = immutable
+		self._const = const
 
 	def declarationMode( self ):
 		if self._reftype == "get":

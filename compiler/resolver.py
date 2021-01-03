@@ -62,8 +62,8 @@ class LexicalScope( Scope ):
         label = newLabel()
         reftype = id_codelet.reftype()
         nonassignable = reftype == "val" or reftype == "const"
-        immutable = reftype == "const"
-        info = dict( label = label, nonassignable = nonassignable, immutable = immutable )
+        const = reftype == "const"
+        info = dict( label = label, nonassignable = nonassignable, const = const )
         self._locals[ nm ] = info
         id_codelet.declareAsLocal( **info )
 
