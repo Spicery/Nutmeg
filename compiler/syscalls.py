@@ -14,6 +14,8 @@ SYSCONSTS = (
         "min", "max",
         "-",
         "*",
+        # Bitwise module
+        "AND", "OR", "XOR", "NOT", "LSHIFT", "RSHIFT",
         # Not in a module
         "<=", "<", ">=", ">",
         "==", "!=", "not",

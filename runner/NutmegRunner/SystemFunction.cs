@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using NutmegRunner.Modules.Arith;
 using NutmegRunner.Modules.Assert;
+using NutmegRunner.Modules.Bitwise;
 using NutmegRunner.Modules.Characters;
 using NutmegRunner.Modules.Ranges;
 using NutmegRunner.Modules.Seqs;
@@ -412,6 +413,7 @@ namespace NutmegRunner {
             .Add( new StringsModule() )
             .Add( new CharactersModule() )
             .Add( new SeqsModule() )
+            .Add( new BitwiseModule() )
             .Table;
 
         public static SystemFunctionMaker Find( string name ) {
