@@ -335,7 +335,7 @@ PREFIX_TABLE = {
     BasicToken: lambda parser, token, source: codetree.StringCodelet( value=token.value() ),
     IdToken: lambda parser, token, source: codetree.IdCodelet( name=token.value(), reftype="get" ),
     CharToken: lambda parser, token, source: codetree.CharCodelet( value=token.literalValue() ),
-    IntToken: lambda parser, token, source: codetree.IntCodelet( value=token.value() ),
+    IntToken: lambda parser, token, source: codetree.IntCodelet( value=str( token.valueAsInt() ) ),
     BoolToken: lambda parser, token, source: codetree.BoolCodelet( value=token.value() ),
     StringToken: lambda parser, token, source: codetree.StringCodelet( value=token.literalValue() ),
     "DEC_VARIABLE": varPrefixMiniParser,
