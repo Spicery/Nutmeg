@@ -28,6 +28,9 @@ class GlobalScope( Scope ):
         id_codelet.setAsGlobal()
 
     def declare( self, id_codelet ):
+        vname = id_codelet.name()
+        if isSysconst( vname ):
+            raise Mishap( "Variable name clashes with built-in procedure", variable=vname, hint="Built-ins cannot be redeclared, please rename your variable" )
         id_codelet.setAsGlobal()
 
 LABEL = 0
