@@ -30,7 +30,7 @@ class GlobalScope( Scope ):
     def declare( self, id_codelet ):
         vname = id_codelet.name()
         if isSysconst( vname ):
-            raise Mishap( "Variable name clashes with built-in procedure", variable=vname, hint="Built-ins cannot be redeclared, please rename your variable" )
+            raise Mishap( "Variable name of global clashes with built-in procedure", variable=vname, hint="Built-ins cannot be redeclared, please rename your variable" )
         id_codelet.setAsGlobal()
 
 LABEL = 0
@@ -60,6 +60,8 @@ class LexicalScope( Scope ):
 
     def declare( self, id_codelet ):
         nm = id_codelet.name()
+        if isSysconst(nm):
+            raise Mishap( "Local variable trying to shadow built-in procedure", variable=nm, hint="Built-ins cannot be shadowed, please rename your variable" )
         if nm in self._locals:
             raise Exception( f'Trying to re-declare the same variable: {nm}' )
         label = newLabel()
