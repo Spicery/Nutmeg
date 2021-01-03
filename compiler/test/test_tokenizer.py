@@ -13,7 +13,7 @@ def help_test( *testcases ):
         assert testcase[1] == tokenize( testcase[0] )
 
 def test_ints():
-    for text in [ '42', '1805', '9999999999999999999999' ]:
+    for text in [ '42', '1805', '9999999999999999999999', '-7', '0xFF', '-0b1010' ]:
         t = tokenizeOne( text )
         assert isinstance( t, IntToken )
         assert t.value() == text

@@ -169,6 +169,9 @@ class IntToken( Token ):
     def category( self ):
         return type(self)
 
+    def valueAsInt( self ):
+        return int( self._value, base=0 )
+
 class CharToken( Token ):
 
     @staticmethod
@@ -301,11 +304,13 @@ class TokenType:
 token_spec = {
     tt.idname(): tt for tt in [
         # literal_constants
-        TokenType( r"(?P<INT>(\+|-)?\d+)", make=IntToken.make ),
+        TokenType( r"(?P<HEXINT>(\+|-)?0x_?[\dA-F]+(?:_[A-F\d]+)*)", make=IntToken.make ),
+        TokenType( r"(?P<BOOLINT>(\+|-)?0b_?[01]+(?:_[01_]+)*)", make=IntToken.make ),
+        TokenType( r"(?P<INT>(\+|-)?[1-9]\d*(?:_\d+)*)", make=IntToken.make ),
+        TokenType( r"(?P<ZEROINT>(\+|-)?0)", make=IntToken.make ),
         TokenType( r"(?P<CHAR>\`[^\n\`]\`)", make=CharToken.make ),
         TokenType( r'(?P<DQSTRING>(?!""")"[^\n"]*")', make=StringToken.make ),
         TokenType( r"(?P<SQSTRING>(?!''')'[^\n']*')", make=StringToken.make ),
-        #TokenType( r'(?P<SQSTRING>"""(?:(?!""").)*""")', make=StringToken.make ),
         TokenType( r'(?P<MULTILINE_DQSTRING>"""(?:(?!""").)*""")', make=StringToken.make ),
         TokenType( r"(?P<MULTILINE_SQSTRING>'''(?:(?!''').)*''')", make=StringToken.make ),
         TokenType( r"(?P<BOOL>true|false)", make=BoolToken.make ),
