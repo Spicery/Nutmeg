@@ -63,6 +63,15 @@ namespace NutmegRunnerTests {
             Assert.Equal( 60, sum );
         }
 
+        [Fact]
+        public void Indexing() {
+            //  Arrange
+            var r = new HalfOpenRangeList( 10L, 15L );
+            //  Act
+            //  Assert
+            Assert.ThrowsAny<NutmegException>( () => r[8] );
+        }
+
     }
 
 }
