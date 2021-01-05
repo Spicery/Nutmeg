@@ -402,6 +402,9 @@ def andOrPostfixMiniParser( parser : TableDrivenParser, p, lhs, token, source : 
     make = codetree.AndCodelet if token.category() == "AND" else codetree.OrCodelet
     return make( lhs=lhs, rhs=rhs )
 
+def discardPostfixMiniParser( parser : TableDrivenParser, p, lhs, token, source : PeekablePushable ):
+    return codetree.SyscallCodelet( name="eraseAll", arguments=lhs )
+
 POSTFIX_TABLE = {
     "SEQ": commaPostfixMiniParser,
     "DOT": dotPostfixMiniParser,
@@ -412,6 +415,7 @@ POSTFIX_TABLE = {
     "IN": inPostfixMiniParser,
     "AND": andOrPostfixMiniParser,
     "OR": andOrPostfixMiniParser,
+    "DISCARD": discardPostfixMiniParser,
 }
 
 def standardParser( unit=None ):

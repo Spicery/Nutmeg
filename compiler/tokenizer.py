@@ -342,6 +342,7 @@ token_spec = {
         TokenType( r"(?P<OR>\bor\b)", prec=595, prefix=False, outfix=False, make=SyntaxToken.make ),
 
         # keywords
+        TokenType( r"(?P<DISCARD>;;)", prec=2000, make=SyntaxToken.make ),
         TokenType( r"(?P<TERMINATE_STATEMENT>;)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_PHRASE>:)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_PARAMETERS>=>>)", make=PunctuationToken.make ),
