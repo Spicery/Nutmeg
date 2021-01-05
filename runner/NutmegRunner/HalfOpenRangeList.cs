@@ -55,21 +55,13 @@ namespace NutmegRunner {
         public long High => this.hi;
 
         public object this[int index] {
-            get => 0 <= index && index< this.hi? this.lo + index : throw new NutmegException( "Out of range" );
+            get => 0 <= index && index< this.Count ? this.lo + index : throw new NutmegException( "Out of range" );
             set => throw new System.NotImplementedException();
         }
 
         public int Count => (int)(this.hi - lo);
 
         public bool IsReadOnly => true;
-
-        //public void Add( long item ) {
-        //    throw new System.NotImplementedException();
-        //}
-
-        //public void Clear() {
-        //    throw new System.NotImplementedException();
-        //}
 
         public bool Contains( long item ) {
             return this.lo <= item && item < this.hi;
@@ -85,7 +77,6 @@ namespace NutmegRunner {
             return new HalfOpenRangeListEnumerator(this.lo, this.hi);
         }
 
-
         public int IndexOf( long item ) {
             if (this.lo <= item && item < this.hi ) {
                 return (int)( item - this.lo );
@@ -93,18 +84,6 @@ namespace NutmegRunner {
                 return -1;
             }
         }
-
-        //public void Insert( int index, long item ) {
-        //    throw new System.NotImplementedException();
-        //}
-
-        //public bool Remove( long item ) {
-        //    throw new System.NotImplementedException();
-        //}
-
-        //public void RemoveAt( int index ) {
-        //    throw new System.NotImplementedException();
-        //}
 
         IEnumerator IEnumerable.GetEnumerator() {
             return this.GetEnumerator();

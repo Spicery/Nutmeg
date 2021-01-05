@@ -131,6 +131,36 @@
 
     }
 
+    public class IntegerDivisionSystemFunction : FixedAritySystemFunction {
+
+        public IntegerDivisionSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 2;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
+            runtimeEngine.PushValue( x / y );
+            return this.Next;
+        }
+
+    }
+
+    public class IntegerRemainderSystemFunction : FixedAritySystemFunction {
+
+        public IntegerRemainderSystemFunction( Runlet next ) : base( next ) { }
+
+        public override int Nargs => 2;
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            long y = (long)runtimeEngine.PopValue();
+            long x = (long)runtimeEngine.PopValue();
+            runtimeEngine.PushValue( x % y );
+            return this.Next;
+        }
+
+    }
+
     public class ArithModule : SystemFunctionsModule {
         public override void AddAll() {
             Add( "+", r => new AddSystemFunction( r ), "add" );
@@ -140,6 +170,8 @@
             Add( "product", r => new ProductSystemFunction( r ) );
             Add( "max", r => new MaxSystemFunction( r ) );
             Add( "min", r => new MinSystemFunction( r ) );
+            Add( "quot", r => new IntegerDivisionSystemFunction( r ) );
+            Add( "rem", r => new IntegerRemainderSystemFunction( r ) );
         }
     }
 }
