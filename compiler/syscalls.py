@@ -3,6 +3,7 @@ SYSCONSTS = {
     "println",
     "showMe",
     # Range module
+    "range",
     "..<",
     "...",
     "[x..<y]",
