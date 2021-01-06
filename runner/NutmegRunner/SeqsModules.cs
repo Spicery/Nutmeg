@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace NutmegRunner.Modules.Seqs {
 
-    
+
     public class Length : FixedAritySystemFunction {
 
         public Length( Runlet next ) : base( next ) {
