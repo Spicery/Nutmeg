@@ -261,17 +261,14 @@ namespace NutmegRunner.Modules.Strings {
         }
 
         private static void GeneralAppend( StringBuilder b, string s, object x ) {
-            switch (x) {
-                case HalfOpenRangeList r:
-                    b.Append( s, (int)r.Low, (int)(r.High - r.Low) );
-                    break;
-                default:
-                    var stream = StreamSystemFunction.ToStream( x );
-                    while (stream.MoveNext()) {
-                        var index = (int)(long)stream.Current;
-                        b.Append( s[index] );
-                    }
-                    break;
+            if ( x is HalfOpenRangeList r && r.Step ==  1) {
+                b.Append( s, (int)r.Start, (int)(r.End - r.Start) );
+            } else {
+                var stream = StreamSystemFunction.ToStream( x );
+                while (stream.MoveNext()) {
+                    var index = (int)(long)stream.Current;
+                    b.Append( s[index] );
+                }
             }
         }
 
@@ -289,16 +286,13 @@ namespace NutmegRunner.Modules.Strings {
                     {
                         object x = runtimeEngine.PopValue();
                         string s = (string)runtimeEngine.PopValue();
-                        switch (x) {
-                            case HalfOpenRangeList r:
-                                var t = s.Substring( (int)r.Low, (int)(r.High - r.Low) );
-                                runtimeEngine.PushValue( t );
-                                break;
-                            default:
-                                var b = new StringBuilder();
-                                GeneralAppend( b, s, x );
-                                runtimeEngine.PushValue( b.ToString() );
-                                break;
+                        if (x is HalfOpenRangeList r && r.Step == 1) {
+                            var t = s.Substring( (int)r.Start, (int)(r.End - r.Start) );
+                            runtimeEngine.PushValue( t );
+                        } else {
+                            var b = new StringBuilder();
+                            GeneralAppend( b, s, x );
+                            runtimeEngine.PushValue( b.ToString() );
                         }
                     }
                     break;
@@ -325,8 +319,6 @@ namespace NutmegRunner.Modules.Strings {
 
         public override void AddAll() {
             Add( "newString", r => new StringNewString( r ) );
-            //Add( "length", r => new StringLength( r ) );
-            //Add( "get", r => new StringGet( r ) );
             Add( "startsWith", r => new StringStartsWith( r ) );
             Add( "endsWith", r => new StringEndsWith( r ) );
             Add( "contains", r => new StringContains( r ) );

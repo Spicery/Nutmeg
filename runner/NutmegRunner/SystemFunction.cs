@@ -145,7 +145,11 @@ namespace NutmegRunner {
                     t.Write( $"\"{s}\"" );
                     break;
                 case HalfOpenRangeList horl:
-                    t.Write( $"[{horl.Low}..<{horl.High}]" );
+                    if (horl.Step == 1) {
+                        t.Write( $"[{horl.Start}..<{horl.End}]" );
+                    } else {
+                        t.Write( $"range({horl.Start}, {horl.End}, {horl.Step})" );
+                    }
                     break;
                 case ICollection<object> collection:
                     t.Write( "[" );
