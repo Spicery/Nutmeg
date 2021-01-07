@@ -173,11 +173,11 @@ class TableDrivenParser:
             t : Token = source.peekOrElse()
             raise Mishap( 'Unexpected token after end of statements', token=t.value(), position=t.positionInText() )
 
-def mustRead( source, *categories, **kwargs ):
+def mustRead( source, *categories, expected=None, **kwargs ):
     token = source.popOrElse()
     if token:
         if token.category() not in categories:
-            m = Mishap( f'Required keyword not found', found=token.value(), position=token.positionInText() )
+            m = Mishap( expected or f'Required keyword not found', found=token.value(), position=token.positionInText() )
         else:
             # Only clean exit
             return
@@ -234,7 +234,7 @@ def forPrefixMiniParser( parser, token, source ):
     # for QUERY do ^ STMNTS endfor
     body = parser.readStatements( source )
     mustRead( source, "ENDFOR", "END", expected='end or endfor' )
-    return codetree.ForCodelet( query=query, body=body )
+    return codetree.ForCodelet( query=codetree.DoCodelet( query=query, body=body ) )
 
 def ifPrefixMiniParser( parser, token, source ):
     return ifXXXPrefixMiniParser( parser, token, source, negatedForm=False, closingKeyword="END_IF" )
@@ -381,8 +381,20 @@ def assignPostfixMiniParser( parser, p, lhs, token, source ):
 
 def inPostfixMiniParser( parser, p, lhs, token, source ):
     lhs.declarationMode()
-    rhs = parser.readExpr( math.inf, source )
+    rhs = parser.readExpr( p - 1, source )
     return codetree.InCodelet( pattern = lhs, streamable = rhs )
+
+def untilPostfixMiniParser( parser, p, lhs, token, source ):
+    rhs = parser.readExpr( p, source )
+    if tryRead( source, 'THEN' ):
+        result = parser.readExpr( p-1, source )
+    else:
+        result = codetree.SeqCodelet()
+    return codetree.UntilCodelet( query=lhs, test=rhs, result=result )
+
+def ifCompletePostfixMiniParser( parser, p, lhs, token, source ):
+    rhs = parser.readExpr( p - 1, source )
+    return codetree.IfCompleteCodelet( query=lhs, result=rhs )
 
 def dotPostfixMiniParser( parser : TableDrivenParser, p, lhs, token, source : PeekablePushable ):
     rhs = parser.readExpr( p-1, source )
@@ -413,6 +425,8 @@ POSTFIX_TABLE = {
     "BIND": bindPostfixMiniParser,
     "ASSIGN": assignPostfixMiniParser,
     "IN": inPostfixMiniParser,
+    "UNTIL": untilPostfixMiniParser,
+    "IFCOMPLETE": ifCompletePostfixMiniParser,
     "AND": andOrPostfixMiniParser,
     "OR": andOrPostfixMiniParser,
     "DISCARD": discardPostfixMiniParser,
