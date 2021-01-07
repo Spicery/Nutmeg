@@ -24,7 +24,6 @@ namespace NutmegRunner {
         private void Convert( Runlet r ) {
             if ( !this.seen.TryGetValue( r, out _ ) ) {
                 this.seen.Add( r, r );
-                //Console.WriteLine( ">> " + r.GetType().Name );
                 Console.Write( $"{this.Name( r )} -> {{" );
                 var neighbors = r.Neighbors().Where( n => n != null ).ToList();
                 foreach ( var n in neighbors ) {
@@ -38,7 +37,7 @@ namespace NutmegRunner {
         }
 
         public void GraphViz( string idName, Runlet r ) {
-            Console.WriteLine( $"digraph {idName} {{" );
+            Console.WriteLine( $"digraph {idName} {{ node [shape=box];" );
             Convert( r );
             Console.WriteLine( $"}}" );
         }

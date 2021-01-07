@@ -125,7 +125,19 @@ class Resolver( codetree.CodeletVisitor ):
     def visitForCodelet( self, codelet, scopes ):
         new_scope = LexicalScope( previous = scopes )
         codelet.query().visit( self, new_scope )
-        codelet.body().visit( self, new_scope )
+
+    def visitDoCodelet( self, codelet, scopes ):
+        codelet.query().visit( self, scopes )
+        codelet.body().visit( self, scopes )
+
+    def visitUntilCodelet( self, codelet, scopes ):
+        codelet.query().visit( self, scopes )
+        codelet.test().visit( self, scopes )
+        codelet.result().visit( self, scopes )
+
+    def visitIfCompleteCodelet( self, codelet, scopes ):
+        codelet.query().visit( self, scopes )
+        codelet.result().visit( self, scopes )
 
     def visitInCodelet( self, in_codelet, scopes ):
         in_codelet.pattern().visit( self, scopes )

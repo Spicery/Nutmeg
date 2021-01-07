@@ -363,7 +363,9 @@ token_spec = {
         TokenType( r"(?P<END_IF>endif\b)", make=PunctuationToken.make ),
         TokenType( r"(?P<END_IFNOT>endifnot\b)", make=PunctuationToken.make ),
         TokenType( r"(?P<FOR>for\b)", make=SyntaxToken.make ),
-        TokenType( r"(?P<IN>in\b)", prec=900, prefix=False, make=SyntaxToken.make ),
+        TokenType( r"(?P<IN>in\b)", prec=910, prefix=False, outfix=False, make=SyntaxToken.make ),
+        TokenType( r"(?P<UNTIL>until\b)", prec=910, prefix=False, outfix=False, make=SyntaxToken.make ),
+        TokenType( r"(?P<IFCOMPLETE>ifcomplete\b)", prec=910, prefix=False, outfix=False, make=SyntaxToken.make ),
         TokenType( r"(?P<DO>do\b)", make=PunctuationToken.make ),
         TokenType( r"(?P<ENDFOR>endfor\b)", make=PunctuationToken.make ),
         TokenType( r"(?P<ASSERT>assert\b)", make=SyntaxToken.make ),
@@ -441,9 +443,10 @@ def tokenizer( text : str ):
                 follows_newline |= text.find( "\n", old_position, position ) != -1
             elif idname != "WS" and idname != "COMMENT_LINE":
                 token_type = token_spec[idname]
-                tok = token_type.newToken( m )
+                tok:Token = token_type.newToken( m )
                 if follows_newline:
-                    tok.setFollowsNewLine()
+                    if not tok.isPostfixerOnly():
+                        tok.setFollowsNewLine()
                     follows_newline = False
                 tok.setSpan( old_position, position )
                 tok.setSourceText( text )
