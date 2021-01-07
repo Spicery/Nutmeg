@@ -115,6 +115,7 @@ namespace NutmegRunner {
                 stdErr.WriteLine( $"Bundle file: {this._bundleFile}" );
                 stdErr.WriteLine( $"Entry point: {this._entryPoint}" );
                 stdErr.WriteLine( $"Unittests: {this._test}" );
+                stdErr.WriteLine( $"GraphViz: {this._graphviz}" );
             }
             try {
                 RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
