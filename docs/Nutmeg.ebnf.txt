@@ -43,21 +43,21 @@ IfNotExpression ::= 'ifnot' Expression ('then'|':') Statements ( ('elseif'|'else
 
 SwitchExpression ::= 'switch' Expression ':'? ( ( 'case' Pattern )+ ('then'|':') Statements )* ('else' ':'? Statements)? ('endswitch'|'end')
 
-LoopExpression ::= 'for' Queries ('do'|':') Statements ('endfor'|'end')
+LoopExpression ::= 'for' Query ('do'|':') Statements ('endfor'|'end')
 
 LambdaExpression ::= 'fn' Identifier? Pattern ('=>>'|':') Statements ('endfn'|'end')
 
 AssertExpression ::= 'assert' Expression
 
-Queries ::= 
-    Query ('&&' Query)* |
-    Query ('||' Query)*
-
 Query ::= 
     Expression |
     Binding |
     Pattern 'in' Expression |
-    '(' Queries ')'
+    Query 'until' Expression ( 'then' Expression )? |
+    Query 'ifcomplete' Expression |
+    '(' Query ')' |
+    Query ('&&' Query)* |
+    Query ('||' Query)*
 
 InfixOperator ::= ',' | '+' | '*' | '-' | '/' | '//' | 'and' | 'or' | '..' | '...' | '.' Identifier
 

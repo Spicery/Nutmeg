@@ -53,6 +53,15 @@ class CodeletVisitor( abc.ABC ):
 	def visitInCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
+	def visitDoCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitUntilCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitIfCompleteCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
 	def visitForCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
@@ -415,9 +424,9 @@ class InCodelet( Codelet ):
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitInCodelet( self, *args, **kwargs )
 
-class ForCodelet( Codelet ):
+class DoCodelet( Codelet ):
 
-	KIND = "for"
+	KIND = "do"
 
 	def __init__( self, *, query, body, **kwargs ):
 		super().__init__( **kwargs )
@@ -438,7 +447,92 @@ class ForCodelet( Codelet ):
 		yield self._body
 
 	def transform( self, f ):
-		return ForCodelet( query=f( self._query ), body=f( self._body ), **self._kwargs )
+		return DoCodelet( query=f( self._query ), body=f(self._body), **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitDoCodelet( self, *args, **kwargs )
+
+class UntilCodelet( Codelet ):
+
+	KIND = "until"
+
+	def __init__( self, *, query, test, result, **kwargs ):
+		super().__init__( **kwargs )
+		self._query = query
+		self._test = test
+		self._result = result
+
+	def query( self ):
+		return self._query
+
+	def test( self ):
+		return self._test
+
+	def result( self ):
+		return self._result
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, query=self._query, test=self._test, result=self._result, **self._kwargs )
+
+	def members( self ):
+		yield self._query
+		yield self._test
+		yield self._result
+
+	def transform( self, f ):
+		return UntilCodelet( query=f( self._query ), test=f(self._test), result=f(self._result), **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitUntilCodelet( self, *args, **kwargs )
+
+class IfCompleteCodelet( Codelet ):
+
+	KIND = "ifcomplete"
+
+	def __init__( self, *, query, result, **kwargs ):
+		super().__init__( **kwargs )
+		self._query = query
+		self._result = result
+
+	def query( self ):
+		return self._query
+
+	def result( self ):
+		return self._result
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, query=self._query, result=self._result, **self._kwargs )
+
+	def members( self ):
+		yield self._query
+		yield self._result
+
+	def transform( self, f ):
+		return IfCompleteCodelet( query=f( self._query ), result=f(self._result), **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitIfCompleteCodelet( self, *args, **kwargs )
+
+
+class ForCodelet( Codelet ):
+
+	KIND = "for"
+
+	def __init__( self, *, query, **kwargs ):
+		super().__init__( **kwargs )
+		self._query = query
+
+	def query( self ):
+		return self._query
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, query=self._query, **self._kwargs )
+
+	def members( self ):
+		yield self._query
+
+	def transform( self, f ):
+		return ForCodelet( query=f( self._query ), **self._kwargs )
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitForCodelet( self, *args, **kwargs )

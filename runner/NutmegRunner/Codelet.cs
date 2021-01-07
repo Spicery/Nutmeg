@@ -64,6 +64,9 @@ namespace NutmegRunner {
                 case "id": return new IdCodelet();
                 case "for": return new ForCodelet();
                 case "in": return new InCodelet();
+                case "do": return new DoCodelet();
+                case "until": return new UntilCodelet();
+                case "ifcomplete": return new IfCompleteCodelet();
                 case "binding": return new BindingCodelet();
                 case "assign": return new AssignCodelet();
                 default: throw new NutmegException( $"Unrecognised kind: {kind}" );
@@ -87,11 +90,15 @@ namespace NutmegRunner {
         }
 
         public virtual Runlet WeaveLoopInit( Runlet continuation, GlobalDictionary g ) {
-            throw new NutmegException( "Cannot iterate over expression" );
+            throw new NutmegException( "Cannot iterate over expression" ).Culprit( "Expression", $"{this}" );
+        }
+
+        public virtual Runlet WeaveLoopBody( Runlet continuation, GlobalDictionary g ) {
+            throw new NutmegException( "Cannot iterate over expression" ).Culprit( "Expression", $"{this}" );
         }
 
         public virtual Runlet WeaveLoopNext( Runlet okLabel, Runlet failLabel, GlobalDictionary g ) {
-            throw new NutmegException( "Cannot iterate over expression" );
+            throw new NutmegException( "Cannot iterate over expression" ).Culprit( "Expression", $"{this}" );
         }
 
     }
@@ -101,16 +108,39 @@ namespace NutmegRunner {
         [JsonProperty( "query" )]
         public Codelet Query { get; set; }
 
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            var loopStartLabel = new JumpRunlet( null );
+            var loopInit = this.Query.WeaveLoopInit( loopStartLabel, g );
+            var loopBody = this.Query.WeaveLoopBody( loopStartLabel, g );
+            var loopNext = this.Query.WeaveLoopNext( loopBody, continuation, g );
+            loopStartLabel.UpdateLink( loopNext );
+            return loopInit;
+        }
+
+    }
+
+    public class DoCodelet : Codelet {
+
+        [JsonProperty( "query" )]
+        public Codelet Query { get; set; }
+
         [JsonProperty( "body" )]
         public Codelet Body { get; set; }
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            var loopStartLabel = new JumpRunlet( null );
-            var loopInit = this.Query.WeaveLoopInit( loopStartLabel, g );
-            var loopBody = this.Body.Weave( loopStartLabel, g );
-            var loopNext = this.Query.WeaveLoopNext( loopBody, continuation, g );
-            loopStartLabel.UpdateLink( loopNext );
-            return loopInit;
+            throw new UnimplementedNutmegException( "Naked 'do' not implemented" );
+        }
+
+        public override Runlet WeaveLoopInit( Runlet continuation, GlobalDictionary g ) {
+            return Query.WeaveLoopInit( continuation, g );
+        }
+
+        public override Runlet WeaveLoopBody( Runlet continuation, GlobalDictionary g ) {
+            return Body.Weave( continuation, g );
+        }
+
+        public override Runlet WeaveLoopNext( Runlet okLabel, Runlet failLabel, GlobalDictionary g ) {
+            return Query.WeaveLoopNext( okLabel, failLabel, g );
         }
 
     }
@@ -122,12 +152,12 @@ namespace NutmegRunner {
 
         [JsonProperty( "streamable" )]
         public Codelet InExpr { get; set; }
-        
+
         [JsonProperty( "streamSlot" )]
         public int InStreamSlot { get; set; }
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            throw new UnimplementedNutmegException( "In not implemented"  );
+            throw new UnimplementedNutmegException( "Naked 'in' not implemented" );
         }
 
         public override Runlet WeaveLoopInit( Runlet continuation, GlobalDictionary g ) {
@@ -136,9 +166,71 @@ namespace NutmegRunner {
             return inExpr;
         }
 
+        public override Runlet WeaveLoopBody( Runlet continuation, GlobalDictionary g ) {
+            return continuation;
+        }
+
         public override Runlet WeaveLoopNext( Runlet okLabel, Runlet failLabel, GlobalDictionary g ) {
             IdCodelet inVar = (IdCodelet)this.InVar;
             return new SlotNextRunlet( this.InStreamSlot, new PopSlotRunlet( inVar.Slot, okLabel ), failLabel );
+        }
+
+    }
+
+    public class UntilCodelet : Codelet {
+
+        [JsonProperty( "query" )]
+        public Codelet Query { get; set; }
+
+        [JsonProperty( "test" )]
+        public Codelet Test { get; set; }
+
+        [JsonProperty( "result" )]
+        public Codelet Result { get; set; }
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            throw new UnimplementedNutmegException( "Naked 'until' not implemented" );
+        }
+
+        public override Runlet WeaveLoopInit( Runlet continuation, GlobalDictionary g ) {
+            return Query.WeaveLoopInit( continuation, g );
+        }
+
+        public override Runlet WeaveLoopBody( Runlet continuation, GlobalDictionary g ) {
+            return Query.WeaveLoopBody( continuation, g );
+        }
+
+        public override Runlet WeaveLoopNext( Runlet okLabel, Runlet failLabel, GlobalDictionary g ) {
+            Runlet resultLabel = Result.Weave( failLabel, g );
+            Runlet okLabel1 = Test.Weave( new ForkRunlet( resultLabel, okLabel ), g );
+            return this.Query.WeaveLoopNext( okLabel1, failLabel, g );
+        }
+
+    }
+
+    public class IfCompleteCodelet : Codelet {
+
+        [JsonProperty( "query" )]
+        public Codelet Query { get; set; }
+
+        [JsonProperty( "result" )]
+        public Codelet Result { get; set; }
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            throw new UnimplementedNutmegException( "Naked 'until' not implemented" );
+        }
+
+        public override Runlet WeaveLoopInit( Runlet continuation, GlobalDictionary g ) {
+            return Query.WeaveLoopInit( continuation, g );
+        }
+
+        public override Runlet WeaveLoopBody( Runlet continuation, GlobalDictionary g ) {
+            return Query.WeaveLoopBody( continuation, g );
+        }
+
+        public override Runlet WeaveLoopNext( Runlet okLabel, Runlet failLabel, GlobalDictionary g ) {
+            Runlet resultLabel = Result.Weave( failLabel, g );
+            return this.Query.WeaveLoopNext( okLabel, resultLabel, g );
         }
 
     }
