@@ -53,10 +53,13 @@ class CodeletVisitor( abc.ABC ):
 	def visitInCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
+	def visitNonStopCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
 	def visitDoCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
-	def visitUntilCodelet( self, code_let, *args, **kwargs ):
+	def visitWUntilCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
 	def visitIfCompleteCodelet( self, code_let, *args, **kwargs ):
@@ -395,6 +398,25 @@ class CallCodelet( Codelet ):
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitCallCodelet( self, *args, **kwargs )
 
+class NonStopCodelet( Codelet ):
+
+	KIND = "nonstop"
+
+	def __init__( self, **kwargs ):
+		super().__init__( **kwargs )
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, **self._kwargs )
+
+	def members( self ):
+		yield from ()
+
+	def transform( self, f ):
+		return self
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitNonStopCodelet( self, *args, **kwargs )
+
 class InCodelet( Codelet ):
 
 	KIND = "in"
@@ -452,15 +474,22 @@ class DoCodelet( Codelet ):
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitDoCodelet( self, *args, **kwargs )
 
-class UntilCodelet( Codelet ):
+class WUntilCodelet( Codelet ):
 
-	KIND = "until"
+	KIND = "wuntil"
 
-	def __init__( self, *, query, test, result, **kwargs ):
+	def __init__( self, *, query, test, result, sense, **kwargs ):
 		super().__init__( **kwargs )
+		self._sense = sense
 		self._query = query
 		self._test = test
 		self._result = result
+
+	def isWhile( self ):
+		return self._sense
+
+	def isUntil( self ):
+		return not self._sense
 
 	def query( self ):
 		return self._query
@@ -472,7 +501,7 @@ class UntilCodelet( Codelet ):
 		return self._result
 
 	def encodeAsJSON( self, encoder ):
-		return dict( kind=self.KIND, query=self._query, test=self._test, result=self._result, **self._kwargs )
+		return dict( kind=self.KIND, query=self._query, test=self._test, result=self._result, sense=self._sense, **self._kwargs )
 
 	def members( self ):
 		yield self._query
@@ -480,10 +509,11 @@ class UntilCodelet( Codelet ):
 		yield self._result
 
 	def transform( self, f ):
-		return UntilCodelet( query=f( self._query ), test=f(self._test), result=f(self._result), **self._kwargs )
+		return WUntilCodelet( sense=self._sense, query=f( self._query ), test=f(self._test), result=f(self._result), **self._kwargs )
 
 	def visit( self, visitor, *args, **kwargs ):
-		return visitor.visitUntilCodelet( self, *args, **kwargs )
+		return visitor.visitWUntilCodelet( self, *args, **kwargs )
+
 
 class IfCompleteCodelet( Codelet ):
 

@@ -226,7 +226,12 @@ def defPrefixMiniParser( parser, token, source ):
     func = codetree.LambdaCodelet( parameters=args, body=b )
     return codetree.BindingCodelet( lhs=id, rhs=func )
 
-def forPrefixMiniParser( parser, token, source ):
+
+def wuntilPrefixMiniParser( parser, token, source ):
+    lhs = codetree.NonStopCodelet()
+    return parser.runPostfixMiniParser( token.precedence(), lhs, token, source )
+
+def forPrefixMiniParser( parser, token, source:PeekablePushable):
     # for ^ QUERY do STMNTS endfor
     query = parser.readExpr( math.inf, source )
     # for QUERY ^ do STMNTS endfor
@@ -241,6 +246,7 @@ def ifPrefixMiniParser( parser, token, source ):
 
 def ifnotPrefixMiniParser( parser, token, source ):
     return ifXXXPrefixMiniParser( parser, token, source, negatedForm=True, closingKeyword="END_IFNOT" )
+
 
 def ifXXXPrefixMiniParser( parser, token, source, *, negatedForm, closingKeyword ):
     # ifXXX ^ EXPR then STMNTS ... endifXXX
@@ -341,6 +347,8 @@ PREFIX_TABLE = {
     "DEC_VARIABLE": varPrefixMiniParser,
     "DEC_NONASSIGNABLE": varPrefixMiniParser,
     "DEC_IMMUTABLE": varPrefixMiniParser,
+    "UNTIL": wuntilPrefixMiniParser,
+    "WHILE": wuntilPrefixMiniParser,
 }
 
 def idPostfixMiniParser( parser, p, lhs, token, source ):
@@ -384,13 +392,14 @@ def inPostfixMiniParser( parser, p, lhs, token, source ):
     rhs = parser.readExpr( p - 1, source )
     return codetree.InCodelet( pattern = lhs, streamable = rhs )
 
-def untilPostfixMiniParser( parser, p, lhs, token, source ):
+def wuntilPostfixMiniParser( parser, p, lhs, token, source ):
     rhs = parser.readExpr( p, source )
     if tryRead( source, 'THEN' ):
         result = parser.readExpr( p-1, source )
     else:
         result = codetree.SeqCodelet()
-    return codetree.UntilCodelet( query=lhs, test=rhs, result=result )
+    is_while = token.category() == "WHILE"
+    return codetree.WUntilCodelet( sense=is_while, query=lhs, test=rhs, result=result )
 
 def ifCompletePostfixMiniParser( parser, p, lhs, token, source ):
     rhs = parser.readExpr( p - 1, source )
@@ -422,7 +431,8 @@ POSTFIX_TABLE = {
     "BIND": bindPostfixMiniParser,
     "ASSIGN": assignPostfixMiniParser,
     "IN": inPostfixMiniParser,
-    "UNTIL": untilPostfixMiniParser,
+    "UNTIL": wuntilPostfixMiniParser,
+    "WHILE": wuntilPostfixMiniParser,
     "IFCOMPLETE": ifCompletePostfixMiniParser,
     "AND": andOrPostfixMiniParser,
     "OR": andOrPostfixMiniParser,

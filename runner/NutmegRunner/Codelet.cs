@@ -64,8 +64,9 @@ namespace NutmegRunner {
                 case "id": return new IdCodelet();
                 case "for": return new ForCodelet();
                 case "in": return new InCodelet();
+                case "nonstop": return new NonStopCodelet();
                 case "do": return new DoCodelet();
-                case "until": return new UntilCodelet();
+                case "wuntil": return new WUntilCodelet();
                 case "ifcomplete": return new IfCompleteCodelet();
                 case "binding": return new BindingCodelet();
                 case "assign": return new AssignCodelet();
@@ -145,6 +146,27 @@ namespace NutmegRunner {
 
     }
 
+    public class NonStopCodelet : Codelet {
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            throw new UnimplementedNutmegException( "Naked 'nonstop' not implemented" );
+        }
+
+        public override Runlet WeaveLoopInit( Runlet continuation, GlobalDictionary g ) {
+            return continuation;
+        }
+
+        public override Runlet WeaveLoopBody( Runlet continuation, GlobalDictionary g ) {
+            return continuation;
+        }
+
+        public override Runlet WeaveLoopNext( Runlet okLabel, Runlet failLabel, GlobalDictionary g ) {
+            return okLabel;
+        }
+
+
+    }
+
     public class InCodelet : Codelet {
 
         [JsonProperty( "pattern" )]
@@ -177,7 +199,10 @@ namespace NutmegRunner {
 
     }
 
-    public class UntilCodelet : Codelet {
+    public class WUntilCodelet : Codelet {
+
+        [JsonProperty( "sense" )]
+        public bool Sense { get; set; }
 
         [JsonProperty( "query" )]
         public Codelet Query { get; set; }
@@ -188,21 +213,26 @@ namespace NutmegRunner {
         [JsonProperty( "result" )]
         public Codelet Result { get; set; }
 
+        public bool IsWhile() => this.Sense;
+
+        public bool IsUntil() => !this.Sense;
+
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            throw new UnimplementedNutmegException( "Naked 'until' not implemented" );
+            throw new UnimplementedNutmegException( "Naked 'while/until' not implemented" );
         }
 
         public override Runlet WeaveLoopInit( Runlet continuation, GlobalDictionary g ) {
-            return Query.WeaveLoopInit( continuation, g );
+            return this.Query.WeaveLoopInit( continuation, g );
         }
 
         public override Runlet WeaveLoopBody( Runlet continuation, GlobalDictionary g ) {
-            return Query.WeaveLoopBody( continuation, g );
+            return this.Query.WeaveLoopBody( continuation, g );
         }
 
         public override Runlet WeaveLoopNext( Runlet okLabel, Runlet failLabel, GlobalDictionary g ) {
-            Runlet resultLabel = Result.Weave( failLabel, g );
-            Runlet okLabel1 = Test.Weave( new ForkRunlet( resultLabel, okLabel ), g );
+            Runlet resultLabel = this.Result.Weave( failLabel, g );
+            Runlet forkLabel = this.IsUntil() ? new ForkRunlet( resultLabel, okLabel ) : new ForkRunlet( okLabel, resultLabel );
+            Runlet okLabel1 = this.Test.Weave( forkLabel, g );
             return this.Query.WeaveLoopNext( okLabel1, failLabel, g );
         }
 
@@ -428,19 +458,19 @@ namespace NutmegRunner {
 
     public abstract class AssignLikeCodelet : Codelet {
 
-        public Codelet lhs { get; set; }
-        public Codelet rhs { get; set; }
+        public Codelet LHS { get; set; }
+        public Codelet RHS { get; set; }
 
         public AssignLikeCodelet() {
             //  Used by deserialisation.
         }
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            switch (this.lhs) {
+            switch (this.LHS) {
                 case IdCodelet lhs_id:
                     var c4 = new PopValueIntoSlotRunlet( lhs_id.Slot, continuation );
                     var c3 = new CheckedUnlockRunlet( 1, c4 );
-                    var c2 = this.rhs.Weave( c3, g );
+                    var c2 = this.RHS.Weave( c3, g );
                     return new LockRunlet( c2 );
                 default:
                     throw new NutmegException( "Left hand side of binding not a simple variable" );
