@@ -527,6 +527,8 @@ namespace NutmegRunner {
 
         public override Runlet ExecuteRunlet(RuntimeEngine runtimeEngine)
         {
+            //var x = runtimeEngine.PeekOrElse();
+            //Console.WriteLine( $"Fork: {x} {ThenPart} {ElsePart}" );
             return runtimeEngine.PopBool() ? ThenPart : ElsePart;
         }
 
