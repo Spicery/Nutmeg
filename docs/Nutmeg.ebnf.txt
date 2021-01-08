@@ -53,7 +53,7 @@ Query ::=
     Expression |
     Binding |
     Pattern 'in' Expression |
-    Query 'until' Expression ( 'then' Expression )? |
+    Query ('while'|'until') Expression ( 'then' Expression )? |
     Query 'ifcomplete' Expression |
     '(' Query ')' |
     Query ('&&' Query)* |
