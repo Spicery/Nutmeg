@@ -401,9 +401,9 @@ def wuntilPostfixMiniParser( parser, p, lhs, token, source ):
     is_while = token.category() == "WHILE"
     return codetree.WUntilCodelet( sense=is_while, query=lhs, test=rhs, result=result )
 
-def ifCompletePostfixMiniParser( parser, p, lhs, token, source ):
+def afterwardsPostfixMiniParser( parser, p, lhs, token, source ):
     rhs = parser.readExpr( p - 1, source )
-    return codetree.IfCompleteCodelet( query=lhs, result=rhs )
+    return codetree.AfterwardsCodelet( query=lhs, result=rhs )
 
 def dotPostfixMiniParser( parser : TableDrivenParser, p, lhs, token, source : PeekablePushable ):
     rhs = parser.readExpr( p-1, source )
@@ -436,7 +436,7 @@ POSTFIX_TABLE = {
     "IN": inPostfixMiniParser,
     "UNTIL": wuntilPostfixMiniParser,
     "WHILE": wuntilPostfixMiniParser,
-    "IFCOMPLETE": ifCompletePostfixMiniParser,
+    "AFTERWARDS": afterwardsPostfixMiniParser,
     "AND": andOrPostfixMiniParser,
     "OR": andOrPostfixMiniParser,
     "DISCARD": discardPostfixMiniParser,

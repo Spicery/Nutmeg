@@ -62,7 +62,7 @@ class CodeletVisitor( abc.ABC ):
 	def visitWUntilCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
-	def visitIfCompleteCodelet( self, code_let, *args, **kwargs ):
+	def visitAfterwardsCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
 	def visitForCodelet( self, code_let, *args, **kwargs ):
@@ -515,9 +515,9 @@ class WUntilCodelet( Codelet ):
 		return visitor.visitWUntilCodelet( self, *args, **kwargs )
 
 
-class IfCompleteCodelet( Codelet ):
+class AfterwardsCodelet( Codelet ):
 
-	KIND = "ifcomplete"
+	KIND = "afterwards"
 
 	def __init__( self, *, query, result, **kwargs ):
 		super().__init__( **kwargs )
@@ -538,10 +538,10 @@ class IfCompleteCodelet( Codelet ):
 		yield self._result
 
 	def transform( self, f ):
-		return IfCompleteCodelet( query=f( self._query ), result=f(self._result), **self._kwargs )
+		return AfterwardsCodelet( query=f( self._query ), result=f(self._result), **self._kwargs )
 
 	def visit( self, visitor, *args, **kwargs ):
-		return visitor.visitIfCompleteCodelet( self, *args, **kwargs )
+		return visitor.visitAfterwardsCodelet( self, *args, **kwargs )
 
 
 class ForCodelet( Codelet ):
