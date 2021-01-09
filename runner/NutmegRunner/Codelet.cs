@@ -48,30 +48,30 @@ namespace NutmegRunner {
 
         protected override Codelet Create( Type objectType, JObject jObject ) {
             var kind = jObject["kind"];
-            switch (kind.ToString()) {
-                case "lambda": return new LambdaCodelet();
-                case "syscall": return new SyscallCodelet();
-                case "sysfn": return new SysfnCodelet();
-                case "string": return new StringCodelet();
-                case "int": return new IntCodelet();
-                case "char": return new CharCodelet();
-                case "bool": return new BoolCodelet();
-                case "if": return new If3Codelet();
-                case "and": return new AndCodelet();
-                case "or": return new OrCodelet();
-                case "call": return new CallCodelet();
-                case "seq": return new SeqCodelet();
-                case "id": return new IdCodelet();
-                case "for": return new ForCodelet();
-                case "in": return new InCodelet();
-                case "nonstop": return new NonStopCodelet();
-                case "do": return new DoCodelet();
-                case "wuntil": return new WUntilCodelet();
-                case "afterwards": return new AfterwardsCodelet();
-                case "binding": return new BindingCodelet();
-                case "assign": return new AssignCodelet();
-                default: throw new NutmegException( $"Unrecognised kind: {kind}" );
-            }
+            return (kind.ToString()) switch {
+                "lambda" => new LambdaCodelet(),
+                "syscall" => new SyscallCodelet(),
+                "sysfn" => new SysfnCodelet(),
+                "string" => new StringCodelet(),
+                "int" => new IntCodelet(),
+                "char" => new CharCodelet(),
+                "bool" => new BoolCodelet(),
+                "if" => new If3Codelet(),
+                "and" => new AndCodelet(),
+                "or" => new OrCodelet(),
+                "call" => new CallCodelet(),
+                "seq" => new SeqCodelet(),
+                "id" => new IdCodelet(),
+                "for" => new ForCodelet(),
+                "in" => new InCodelet(),
+                "nonstop" => new NonStopCodelet(),
+                "do" => new DoCodelet(),
+                "wuntil" => new WUntilCodelet(),
+                "afterwards" => new AfterwardsCodelet(),
+                "binding" => new BindingCodelet(),
+                "assign" => new AssignCodelet(),
+                _ => throw new NutmegException( $"Unrecognised kind: {kind}" ),
+            };
         }
 
     }
