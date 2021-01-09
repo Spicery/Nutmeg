@@ -135,7 +135,7 @@ class Resolver( codetree.CodeletVisitor ):
         codelet.test().visit( self, scopes )
         codelet.result().visit( self, scopes )
 
-    def visitIfCompleteCodelet( self, codelet, scopes ):
+    def visitAfterwardsCodelet( self, codelet, scopes ):
         codelet.query().visit( self, scopes )
         codelet.result().visit( self, scopes )
 

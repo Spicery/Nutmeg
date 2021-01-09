@@ -366,7 +366,7 @@ token_spec = {
         TokenType( r"(?P<IN>in\b)", prec=910, prefix=False, outfix=False, make=SyntaxToken.make ),
         TokenType( r"(?P<UNTIL>until\b)", prec=910, prefix=True, outfix=False, make=SyntaxToken.make ),
         TokenType( r"(?P<WHILE>while\b)", prec=910, prefix=True, outfix=False, make=SyntaxToken.make ),
-        TokenType( r"(?P<IFCOMPLETE>ifcomplete\b)", prec=910, prefix=False, outfix=False, make=SyntaxToken.make ),
+        TokenType( r"(?P<AFTERWARDS>afterwards\b)", prec=910, prefix=False, outfix=False, make=SyntaxToken.make ),
         TokenType( r"(?P<DO>do\b)", make=PunctuationToken.make ),
         TokenType( r"(?P<ENDFOR>endfor\b)", make=PunctuationToken.make ),
         TokenType( r"(?P<ASSERT>assert\b)", make=SyntaxToken.make ),

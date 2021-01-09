@@ -67,7 +67,7 @@ namespace NutmegRunner {
                 case "nonstop": return new NonStopCodelet();
                 case "do": return new DoCodelet();
                 case "wuntil": return new WUntilCodelet();
-                case "ifcomplete": return new IfCompleteCodelet();
+                case "afterwards": return new AfterwardsCodelet();
                 case "binding": return new BindingCodelet();
                 case "assign": return new AssignCodelet();
                 default: throw new NutmegException( $"Unrecognised kind: {kind}" );
@@ -238,7 +238,7 @@ namespace NutmegRunner {
 
     }
 
-    public class IfCompleteCodelet : Codelet {
+    public class AfterwardsCodelet : Codelet {
 
         [JsonProperty( "query" )]
         public Codelet Query { get; set; }
