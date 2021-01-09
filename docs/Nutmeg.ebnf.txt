@@ -54,7 +54,7 @@ Query ::=
     Binding |
     Pattern 'in' Expression |
     Query ('while'|'until') Expression ( 'then' Expression )? |
-    Query 'ifcomplete' Expression |
+    Query 'afterwards' Expression |
     '(' Query ')' |
     Query ('&&' Query)* |
     Query ('||' Query)*
