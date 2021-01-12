@@ -249,6 +249,18 @@ class IdCodelet( Codelet ):
 		self._nonassignable = nonassignable
 		self._const = const
 
+	def copy( self, label=None ):
+		return IdCodelet(
+			name=self._name,
+			reftype=self._reftype,
+			slot=self._slot,
+			const=self._const,
+			nonassignable=self._nonassignable,
+			scope=self._scope,
+			label=( label or self._label ),
+			**self._kwargs
+		)
+
 	def members( self ):
 		yield from ()
 
@@ -751,12 +763,19 @@ class LambdaCodelet( Codelet ):
 
 	KIND = "lambda"
 
-	def __init__( self, *, parameters, body, nlocals = None, nargs = None, **kwargs ):
+	def __init__( self, *, parameters, body, captured=[], nlocals = None, nargs = None, **kwargs ):
 		super().__init__( **kwargs )
 		self._parameters = parameters
 		self._body = body
 		self._nlocals = nlocals
 		self._nargs = nargs
+		self._captured = set(captured)
+
+	def captured( self ):
+		return self._captured
+
+	def capture( self, name ):
+		self._captured.add( name )
 
 	def members( self ):
 		yield self.parameters()
@@ -784,7 +803,7 @@ class LambdaCodelet( Codelet ):
 		self._nargs = n
 
 	def encodeAsJSON( self, encoder ):
-		d = dict( kind=self.KIND, parameters=self._parameters, body=self._body, **self._kwargs )
+		d = dict( kind=self.KIND, parameters=self._parameters, body=self._body, captured=list(self._captured), **self._kwargs )
 		if self._nlocals is not None:
 			d[ 'nlocals' ] = self._nlocals
 		if self._nargs is not None:

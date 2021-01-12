@@ -346,8 +346,29 @@ namespace NutmegRunner {
 
     }
 
-    interface ICallable {
+    public interface ICallable {
         Runlet Call( RuntimeEngine runtimeEngine, Runlet next, bool alt );
+    }
+
+    public class PartialApplication : RunletWithNext, ICallable {
+
+        ICallable _fn;
+        IList<object> _args;
+
+        public PartialApplication( ICallable fn, IList<object> args, Runlet next ) : base( next ) {
+            _fn = fn;
+            _args = args;
+        }
+
+        public Runlet Call( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
+            runtimeEngine.PushAll( _args );
+            return _fn.Call( runtimeEngine, next, alt );
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.PushValue( this );
+            return this.Next;
+        }
     }
 
     public class FunctionRunlet : RunletWithNext, ICallable
@@ -385,7 +406,7 @@ namespace NutmegRunner {
         public override Runlet ExecuteRunlet(RuntimeEngine runtimeEngine)
         {
             runtimeEngine.PushValue(this);
-            return this._next;
+            return this.Next;
         }
 
         public override IEnumerable<Runlet> Neighbors() {
