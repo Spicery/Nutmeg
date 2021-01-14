@@ -235,9 +235,12 @@ def defPrefixMiniParser( parser, token, source ):
     return codetree.BindingCodelet( lhs=id, rhs=func )
 
 def fnPrefixMiniParser( parser, token, source ):
-    args = parser.readArgs( source )
-    args.declarationMode()
-    mustRead( source, 'END_PARAMETERS', 'END_PHRASE', expected=': or =>>' )
+    if tryRead( source, 'END_PARAMETERS', 'END_PHRASE' ):
+        args = codetree.SeqCodelet()
+    else:
+        args = parser.readArgs( source )
+        args.declarationMode()
+        mustRead( source, 'END_PARAMETERS', 'END_PHRASE', expected=': or =>>' )
     b = parser.readStatements( source )
     mustRead( source, 'ENDFN', 'END', expected='end or endfn' )
     return codetree.LambdaCodelet( parameters=args, body=b )
