@@ -79,6 +79,19 @@ namespace NutmegRunner {
     [JsonConverter( typeof( CodeletConverter ) )]
     public abstract class Codelet {
 
+        [JsonProperty( "arity" )]
+        public string Arity { get; set; }
+
+        public Arity GetArity() {
+            if (this.Arity == null ) {
+                return new Arity( 0, true );
+            } else if ( this.Arity.EndsWith("+") ) {
+                return new Arity( int.Parse( this.Arity.Substring( 0, this.Arity.Length - 1 ) ), true );
+            } else {
+                return new Arity( int.Parse( Arity ), false );
+            }
+        }
+
         public static Codelet DeserialiseCodelet( string jsonValue ) {
             return JsonConvert.DeserializeObject< Codelet >( jsonValue );
         }
@@ -86,8 +99,13 @@ namespace NutmegRunner {
         public abstract Runlet Weave( Runlet continuation, GlobalDictionary g );
 
         public virtual Runlet Weave1( Runlet continuation, GlobalDictionary g ) {
-            var runlet = this.Weave( new Unlock1Runlet( continuation ), g );
-            return new LockRunlet( runlet );
+            Arity a = this.GetArity();
+            if ( a.HasExactArity( 1 ) ) {
+                return this.Weave( continuation, g );
+            } else {
+                var runlet = this.Weave( new Unlock1Runlet( continuation ), g );
+                return new LockRunlet( runlet );
+            }
         }
 
         public virtual Runlet WeaveLoopInit( Runlet continuation, GlobalDictionary g ) {
@@ -468,10 +486,15 @@ namespace NutmegRunner {
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
             switch (this.LHS) {
                 case IdCodelet lhs_id:
+                    Arity a = this.RHS.GetArity();
                     var c4 = new PopValueIntoSlotRunlet( lhs_id.Slot, continuation );
-                    var c3 = new CheckedUnlockRunlet( 1, c4 );
-                    var c2 = this.RHS.Weave( c3, g );
-                    return new LockRunlet( c2 );
+                    if ( a.HasExactArity( 1 ) ) {
+                        return this.RHS.Weave( c4, g );
+                    } else {
+                        var c3 = new CheckedUnlockRunlet( 1, c4 );
+                        var c2 = this.RHS.Weave( c3, g );
+                        return new LockRunlet( c2 );
+                    }
                 default:
                     throw new NutmegException( "Left hand side of binding not a simple variable" );
             }
@@ -538,7 +561,13 @@ namespace NutmegRunner {
                 //  like overkill right now.
                 case FixedAritySystemFunction f_sysfn:
                     var nargs = f_sysfn.Nargs;
-                    return new LockRunlet( this.Arguments.Weave( new CheckedUnlockRunlet( nargs, f_sysfn ), g ) );
+                    Arity a = this.Arguments.GetArity();
+                    //Console.WriteLine( $"Weave Syscall: nargs={nargs}, arity={a.AsString()}" );
+                    if ( a.HasExactArity( nargs )) {
+                        return this.Arguments.Weave( f_sysfn, g );
+                    } else {
+                        return new LockRunlet( this.Arguments.Weave( new CheckedUnlockRunlet( nargs, f_sysfn ), g ) );
+                    }
                 case VariadicSystemFunction v_sysfn:
                     //  If nargs is null then we cannot unlock the stack until after it runs. But
                     //  we can forgo the value-stack length check.

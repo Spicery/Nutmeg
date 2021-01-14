@@ -9,6 +9,9 @@ from abc import ABC
 
 from str2bool import str2bool
 
+from arity import Arity
+
+
 class CodeletVisitor( abc.ABC ):
 
 	def visitCodelet( self, code_let, *args, **kwargs ):
@@ -89,12 +92,13 @@ class Codelet( abc.ABC ):
 
 	KIND_PROPERTY = "kind"
 
-	def __init__( self, kind=None, **kwargs ):
+	def __init__( self, kind=None, arity=None, **kwargs ):
 		"""
 		The keyword-arguments are going to be supplied from the deserialisd
 		JSON, so the keywords will match the object-fields from the JSON,
 		although the values will be codelets and not plain-JSON objects.
 		"""
+		self._arity = arity
 		self._kwargs = kwargs
 
 	def serialize( self, dst ):
@@ -140,6 +144,18 @@ class Codelet( abc.ABC ):
 	def assignMode( self ):
 		for m in self.members():
 			m.assignMode()
+
+	def arity( self ):
+		if not self._arity:
+			return Arity( 0, more=True )
+		else:
+			return Arity.fromString( self._arity )
+
+	def setArity( self, arity ):
+		if isinstance( arity, int ):
+			self._arity = str(arity)
+		else:
+			self._arity = arity.toString()
 
 class ConstantCodelet( Codelet, ABC ):
 	"""
@@ -825,7 +841,10 @@ class CodeTreeEncoder(json.JSONEncoder):
 	
 	def default( self, obj ):
 		if isinstance( obj, Codelet ):
-			return obj.encodeAsJSON( self )
+			d = obj.encodeAsJSON( self )
+			if obj._arity:
+				d['arity'] = obj._arity
+			return d
 		return json.JSONEncoder.default( self, obj )
 
 ### Deserialization ###########################################################
