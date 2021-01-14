@@ -1,6 +1,34 @@
 import codetree
 from codetree import CallCodelet, SyscallCodelet, IdCodelet
 import syscalls
+from resolver import newLabel
+
+
+class LambdaLift( codetree.CodeletVisitor ):
+
+    def __call__( self, tree ):
+        return tree.visit( self )
+
+    def visitCodelet( self, codelet ):
+        return codelet.transform( self )
+
+    def visitFunctionCodelet( self, fn_codelet : codetree.LambdaCodelet ):
+        captured = list( fn_codelet.captured() )
+        fn_codelet = codetree.LambdaCodelet( parameters=fn_codelet.parameters(), body=fn_codelet.body().visit( self ) )
+        if captured:
+            extra_params = [ id_codelet.copy( label=newLabel() ) for id_codelet in captured ]
+            new_params = codetree.SeqCodelet(
+                fn_codelet.parameters(),
+                *extra_params
+            )
+            fn_codelet = codetree.LambdaCodelet( parameters=new_params, body=fn_codelet.body() )
+            return codetree.SyscallCodelet(
+                name="partApply",
+                arguments=codetree.SeqCodelet( fn_codelet, *captured )
+            )
+        else:
+            return fn_codelet
+
 
 class ReplaceIdsWithSysconsts( codetree.CodeletVisitor ):
 
@@ -74,6 +102,8 @@ class Simplify( codetree.CodeletVisitor ):
         else:
             return self.visitCodelet( syscall_codelet )
 
+def lambdaLift( tree ):
+    return LambdaLift()( tree )
 
 def replaceIdsWithSysconsts( tree ):
     return ReplaceIdsWithSysconsts()( tree )
@@ -82,6 +112,7 @@ def simplifyCodeTree( tree ):
     return Simplify()( tree )
 
 def optimizeCodeTree( tree ):
+    tree = lambdaLift( tree )
     tree = replaceIdsWithSysconsts( tree )
     tree = simplifyCodeTree( tree )
     return tree
