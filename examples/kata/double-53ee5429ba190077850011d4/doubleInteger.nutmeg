@@ -2,6 +2,7 @@ def doubleInteger( n ):
     2 * n
 enddef
 
+@command
 def main():
     println( doubleInteger( 123 ) )
 enddef
