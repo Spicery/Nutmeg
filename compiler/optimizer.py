@@ -102,6 +102,34 @@ class Simplify( codetree.CodeletVisitor ):
         else:
             return self.visitCodelet( syscall_codelet )
 
+import arity
+class ArityAnalysis( codetree.CodeletVisitor ):
+
+    def __call__( self, tree ):
+        tree.visit( self )
+
+    def visitCodelet( self, codelet ):
+        for c in codelet.members():
+            c.visit( self )
+
+    def visitIdCodelet( self, code_let, *args, **kwargs ):
+        code_let.setArity(1)
+
+    def visitConstantCodelet( self, code_let, *args, **kwargs ):
+        code_let.setArity( 1 )
+
+    def visitFunctionCodelet( self, codelet, *args, **kwargs ):
+        codelet.setArity( 1 )
+        for c in codelet.members():
+            c.visit( self )
+
+    def visitSeqCodelet( self, codelet : codetree.SeqCodelet, *args, **kwargs ):
+        sofar = arity.Arity(0)
+        for c in codelet.members():
+            c.visit( self )
+            sofar = sofar.sum( c.arity() )
+        codelet.setArity( sofar )
+
 def lambdaLift( tree ):
     return LambdaLift()( tree )
 
@@ -111,10 +139,14 @@ def replaceIdsWithSysconsts( tree ):
 def simplifyCodeTree( tree ):
     return Simplify()( tree )
 
+def arityAnalysisCodeTree( tree ):
+    return ArityAnalysis()( tree )
+
 def optimizeCodeTree( tree ):
     tree = lambdaLift( tree )
     tree = replaceIdsWithSysconsts( tree )
     tree = simplifyCodeTree( tree )
+    arityAnalysisCodeTree( tree )
     return tree
 
 def optimizeFile( file ):
