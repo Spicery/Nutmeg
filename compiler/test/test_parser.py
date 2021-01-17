@@ -1,5 +1,9 @@
 from parser import parseFromString
+import json
 import codetree
+
+def parse( text ):
+    return [ *parseFromString( text ) ]
 
 def parseOne( text ):
     e = [ *parseFromString( text ) ]
@@ -69,7 +73,21 @@ def test_if5_ifPrefixMiniParser():
     assert isinstance( if3.thenPart(), codetree.IdCodelet )
     assert isinstance( if3.elsePart(), codetree.IdCodelet )
 
+def test_discardPostfixMiniParser():
+    def aux( s1 ):
+        c1 = parseOne( s1 )
+        s1e = s1 + ";;"
+        c1e = parseOne( s1e )
+        c1e_expected = codetree.SyscallCodelet( name="eraseAll", arguments=c1 )
+        flat = lambda c : json.dumps( c, separators=(',', ':'), cls=codetree.CodeTreeEncoder )
+        assert flat( c1e_expected ) == flat( c1e )
+    aux( "0" )
+    aux( " 3 * ( 2 + 1 )" )
+    # aux( "0; 1 + 2")
 
+# '{\n    "arguments": {\n        "kind": "int",\n        "value": "0"\n    },\n    "kind": "syscall",\n    "name": "eraseAll"\n}\n'
+# '{\n    "arguments": {\n        "kind": "int",\n        "value": "0"\n    },\n    "kind": "syscall",\n    "name": "eraseAll"\n}\n'
+# '{\n    "kind": "int",\n    "value": "0"\n}\n'
 ################################################################################
 ### Tests for Issue #14
 ################################################################################

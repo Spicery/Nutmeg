@@ -51,6 +51,13 @@ def test_lt_lte_gt_gte():
     assert ts[2].value() == ">"
     assert ts[3].value() == ">="
 
+def test_eraseAll():
+    text = "0;;"
+    ts = tokenize( text )
+    assert 2 == len( ts )
+    assert "0" == ts[0].value()
+    assert ";;" == ts[1].value()
+
 def test_follows_newline():
     text = """
     this is
