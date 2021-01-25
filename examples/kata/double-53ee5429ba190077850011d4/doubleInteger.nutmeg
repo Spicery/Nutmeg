@@ -2,7 +2,8 @@ def doubleInteger( n ):
     2 * n
 enddef
 
-@command
-def main():
-    println( doubleInteger( 123 ) )
+@unittest
+def test():
+    assert 4 == doubleInteger( 2 )
+    assert 0 == doubleInteger( 0 )
 enddef
