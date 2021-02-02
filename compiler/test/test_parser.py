@@ -73,21 +73,28 @@ def test_if5_ifPrefixMiniParser():
     assert isinstance( if3.thenPart(), codetree.IdCodelet )
     assert isinstance( if3.elsePart(), codetree.IdCodelet )
 
-def test_discardPostfixMiniParser():
-    def aux( s1 ):
-        c1 = parseOne( s1 )
-        s1e = s1 + ";;"
-        c1e = parseOne( s1e )
-        c1e_expected = codetree.SyscallCodelet( name="eraseAll", arguments=c1 )
-        flat = lambda c : json.dumps( c, separators=(',', ':'), cls=codetree.CodeTreeEncoder )
-        assert flat( c1e_expected ) == flat( c1e )
-    aux( "0" )
-    aux( " 3 * ( 2 + 1 )" )
-    # aux( "0; 1 + 2")
+def test_discardPostfixMiniParser1():
+    e = parseOne( "0;;" )
+    assert isinstance( e, codetree.SyscallCodelet)
+    assert e.name() == "eraseAll"
+    assert isinstance( e.arguments(), codetree.IntCodelet )
 
-# '{\n    "arguments": {\n        "kind": "int",\n        "value": "0"\n    },\n    "kind": "syscall",\n    "name": "eraseAll"\n}\n'
-# '{\n    "arguments": {\n        "kind": "int",\n        "value": "0"\n    },\n    "kind": "syscall",\n    "name": "eraseAll"\n}\n'
-# '{\n    "kind": "int",\n    "value": "0"\n}\n'
+def test_discardPostfixMiniParser2():
+    ''' eraseAll should discard a sequence '''
+    es = [*parseFromString( "0, 1;;")]
+    e = parseOne( "0, 1;;")
+    assert isinstance( e, codetree.SyscallCodelet)
+    assert e.name() == "eraseAll"
+    assert isinstance( e.arguments(), codetree.SeqCodelet )
+
+def test_discardPostfixMiniParser3():
+    ''' eraseAll should affect only one statement '''
+    el = [*parseFromString( "0; 1;;")]
+    assert len( el ) == 2
+    assert isinstance( el[0], codetree.IntCodelet)
+    assert isinstance( el[1], codetree.SyscallCodelet)
+    assert el[1].name() == "eraseAll"
+
 ################################################################################
 ### Tests for Issue #14
 ################################################################################
