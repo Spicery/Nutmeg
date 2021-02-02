@@ -105,6 +105,13 @@ namespace NutmegRunner {
             this._valueStack.Push( value );
         }
 
+        public void PushAll( IList<object> args ) {
+            //  TODO: This can be sped up.
+            foreach ( var x in args ) {
+                this._valueStack.Push( x );
+            }
+        }
+
         public object PopValue() {
             return this._valueStack.Pop();
         }

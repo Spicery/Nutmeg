@@ -370,6 +370,9 @@ token_spec = {
         TokenType( r"(?P<AFTERWARDS>afterwards\b)", prec=910, prefix=False, outfix=False, make=SyntaxToken.make ),
         TokenType( r"(?P<DO>do\b)", make=PunctuationToken.make ),
         TokenType( r"(?P<ENDFOR>endfor\b)", make=PunctuationToken.make ),
+        TokenType( r"(?P<FN>fn\b)", outfix=True, make=SyntaxToken.make ),
+        TokenType( r"(?P<ENDFN>endfn\b)", make=PunctuationToken.make ),
+
         TokenType( r"(?P<ASSERT>assert\b)", make=SyntaxToken.make ),
 
         TokenType( r"(?P<END>end\b)", make=PunctuationToken.make ),  # MUST come after all other end... token types.

@@ -6,10 +6,15 @@ Statement ::= Expression | Binding
 
 Binding ::= 
     Pattern ':=' Expression |
-    Annotation* ('def'|'function'|'finesse') Identifier '(' Pattern ')' ('=>>'|':') Statements ('enddef'|'end')
+    Annotation* ('def'|'function'|'finesse') DefinitionalFunctionCall ('=>>'|':') Statements ('enddef'|'end')
 
 Annotation ::=
     '@' ('command'|'unittest')
+
+DefinitionalFunctionCall ::=
+    Identifier '(' Pattern ')' |
+    Pattern '.' Identifier |
+    Pattern '.' Identifier '(' Pattern ')'
 
 Pattern ::= 
     LiteralConstant |
@@ -24,8 +29,8 @@ Expression ::=
     LiteralConstant |
     Identifier | 
     '(' Expression? ')' |
-    Expression '(' Expression ')' |
     Expression InfixOperator Expression |
+    FunctionCall |
     LetExpression |
     IfExpression |
     IfNotExpression |
@@ -33,7 +38,12 @@ Expression ::=
     LoopExpression |
     LambdaExpression |
     AssertExpression
-     
+
+FunctionCall ::=
+    Expression '(' Expression ')' |
+    Expression '.' Identifier |
+    Expression '.' Identifier '(' Expression ')'
+
 
 LetExpression ::= 'let' Statements 'in' Statements ('endlet'|'end')
 
@@ -45,7 +55,13 @@ SwitchExpression ::= 'switch' Expression ':'? ( ( 'case' Pattern )+ ('then'|':')
 
 LoopExpression ::= 'for' Query ('do'|':') Statements ('endfor'|'end')
 
-LambdaExpression ::= 'fn' Identifier? Pattern ('=>>'|':') Statements ('endfn'|'end')
+LambdaExpression ::= 'fn' LambdaFunctionCall ('=>>'|':') Statements ('endfn'|'end')
+
+LambdaFunctionCall ::=
+    Pattern? |
+    Identifier? '(' Pattern ')' |
+    Pattern '.' Identifier |
+    Pattern '.' Identifier '(' Pattern ')'    
 
 AssertExpression ::= 'assert' Expression
 
@@ -59,7 +75,7 @@ Query ::=
     Query ('&&' Query)* |
     Query ('||' Query)*
 
-InfixOperator ::= ',' | '+' | '*' | '-' | '/' | '//' | 'and' | 'or' | '..' | '...' | '.' Identifier
+InfixOperator ::= ',' | '+' | '*' | '-' | '/' | '//' | 'and' | 'or' | '..' | '...' 
 
 /* This is not quite right */
 Identifier ::= [http://www.w3.org/TR/xml-names/#NT-NCName]

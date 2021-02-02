@@ -394,6 +394,18 @@ namespace NutmegRunner {
         }
     }
 
+    public class PartApplySystemFunction : VariadicSystemFunction {
+        public PartApplySystemFunction( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            int N = runtimeEngine.ValueStackLength();
+            var args = runtimeEngine.PopMany( N - 1 );
+            ICallable fn = (ICallable)runtimeEngine.PopValue();
+            runtimeEngine.PushValue( new PartialApplication( fn, args, null ) );
+            return this.Next;
+        }
+    }
+
     public class NutmegSystem {
 
         static readonly Dictionary<string, SystemFunctionMaker> SYSTEM_FUNCTION_TABLE =
@@ -411,6 +423,7 @@ namespace NutmegRunner {
             .Add( "newImmutableList", r => new ListSystemFunction( r ) )
             .Add( "countArguments", r => new CountArgumentsSystemFunction( r ) )
             .Add( "dup", r => new DupSystemFunction( r ) )
+            .Add( "partApply", r => new PartApplySystemFunction( r ) )
             .Add( new ArithModule() )
             .Add( new RangesModule() )
             .Add( new AssertModule() )

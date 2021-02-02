@@ -14,7 +14,8 @@ def is_prime(num):
     else:
         for i in range( 3, num + 1, 2 )
         until i * i > num then true 
-        until num.rem( i ) == 0 then false:
+        until num.rem( i ) == 0 then false 
+        do
         endfor
     endif
 enddef

@@ -6,7 +6,7 @@ from mishap import Mishap
 class Scope( abc.ABC ):
 
     @abc.abstractmethod
-    def lookup( self, name ):
+    def lookup( self, id_codelet ):
         pass
 
     @abc.abstractmethod
@@ -20,7 +20,7 @@ class Scope( abc.ABC ):
 
 class GlobalScope( Scope ):
 
-    def lookup( self, name ):
+    def lookup( self, id_codelet ):
         """Returns the scope that the name appears in, by definition this is the outermost scope"""
         return self, 0
 
@@ -33,6 +33,9 @@ class GlobalScope( Scope ):
             raise Mishap( "Variable name of global clashes with built-in procedure", variable=vname, hint="Built-ins cannot be redeclared, please rename your variable" )
         id_codelet.setAsGlobal()
 
+    def hasLambda( self ):
+        return False
+
 LABEL = 0
 def newLabel():
     global LABEL
@@ -41,18 +44,25 @@ def newLabel():
 
 class LexicalScope( Scope ):
 
-    def __init__( self, is_block = False, previous = None, is_lambda = False ):
+    def __init__( self, is_block = False, previous = None, lambdaCodelet=None ):
         self._previous = previous
         self._is_block = is_block
         self._locals = {}
-        self._is_lambda = 1 if is_lambda else 0
+        self._is_lambda = 1 if lambdaCodelet else 0
+        self._lambda = lambdaCodelet if previous and previous.hasLambda() else None
 
-    def lookup( self, name ):
+    def hasLambda( self ):
+        return self._is_lambda or self._previous.hasLambda()
+
+    def lookup( self, id_codelet ):
         """Returns the scope that the name appears in"""
+        name = id_codelet.name()
         if name in self._locals:
             return self, 0
         else:
-            scope, lambda_nesting = self._previous.lookup( name )
+            scope, lambda_nesting = self._previous.lookup( id_codelet )
+            if self._lambda:
+                self._lambda.capture( id_codelet )
             return scope, lambda_nesting + self._is_lambda
 
     def addInfo( self, code_let ):
@@ -103,7 +113,7 @@ class Resolver( codetree.CodeletVisitor ):
         reftype = id_codelet.reftype()
         if reftype == "get" or reftype == "set":
             nm = id_codelet.name()
-            scope, lambda_nesting = scopes.lookup( nm )
+            scope, lambda_nesting = scopes.lookup( id_codelet )
             scope.addInfo( id_codelet )
             if lambda_nesting > 0 and not id_codelet.nonassignable():
                 raise Exception( f"Cannot access assignable variable across lambda boundary: {id_codelet.name()}" )
@@ -182,7 +192,7 @@ class Resolver( codetree.CodeletVisitor ):
             c.visit( self, scopes )
 
     def visitFunctionCodelet( self, fun_codelet, scopes ):
-        new_scopes = LexicalScope( previous = scopes, is_lambda=True )
+        new_scopes = LexicalScope( previous = scopes, lambdaCodelet=fun_codelet )
         fun_codelet.parameters().visit( self, new_scopes )
         fun_codelet.body().visit( self, new_scopes )
 

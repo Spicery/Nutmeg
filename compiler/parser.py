@@ -128,6 +128,14 @@ class TableDrivenParser:
         else:
             return funcargs
 
+    def readArgs( self, source ):
+        args = self.readExpr( math.inf, source )
+        issue = TableDrivenParser.isntArgs( args )
+        if issue:
+            raise Exception( f'Invalid expression for lambda definition ({issue})' )
+        else:
+            return args
+
     def isVirtualSemi( self, nonsemi ):
         if not nonsemi.followsNewLine():
             return False
@@ -226,6 +234,16 @@ def defPrefixMiniParser( parser, token, source ):
     func = codetree.LambdaCodelet( parameters=args, body=b )
     return codetree.BindingCodelet( lhs=id, rhs=func )
 
+def fnPrefixMiniParser( parser, token, source ):
+    if tryRead( source, 'END_PARAMETERS', 'END_PHRASE' ):
+        args = codetree.SeqCodelet()
+    else:
+        args = parser.readArgs( source )
+        args.declarationMode()
+        mustRead( source, 'END_PARAMETERS', 'END_PHRASE', expected=': or =>>' )
+    b = parser.readStatements( source )
+    mustRead( source, 'ENDFN', 'END', expected='end or endfn' )
+    return codetree.LambdaCodelet( parameters=args, body=b )
 
 def wuntilPrefixMiniParser( parser, token, source ):
     lhs = codetree.NonStopCodelet()
@@ -335,6 +353,7 @@ PREFIX_TABLE = {
     "LPAREN": lparenPrefixMiniParser,
     "LBRACKET": lbracketPrefixMiniParser,
     "DEC_FUNCTION_1": defPrefixMiniParser,
+    "FN": fnPrefixMiniParser,
     "IF": ifPrefixMiniParser,
     "IFNOT": ifnotPrefixMiniParser,
     "FOR": forPrefixMiniParser,

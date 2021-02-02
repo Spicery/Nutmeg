@@ -1,6 +1,34 @@
 import codetree
 from codetree import CallCodelet, SyscallCodelet, IdCodelet
 import syscalls
+from resolver import newLabel
+
+
+class LambdaLift( codetree.CodeletVisitor ):
+
+    def __call__( self, tree ):
+        return tree.visit( self )
+
+    def visitCodelet( self, codelet ):
+        return codelet.transform( self )
+
+    def visitFunctionCodelet( self, fn_codelet : codetree.LambdaCodelet ):
+        captured = list( fn_codelet.captured() )
+        fn_codelet = codetree.LambdaCodelet( parameters=fn_codelet.parameters(), body=fn_codelet.body().visit( self ) )
+        if captured:
+            extra_params = [ id_codelet.copy( label=newLabel() ) for id_codelet in captured ]
+            new_params = codetree.SeqCodelet(
+                fn_codelet.parameters(),
+                *extra_params
+            )
+            fn_codelet = codetree.LambdaCodelet( parameters=new_params, body=fn_codelet.body() )
+            return codetree.SyscallCodelet(
+                name="partApply",
+                arguments=codetree.SeqCodelet( fn_codelet, *captured )
+            )
+        else:
+            return fn_codelet
+
 
 class ReplaceIdsWithSysconsts( codetree.CodeletVisitor ):
 
@@ -74,6 +102,36 @@ class Simplify( codetree.CodeletVisitor ):
         else:
             return self.visitCodelet( syscall_codelet )
 
+import arity
+class ArityAnalysis( codetree.CodeletVisitor ):
+
+    def __call__( self, tree ):
+        tree.visit( self )
+
+    def visitCodelet( self, codelet ):
+        for c in codelet.members():
+            c.visit( self )
+
+    def visitIdCodelet( self, code_let, *args, **kwargs ):
+        code_let.setArity(1)
+
+    def visitConstantCodelet( self, code_let, *args, **kwargs ):
+        code_let.setArity( 1 )
+
+    def visitFunctionCodelet( self, codelet, *args, **kwargs ):
+        codelet.setArity( 1 )
+        for c in codelet.members():
+            c.visit( self )
+
+    def visitSeqCodelet( self, codelet : codetree.SeqCodelet, *args, **kwargs ):
+        sofar = arity.Arity(0)
+        for c in codelet.members():
+            c.visit( self )
+            sofar = sofar.sum( c.arity() )
+        codelet.setArity( sofar )
+
+def lambdaLift( tree ):
+    return LambdaLift()( tree )
 
 def replaceIdsWithSysconsts( tree ):
     return ReplaceIdsWithSysconsts()( tree )
@@ -81,9 +139,14 @@ def replaceIdsWithSysconsts( tree ):
 def simplifyCodeTree( tree ):
     return Simplify()( tree )
 
+def arityAnalysisCodeTree( tree ):
+    return ArityAnalysis()( tree )
+
 def optimizeCodeTree( tree ):
+    tree = lambdaLift( tree )
     tree = replaceIdsWithSysconsts( tree )
     tree = simplifyCodeTree( tree )
+    arityAnalysisCodeTree( tree )
     return tree
 
 def optimizeFile( file ):
