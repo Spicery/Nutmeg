@@ -112,6 +112,14 @@ namespace NutmegRunner {
             }
         }
 
+        public void ApplyUnaryFunction( Func<object, object> f ) {
+            this._valueStack.ApplyUnaryFunction( f );
+        }
+
+        public void ApplyUnaryToVoidFunction( Action<object> a ) {
+            a( this._valueStack.Pop() );
+        }
+
         public object PopValue() {
             return this._valueStack.Pop();
         }

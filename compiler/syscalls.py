@@ -32,6 +32,8 @@ SYSCONSTS = {
     # Character functions
     "isLowercase", "isUppercase",
     "lowercase", "uppercase",
+    # Ref functions
+    "newVarRef", "newValRef", "sealObject", "isRef",
 }
 
 def isSysconst( name ):
