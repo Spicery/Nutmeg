@@ -374,7 +374,7 @@ namespace NutmegRunner {
         }
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            return new LockRunlet( Arguments.Weave( Funarg.Weave( new CallSRunlet( continuation ), g ), g ) );
+            return new LockRunlet( Arguments.Weave( Funarg.Weave1( new CallSRunlet( continuation ), g ), g ) );
         }
 
     }
@@ -469,7 +469,7 @@ namespace NutmegRunner {
 
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            return TestPart.Weave( new ForkRunlet( ThenPart.Weave( continuation, g ), ElsePart.Weave( continuation, g ) ), g );
+            return this.TestPart.Weave( new ForkRunlet( ThenPart.Weave( continuation, g ), ElsePart.Weave( continuation, g ) ), g );
         }
 
     }
@@ -486,15 +486,8 @@ namespace NutmegRunner {
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
             switch (this.LHS) {
                 case IdCodelet lhs_id:
-                    Arity a = this.RHS.GetArity();
                     var c4 = new PopValueIntoSlotRunlet( lhs_id.Slot, continuation );
-                    if ( a.HasExactArity( 1 ) ) {
-                        return this.RHS.Weave( c4, g );
-                    } else {
-                        var c3 = new CheckedUnlockRunlet( 1, c4 );
-                        var c2 = this.RHS.Weave( c3, g );
-                        return new LockRunlet( c2 );
-                    }
+                    return this.RHS.Weave1( c4, g );
                 default:
                     throw new NutmegException( "Left hand side of binding not a simple variable" );
             }
@@ -569,10 +562,9 @@ namespace NutmegRunner {
                         return new LockRunlet( this.Arguments.Weave( new CheckedUnlockRunlet( nargs, f_sysfn ), g ) );
                     }
                 case VariadicSystemFunction v_sysfn:
-                    //  If nargs is null then we cannot unlock the stack until after it runs. But
-                    //  we can forgo the value-stack length check.
-                    var altsysfn = this._systemFunction( new UnlockRunlet( continuation ) );
-                    return new LockRunlet( this.Arguments.Weave( altsysfn, g ) );
+                    //  If nargs is null then we must count the arguments.
+                    var altsysfn = new CountAndUnlockRunlet( this._systemFunction( continuation ) );
+                    return new LockRunlet( this.Arguments.Weave( altsysfn, g ) ); 
                 default:
                     throw new UnreachableNutmegException();
             }

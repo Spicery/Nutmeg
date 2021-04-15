@@ -21,7 +21,7 @@ namespace NutmegRunner {
         public void Unlock();
         public int LockCount();
 
-        public List<object> PopAllAndUnlock();
+        public List<object> PopAllAndUnlock( int n );
 
         public T this[int n] { get; set; }
     }
@@ -112,6 +112,16 @@ namespace NutmegRunner {
             }
         }
 
+        public int CountAndUnlock() {
+            try {
+                int n = this.top - this.layer;
+                this.layer = this.dump.Pop();
+                return n;
+            } catch (InvalidOperationException) {
+                throw new NutmegException( "Trying to unlock when there are no locks" );
+            }
+        }
+
         public int LockCount() {
             return this.dump.Count;
         }
@@ -176,28 +186,26 @@ namespace NutmegRunner {
 
 
 
-        public List<object> PopAllAndUnlock() {
-            var all = this.PopAll();
+        public List<object> PopAllAndUnlock( int n ) {
+            var all = this.PopAll( n );
             this.Unlock();
             return all;
         }
 
-        private IEnumerable<object> AllAsEnumerable() {
-            var n = this.Size();
+        private IEnumerable<object> AllAsEnumerable( int n ) {
             for (int i = 0; i < n; i++) {
                 yield return this.items[this.layer + i];
             }
         }
 
-        public ImmutableList<object> ImmutablePopAll() {
-            var all = ImmutableList<object>.Empty.AddRange( this.AllAsEnumerable() );
+        public ImmutableList<object> ImmutablePopAll( int n ) {
+            var all = ImmutableList<object>.Empty.AddRange( this.AllAsEnumerable( n ) );
             this.top = this.layer;
             return all;
         }
 
-        public List<object> PopAll() {
+        public List<object> PopAll( int n ) {
             var all = new List<object>();
-            var n = this.Size();
             for (int i = 0; i < n; i++) {
                 all.Add( this.items[this.layer + i] );
             }
@@ -349,9 +357,8 @@ namespace NutmegRunner {
             }
         }
 
-        public List<object> PopAllAndUnlock() {
+        public List<object> PopAllAndUnlock( int n ) {
             var all = new List<object>();
-            var n = this.Size();
             for (int i = 0; i < n; i++) {
                 all.Add( this.items[this.layer + i] );
             }

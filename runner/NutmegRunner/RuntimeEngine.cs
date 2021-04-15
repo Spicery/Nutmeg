@@ -45,7 +45,7 @@ namespace NutmegRunner {
         /// </summary>
         UncheckedLayeredStack<object> _callStack = new UncheckedLayeredStack<object>();
 
-
+        int _nargs0, _nargs1;
 
         /// <summary>
         /// Soon we will need to replace this with a custom implementation of a layered stack.
@@ -64,6 +64,10 @@ namespace NutmegRunner {
             this._valueStack = new CheckedLayeredStack<object>();
         }
 
+        public int ValueStackLockCount() {
+            return this._valueStack.LockCount(); 
+        }
+
         public void LockValueStack() {
             this._valueStack.Lock();
         }
@@ -72,6 +76,9 @@ namespace NutmegRunner {
             this._valueStack.Unlock();
         }
 
+        public void CountAndUnlockValueStack() {
+            this._nargs0 = this._valueStack.CountAndUnlock();
+        }
 
         public void Unlock1ValueStack() {
             if (this._valueStack.Size() == 1) {
@@ -126,6 +133,9 @@ namespace NutmegRunner {
             }
         }
 
+        public int NArgs0() {
+            return this._nargs0;
+        }
 
         public void PopValueIntoSlot( int slot ) {
             this._callStack[slot] = this._valueStack.Pop();
@@ -187,8 +197,7 @@ namespace NutmegRunner {
         }
 
         public Runlet Return() {
-            this._valueStack.Unlock();              //  Merge the top two value-stack frames.
-            this._callStack.ClearAndUnlock();       //  Tear down the current call-stack frame.
+            this._callStack.ClearAndUnlock();
             this._callStack.Drop();                 //  Remove alt flag from callstack.
             return (Runlet)this._callStack.Pop();   //  And continue from the return runlet.
         }
@@ -280,12 +289,12 @@ namespace NutmegRunner {
             }
         }
 
-        public IList<object> PopAllAndUnlock() {
-            return this._valueStack.PopAllAndUnlock();
+        public IList<object> PopAllAndUnlock( int n ) {
+            return this._valueStack.PopAllAndUnlock( n );
         }
 
-        public IList<object> PopAll( bool immutable = false ) {
-            return immutable ? (IList<object>)this._valueStack.ImmutablePopAll() : (IList<object>)this._valueStack.PopAll();
+        public IList<object> PopAll( int count, bool immutable = false ) {
+            return immutable ? (IList<object>)this._valueStack.ImmutablePopAll( count ) : (IList<object>)this._valueStack.PopAll( count );
         }
 
         public IList<object> PopMany( int m ) {

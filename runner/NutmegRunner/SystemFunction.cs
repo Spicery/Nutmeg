@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using NutmegRunner.Modules.Arith;
@@ -118,7 +117,8 @@ namespace NutmegRunner {
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             var sep = " ";
             var first = true;
-            foreach (var item in runtimeEngine.PopAll()) {
+            var nargs = runtimeEngine.NArgs0();
+            foreach (var item in runtimeEngine.PopAll( nargs ) ) {
                 if (!first) {
                     Console.Write( sep );
                 }
@@ -175,7 +175,8 @@ namespace NutmegRunner {
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             var sep = " ";
             var first = true;
-            foreach (var item in runtimeEngine.PopAll()) {
+            var n = runtimeEngine.NArgs0();
+            foreach (var item in runtimeEngine.PopAll( n ) ) {
                 if (!first) {
                     Console.Write( sep );
                 }
@@ -237,7 +238,8 @@ namespace NutmegRunner {
         public ListSystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            runtimeEngine.PushValue( runtimeEngine.PopAll( immutable: true ) );
+            var n = runtimeEngine.NArgs0();
+            runtimeEngine.PushValue( runtimeEngine.PopAll( n, immutable: true ) );
             return this.Next;
         }
     }
@@ -398,7 +400,7 @@ namespace NutmegRunner {
         public PartApplySystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int N = runtimeEngine.ValueStackLength();
+            int N = runtimeEngine.NArgs0();
             var args = runtimeEngine.PopMany( N - 1 );
             ICallable fn = (ICallable)runtimeEngine.PopValue();
             runtimeEngine.PushValue( new PartialApplication( fn, args, null ) );
