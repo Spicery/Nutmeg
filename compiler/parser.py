@@ -445,7 +445,6 @@ def andOrPostfixMiniParser( parser : TableDrivenParser, p, lhs, token, source : 
 def derefPostfixMiniParser( parser: TableDrivenParser, p, lhs: codetree.Codelet, token, source: PeekablePushable ):
     return codetree.SyscallCodelet( name="itemRef", arguments=lhs )
 
-
 POSTFIX_TABLE = {
     "SEQ": commaPostfixMiniParser,
     "DOT": dotPostfixMiniParser,

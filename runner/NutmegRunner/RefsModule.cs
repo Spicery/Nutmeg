@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace NutmegRunner.Modules.Refs {
 
@@ -104,4 +104,3 @@ namespace NutmegRunner.Modules.Refs {
         }
     }
 }
- 

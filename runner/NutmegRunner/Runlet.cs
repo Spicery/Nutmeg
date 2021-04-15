@@ -281,6 +281,18 @@ namespace NutmegRunner {
         }
     }
 
+    public class CountAndUnlockRunlet : RunletWithNext {
+
+        public CountAndUnlockRunlet( Runlet next ) : base( next ) {
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.CountAndUnlockValueStack();
+            return _next;
+        }
+
+    }
+
     public class CheckedUnlockRunlet : RunletWithNext {
 
         int _nargs;
@@ -425,6 +437,7 @@ namespace NutmegRunner {
         public override Runlet ExecuteRunlet(RuntimeEngine runtimeEngine)
         {
             var obj = runtimeEngine.PopValue();
+            runtimeEngine.CountAndUnlockValueStack();
             switch ( obj ) {
                 case ICallable f:
                     return f.Call( runtimeEngine, this.Next, alt: false );

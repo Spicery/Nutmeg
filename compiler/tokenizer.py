@@ -331,8 +331,7 @@ token_spec = {
         TokenType( r"(?P<CLOSED_INTERVAL>\.\.\.)", prec=240, make=IdToken.make ),
         TokenType( r"(?P<SEQ>,)", prec=1000, prefix=False, make=SyntaxToken.make ),
         TokenType( r"(?P<DEREF>!)", prec=8, prefix=False, make=SyntaxToken.make ),
-
-
+        
         # Warning! Short tokens must come AFTER long ones.
         TokenType( r"(?P<LTE><=)", prec=570, make=IdToken.make ),
         TokenType( r"(?P<GTE>>=)", prec=570, make=IdToken.make ),
