@@ -6,7 +6,7 @@ help:
 	# Valid targets are:
 	#	make clean - cleans out build files and artefacts
 	#	make build - builds the compiler
-	#   make test - runs unit tests
+	#	make unittests - runs unit tests
 
 # Cleans out the build files and other artefacts. 
 .PHONEY: clean
