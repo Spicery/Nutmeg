@@ -126,6 +126,14 @@ namespace NutmegRunner {
             return this.dump.Count;
         }
 
+        public void ApplyUnaryFunction( Func<T, T> f ) {
+            if (this.top > this.layer) {
+                this.items[this.top - 1] = f( this.items[this.top - 1] );
+            } else {
+                throw new NutmegException( "No items on stack" );
+            }
+        }
+
         public T Peek() {
             if (this.top > this.layer) {
                 return this.items[this.top - 1];

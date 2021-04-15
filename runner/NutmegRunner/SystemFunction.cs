@@ -6,6 +6,7 @@ using NutmegRunner.Modules.Assert;
 using NutmegRunner.Modules.Bitwise;
 using NutmegRunner.Modules.Characters;
 using NutmegRunner.Modules.Ranges;
+using NutmegRunner.Modules.Refs;
 using NutmegRunner.Modules.Seqs;
 using NutmegRunner.Modules.Strings;
 
@@ -79,6 +80,30 @@ namespace NutmegRunner {
 
         public abstract int Nargs { get; }
 
+    }
+
+
+    public abstract class UnarySystemFunction : FixedAritySystemFunction {
+        public UnarySystemFunction( Runlet next ) : base( next ) {
+        }
+        public override int Nargs => 1;
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.ApplyUnaryFunction( this.Apply );
+            return this.Next;
+        }
+        public abstract object Apply( object x );
+    }
+
+
+    public abstract class UnaryToVoidSystemFunction : FixedAritySystemFunction {
+        public UnaryToVoidSystemFunction( Runlet next ) : base( next ) {
+        }
+        public override int Nargs => 1;
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.ApplyUnaryToVoidFunction( this.Apply );
+            return this.Next;
+        }
+        public abstract void Apply( object x );
     }
 
 
@@ -433,6 +458,7 @@ namespace NutmegRunner {
             .Add( new CharactersModule() )
             .Add( new SeqsModule() )
             .Add( new BitwiseModule() )
+            .Add( new RefsModule() )
             .Table;
 
         public static SystemFunctionMaker Find( string name ) {
