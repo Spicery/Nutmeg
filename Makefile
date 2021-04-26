@@ -11,6 +11,7 @@ help:
 	#	make jumpstart - install all the necessary tools for devs to get started
 	#	make run ENTRYPOINT=$(ENTRYPOINT) - start the interpreter on one of the supplied examples
 	#	make unittests
+	#   make inttests
 
 PREFIX=/opt/nutmeg
 INSTALL_DIR=$(PREFIX)/libexec/nutmeg
@@ -144,3 +145,7 @@ uninstall-runner:
 unittests:
 	make -C compiler unittests
 	make -C runner unittests
+
+.PHONEY: inttests
+inttests: 
+	python3 scripts/unittest_here.py examples/kata/*/

@@ -13,8 +13,10 @@ namespace NutmegRunner {
         private SqliteConnection _connection;
         private List<string> _passes = new List<string>();
         private List<Tuple<string, Exception>> _failures = new List<Tuple<string, Exception>>();
+        private string _title;
 
-        public UnitTestResults( SqliteConnection connection ) {
+        public UnitTestResults( string title, SqliteConnection connection ) {
+            this._title = title;
             this._connection = connection;
         }
 
@@ -35,7 +37,11 @@ namespace NutmegRunner {
         }
 
         public void ShowResults() {
-            Console.WriteLine( $"{Status()}: {_passes.Count} passed, {_failures.Count} failed" );
+            Console.Write( $"{Status()}: {_passes.Count} passed, {_failures.Count} failed" );
+            if ( ! string.IsNullOrWhiteSpace( this._title ) ) {
+                Console.Write( $" [{this._title}]" );
+            }
+            Console.WriteLine();
             if (_failures.Count > 0) {
                 int n = 0;
                 foreach (var f in _failures) {
