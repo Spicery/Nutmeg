@@ -6,6 +6,56 @@ using System.Linq;
 
 namespace NutmegRunner {
 
+    delegate SqliteConnection GetSqliteConnection();
+
+    class UnitTestRunner {
+
+        RuntimeEngine _runtimeEngine;
+        GetSqliteConnection _getConnection;
+        string _testTitle;
+
+        public UnitTestRunner( string testTitle, RuntimeEngine runtimeEngine, GetSqliteConnection getConnection  ) {
+            this._testTitle = testTitle;
+            this._runtimeEngine = runtimeEngine;
+            this._getConnection = getConnection;
+        }
+
+        public bool Debug => this._runtimeEngine.Debug;
+
+        public void RunTests() { 
+            using (SqliteConnection connection = this._getConnection()) {
+                connection.Open();
+                var tests_to_run = this.GetTestsToRun( connection );
+                UnitTestResults utresults = new UnitTestResults( this._testTitle, connection );
+                foreach (var idName in tests_to_run) {
+                    if (this.Debug ) Console.WriteLine( $"Running unit test for {idName}" );
+                    try {
+                        this._runtimeEngine.Start( idName, new List<string>(), useEvaluate: false, usePrint: false );
+                        utresults.AddPass( idName );
+                    } catch (Exception ex) {
+                        utresults.AddFailure( idName, ex );
+                    } finally {
+                        this._runtimeEngine.Reset();
+                    }
+                }
+                utresults.ShowResults();
+            }
+        }
+
+        private List<string> GetTestsToRun( SqliteConnection connection ) {
+            var sofar = new List<string>();
+            using (var cmd = new SqliteCommand( "SELECT B.[IdName] FROM [Bindings] B JOIN [Annotations] A ON A.IdName = B.IdName WHERE A.AnnotationKey='unittest'", connection )) {
+                var reader = cmd.ExecuteReader();
+                while (reader.Read()) {
+                    string idName = reader.GetString( 0 );
+                    sofar.Add( idName );
+                }
+                return sofar;
+            }
+        }
+
+    }
+
     class Program {
 
         string _bundleFile;
@@ -15,7 +65,11 @@ namespace NutmegRunner {
         string _graphviz = null;
         bool _print = false;
         bool _test = false;
+        string _title = null;
         LinkedList<string> _args;
+
+        public bool InTestMode => this._test;
+        public string TestTitle => this._title;
 
         public bool Trace => this._trace;
 
@@ -75,6 +129,9 @@ namespace NutmegRunner {
                         case "--unittest":
                             this._test = true;
                             break;
+                        case "--title":
+                            this._title = parameter;
+                            break;
                         default:
                             throw new NutmegException( $"Unrecognised option: {option}" ).Culprit( "Option", option );
                     }
@@ -114,14 +171,14 @@ namespace NutmegRunner {
                 stdErr.WriteLine( "Nutmeg kicks the ball ..." );
                 stdErr.WriteLine( $"Bundle file: {this._bundleFile}" );
                 stdErr.WriteLine( $"Entry point: {this._entryPoint}" );
-                stdErr.WriteLine( $"Unittests: {this._test}" );
+                stdErr.WriteLine( $"Unittests: {this.InTestMode}" );
                 stdErr.WriteLine( $"GraphViz: {this._graphviz}" );
             }
             try {
                 RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
                 using (SqliteConnection connection = GetConnection()) {
                     connection.Open();
-                    if (this._entryPoint == null && !this._test) {
+                    if (this._entryPoint == null && !this.InTestMode) {
                         //  If the entry-point is not specified, and we need an entry-point (i.e. not a test run), check if
                         //  there a unique entry-point in the bundle.
                         var entrypoints = this.GetEntryPoints( connection ).ToList();
@@ -171,24 +228,9 @@ namespace NutmegRunner {
                 }
                 if (this._graphviz != null) {
                     runtimeEngine.GraphViz( this._graphviz );
-                } else if (this._test) {
-                    using (SqliteConnection connection = GetConnection()) {
-                        connection.Open();
-                        var tests_to_run = GetTestsToRun( connection );
-                        UnitTestResults utresults = new UnitTestResults( connection );
-                        foreach (var idName in tests_to_run) {
-                            if (this._debug) Console.WriteLine( $"Running unit test for {idName}" );
-                            try {
-                                runtimeEngine.Start( idName, new List<string>(), useEvaluate: false, usePrint: this._print );
-                                utresults.AddPass( idName );
-                            } catch (Exception ex) {
-                                utresults.AddFailure( idName, ex );
-                            } finally {
-                                runtimeEngine.Reset();
-                            }
-                        }
-                        utresults.ShowResults();
-                    }
+                } else if (this.InTestMode) {
+                    UnitTestRunner utrunner = new( this.TestTitle, runtimeEngine, this.GetConnection );
+                    utrunner.RunTests();
                 } else {
                     runtimeEngine.Start( this._entryPoint, this._args, useEvaluate: false, usePrint: this._print );
                 }
@@ -203,20 +245,10 @@ namespace NutmegRunner {
             }
         }
 
-        private List<string> GetTestsToRun( SqliteConnection connection ) {
-            var sofar = new List<string>();
-            using (var cmd = new SqliteCommand( "SELECT B.[IdName] FROM [Bindings] B JOIN [Annotations] A ON A.IdName = B.IdName WHERE A.AnnotationKey='unittest'", connection )) {
-                var reader = cmd.ExecuteReader();
-                while (reader.Read()) {
-                    string idName = reader.GetString( 0 );
-                    sofar.Add( idName );
-                }
-                return sofar;
-            }
-        }
+
 
         private SqliteCommand GetCommandForBindingsToLoad( SqliteConnection connection ) {
-            if ( this._test ) {
+            if ( this.InTestMode ) {
                 var cmd = new SqliteCommand( "SELECT DISTINCT B.[IdName], B.[Value] FROM [Bindings] B JOIN [DependsOn] E ON E.[Needs] = B.[IdName] JOIN [Annotations] A ON A.[IdName] = E.[IdName] WHERE A.AnnotationKey='unittest'", connection );
                 cmd.Prepare();
                 return cmd;
