@@ -38,10 +38,16 @@ class CodeletVisitor( abc.ABC ):
 	def visitSyscallCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
+	def visitSysupdateCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
 	def visitSysfnCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
 	def visitCallCodelet( self, code_let, *args, **kwargs ):
+		return self.visitCodelet( code_let, *args, **kwargs )
+
+	def visitUpdateCodelet( self, code_let, *args, **kwargs ):
 		return self.visitCodelet( code_let, *args, **kwargs )
 
 	def visitAndCodelet( self, code_let, *args, **kwargs ):
@@ -398,6 +404,40 @@ class SyscallCodelet( Codelet ):
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitSyscallCodelet( self, *args, **kwargs )
 
+
+class SysupdateCodelet( Codelet ):
+
+	KIND="sysupdate"
+
+	def __init__( self, *, name, lhs, rhs, **kwargs ):
+		super().__init__( **kwargs )
+		self._name = name
+		self._lhs = lhs
+		self._rhs = rhs
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, name=self._name, lhs=self._lhs, rhs=self._rhs, **self._kwargs )
+
+	def name( self ):
+		return self._name
+
+	def lhs( self ):
+		return self._lhs
+
+	def rhs( self ):
+		return self._rhs
+
+	def members( self ):
+		yield self._lhs
+		yield self._rhs
+
+	def transform( self, f ):
+		return SysupdateCodelet( name=self._name, lhs=f( self._lhs ), rhs=f( self._rhs ), **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitSysupdateCodelet( self, *args, **kwargs )
+
+
 class CallCodelet( Codelet ):
 
 	KIND="call"
@@ -425,6 +465,41 @@ class CallCodelet( Codelet ):
 
 	def visit( self, visitor, *args, **kwargs ):
 		return visitor.visitCallCodelet( self, *args, **kwargs )
+
+
+class UpdateCodelet( Codelet ):
+
+	KIND="update"
+
+	def __init__( self, *, function, lhs, rhs, **kwargs ):
+		super().__init__( **kwargs )
+		self._function = function
+		self._lhs = lhs
+		self._rhs = rhs
+
+	def function( self ):
+		return self._function
+
+	def lhs( self ):
+		return self._lhs
+
+	def rhs( self ):
+		return self._rhs
+
+	def encodeAsJSON( self, encoder ):
+		return dict( kind=self.KIND, function=self._function, lhs=self._lhs, rhs=self._rhs, **self._kwargs )
+
+	def members( self ):
+		yield self._function
+		yield self._lhs
+		yield self._rhs
+
+	def transform( self, f ):
+		return UpdateCodelet( function=f(self._function), lhs=f(self._lhs), rhs=f(self._rhs), **self._kwargs )
+
+	def visit( self, visitor, *args, **kwargs ):
+		return visitor.visitUpdateCodelet( self, *args, **kwargs )
+
 
 class NonStopCodelet( Codelet ):
 

@@ -25,6 +25,10 @@ namespace NutmegRunner {
             return next;
         }
 
+        public virtual Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
+            throw new NutmegException( "Update not defined for this system function" ).Culprit( "System Function", $"{this}" );
+        }
+
         public override IEnumerable<Runlet> Neighbors() {
             return new List<Runlet> { Next };
         }
@@ -103,31 +107,6 @@ namespace NutmegRunner {
         }
         public abstract void Apply( object x );
     }
-
-
-    public abstract class UnarySystemFunction : FixedAritySystemFunction {
-        public UnarySystemFunction( Runlet next ) : base( next ) {
-        }
-        public override int Nargs => 1;
-        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            runtimeEngine.ApplyUnaryFunction( this.Apply );
-            return this.Next;
-        }
-        public abstract object Apply( object x );
-    }
-
-
-    public abstract class UnaryToVoidSystemFunction : FixedAritySystemFunction {
-        public UnaryToVoidSystemFunction( Runlet next ) : base( next ) {
-        }
-        public override int Nargs => 1;
-        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            runtimeEngine.ApplyUnaryToVoidFunction( this.Apply );
-            return this.Next;
-        }
-        public abstract void Apply( object x );
-    }
-
 
     public abstract class VariadicSystemFunction : SystemFunction {
 

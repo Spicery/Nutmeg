@@ -80,10 +80,24 @@ namespace NutmegRunner.Modules.Refs {
     }
 
     public class ItemRefSystemFunction : UnarySystemFunction {
+
         public ItemRefSystemFunction( Runlet next ) : base( next ) { }
+
         public override object Apply( object x ) {
             return ((AbsRef)x).GetItem();
         }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.ApplyUnaryFunction( x => ((AbsRef)x).GetItem() );
+            return this.Next;
+        }
+
+        public override Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
+            //  TODO: implement this
+            base.Update( runtimeEngine, next, alt );
+            return next;
+        }
+
     }
 
     public class SetItemRefSystemFunction : UnaryToVoidSystemFunction {

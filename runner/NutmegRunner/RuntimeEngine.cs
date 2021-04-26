@@ -80,6 +80,11 @@ namespace NutmegRunner {
             this._nargs0 = this._valueStack.CountAndUnlock();
         }
 
+        public void CountAndDoubleUnlockValueStack() {
+            this._nargs1 = this._valueStack.CountAndUnlock();
+            this._nargs0 = this._valueStack.CountAndUnlock() - this._nargs1;
+        }
+
         public void Unlock1ValueStack() {
             if (this._valueStack.Size() == 1) {
                 this._valueStack.Unlock();

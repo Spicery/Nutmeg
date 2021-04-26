@@ -501,6 +501,38 @@ namespace NutmegRunner {
     public class BindingCodelet : AssignLikeCodelet {
     }
 
+    public class UpdateCodelet : Codelet {
+
+        [JsonProperty( "function" )]        //  TODO: I propose we change this to "run".
+        Codelet Funarg { get; set; }
+
+        [JsonProperty( "arguments" )]
+        Codelet Arguments { get; set; }
+
+        [JsonProperty( "values" )]
+        Codelet Values { get; set; }
+
+        public UpdateCodelet() {
+            //  Used by deserialisation.
+        }
+
+        public UpdateCodelet( Codelet f, Codelet a, Codelet v ) {
+            this.Funarg = f;
+            this.Arguments = a;
+            this.Values = v;
+        }
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            return new LockRunlet(
+                this.Arguments.Weave(
+                    new LockRunlet( this.Values.Weave( this.Funarg.Weave1( new UpdateSRunlet( continuation ), g ), g ) ),
+                    g
+                )
+            );
+        }
+
+    }
+
     public class SysfnCodelet : Codelet {
 
         string _name;
@@ -517,6 +549,7 @@ namespace NutmegRunner {
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
             return this._systemFunction( null );
         }
+
     }
 
     public class SyscallCodelet : Codelet {

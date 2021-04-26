@@ -360,6 +360,7 @@ namespace NutmegRunner {
 
     public interface ICallable {
         Runlet Call( RuntimeEngine runtimeEngine, Runlet next, bool alt );
+        Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt );
     }
 
     public class PartialApplication : RunletWithNext, ICallable {
@@ -381,6 +382,11 @@ namespace NutmegRunner {
             runtimeEngine.PushValue( this );
             return this.Next;
         }
+
+        public Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
+            throw new UnimplementedNutmegException();
+        }
+
     }
 
     public class FunctionRunlet : RunletWithNext, ICallable
@@ -423,6 +429,27 @@ namespace NutmegRunner {
 
         public override IEnumerable<Runlet> Neighbors() {
             return new List<Runlet> { this._startCodelet, this._next };
+        }
+
+        public Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
+            throw new UnimplementedNutmegException();
+        }
+
+    }
+
+    public class UpdateSRunlet : RunletWithNext {
+
+        public UpdateSRunlet( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            var obj = runtimeEngine.PopValue();
+            runtimeEngine.CountAndDoubleUnlockValueStack();
+            switch ( obj ) {
+                case ICallable f:
+                    return f.Update( runtimeEngine, this.Next, alt: false );
+                default:
+                    throw new NutmegException( $"Cannot update this object: {obj}" );
+            }
         }
 
     }

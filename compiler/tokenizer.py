@@ -319,8 +319,8 @@ token_spec = {
         # operators
         TokenType( r"(?P<ANNOTATION>@)", make=SyntaxToken.make ),
         TokenType( r"(?P<BIND>:=)", prec=990, make=SyntaxToken.make ),
+        TokenType( r"(?P<UPDATE><--)", prec=990, make=SyntaxToken.make ),
         TokenType( r"(?P<ASSIGN><-)", prec=990, make=SyntaxToken.make ),
-        TokenType( r"(?P<UPDATE_ELEMENT><--)" ),
         TokenType( r"(?P<COPY_AND_SET><==)" ),
         TokenType( r"(?P<PLUSPLUS>\++)", prec=500, make=IdToken.make ),
         TokenType( r"(?P<PLUS>\+)", prec=190, make=IdToken.make ),
