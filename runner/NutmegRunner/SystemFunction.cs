@@ -400,8 +400,8 @@ namespace NutmegRunner {
         public CountArgumentsSystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int n = runtimeEngine.ValueStackLength();
-            runtimeEngine.ClearValueStack();
+            int n = runtimeEngine.NArgs0();
+            runtimeEngine.DropValues( n );
             runtimeEngine.PushValue( (long)n );
             return this.Next;
         }

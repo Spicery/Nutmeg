@@ -48,7 +48,7 @@ namespace NutmegRunner.Modules.Seqs {
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int N = runtimeEngine.ValueStackLength();
+            int N = runtimeEngine.NArgs0();
             switch (N) {
                 case 0:
                     throw new NutmegException( "No arguments for get" ).Hint( "At least 1 is needed" );

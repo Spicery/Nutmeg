@@ -10,6 +10,7 @@ namespace NutmegRunner {
         public bool IsEmpty();
         public int Size();
         public void Clear();
+        public void Reset();
 
         public T Peek();
         public T PeekOrElse( T orElse = default( T ) );
@@ -53,13 +54,16 @@ namespace NutmegRunner {
             Array.Fill( this.items, default( T ), this.top, this.items.Length - this.top );
         }
 
-        public int RawSend( UncheckedLayeredStack<T> destination ) {
+        public void RawSend( int nargs, UncheckedLayeredStack<T> destination ) {
             var src_data = this.items;
             var src_top = this.top;
             var src_nargs = this.top - this.layer;
-            destination.RawReceive( src_data, src_top, src_nargs );
-            this.top = this.layer;                                      // Clear top layer.
-            return src_nargs;
+            if (src_nargs >= nargs) {
+                destination.RawReceive( src_data, src_top, nargs );
+                this.top -= nargs;
+            } else {
+                throw new NutmegException( "Too few arguments" );
+            }
         }
 
         public void Push( T value ) {
@@ -89,6 +93,22 @@ namespace NutmegRunner {
 
         public void Clear() {
             this.top = this.layer;
+        }
+
+        public void Reset() {
+            Array.Clear( this.items, 0, this.items.Length );
+            this.layer = 0;
+            this.top = 0;
+            this.dump.Clear();
+        }
+
+        public void Drop( int n ) {
+            int t = this.top - n;
+            if ( t >= this.layer ) {
+                this.top = t;
+            } else {
+                throw new NutmegException( "Too few items on stack" );
+            }
         }
 
         public bool IsEmpty() {
@@ -201,27 +221,31 @@ namespace NutmegRunner {
         }
 
         private IEnumerable<object> AllAsEnumerable( int n ) {
+            int t = this.top - n;
             for (int i = 0; i < n; i++) {
-                yield return this.items[this.layer + i];
+                yield return this.items[t + i];
             }
         }
 
         public ImmutableList<object> ImmutablePopAll( int n ) {
+            if (this.Size() < n) throw new NutmegException( "Too few items on the stack" );
             var all = ImmutableList<object>.Empty.AddRange( this.AllAsEnumerable( n ) );
-            this.top = this.layer;
+            this.top -= n;
             return all;
         }
 
         public List<object> PopAll( int n ) {
             var all = new List<object>();
+            int t = this.top - n;
             for (int i = 0; i < n; i++) {
-                all.Add( this.items[this.layer + i] );
+                all.Add( this.items[t + i] );
             }
-            this.top = this.layer;
+            this.top -= n;
             return all;
         }
 
         public List<object> PopMany( int m ) {
+            if (this.Size() < m) throw new NutmegException( "Too few items on the stack" );
             var all = new List<object>();
             var n = this.Size();
             if (0 <= m && m < n) {
@@ -285,6 +309,13 @@ namespace NutmegRunner {
             this.top = this.layer;
         }
 
+        public void Reset() {
+            Array.Clear( this.items, 0, this.items.Length );
+            this.layer = 0;
+            this.top = 0;
+            this.dump.Clear();
+        }
+
         public bool IsEmpty() {
             return this.top == this.layer;
         }
@@ -298,10 +329,10 @@ namespace NutmegRunner {
             this.layer = this.top;
         }
 
-        public int RawLock( int nlocals, CheckedLayeredStack<T> src ) {
+        public int RawLock( int nlocals, int nargs, CheckedLayeredStack<T> src ) {
             this.EnsureRoom( nlocals );
             this.Lock();
-            var nargs = src.RawSend( this );
+            src.RawSend( nargs, this );
             if (nlocals >= nargs) {
                 //  If this branch is not taken then an error will be raised when nargs is detected to be wrong.
                 Array.Fill( this.items, default( T ), this.top + nargs, nlocals - nargs );

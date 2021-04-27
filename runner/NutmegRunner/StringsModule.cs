@@ -195,7 +195,7 @@ namespace NutmegRunner.Modules.Strings {
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int n = runtimeEngine.ValueStackLength();
+            int n = runtimeEngine.NArgs0();
             var b = new StringBuilder();
             for ( int i = 0; i < n; i++ ) {
                 var item = runtimeEngine.GetItem( i );
@@ -240,7 +240,7 @@ namespace NutmegRunner.Modules.Strings {
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             StringBuilder b = new StringBuilder();
-            int n = runtimeEngine.ValueStackLength();
+            int n = runtimeEngine.NArgs0();
             string sep = (string)runtimeEngine.GetItem( 0 );
             for ( int i = 1; i < n; i++ ) {
                 if ( i > 1 ) {
@@ -273,7 +273,7 @@ namespace NutmegRunner.Modules.Strings {
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int N = runtimeEngine.ValueStackLength();
+            int N = runtimeEngine.NArgs0();
             switch (N) {
                 case 0:
                     throw new NutmegException( "No arguments supplied to substring" ).Hint( "At least one is required" );

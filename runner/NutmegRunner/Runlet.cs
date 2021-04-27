@@ -175,6 +175,7 @@ namespace NutmegRunner {
                     Console.WriteLine();
                 }
             }
+            //runtimeEngine.ResetStacks();
             throw new NormalExitNutmegException();
         }
 
@@ -297,7 +298,7 @@ namespace NutmegRunner {
 
         int _nargs;
 
-        public CheckedUnlockRunlet( int nargs, Runlet next ) : base( next ) {
+        public  CheckedUnlockRunlet( int nargs, Runlet next ) : base( next ) {
             this._nargs = nargs;
         }
 
@@ -307,7 +308,10 @@ namespace NutmegRunner {
                 return _next;
             } else {
                 //  TODO: more detailed message needed.
-                throw new NutmegException( "Unexpected number of arguments" );
+                throw
+                    new NutmegException( "Unexpected number of arguments" ).
+                    Culprit( "Expected", $"{this._nargs}" ).
+                    Culprit( "Actual", $"{runtimeEngine.ValueStackLength()}" );
             }
         }
 
@@ -407,7 +411,7 @@ namespace NutmegRunner {
         public Runlet Call(RuntimeEngine runtimeEngine, Runlet next, bool alt )
         {
             runtimeEngine.PushReturnAddress( next, alt: false );
-            var nargs = runtimeEngine.CreateFrameAndCopyValueStack(this.Nlocals);
+            var nargs = runtimeEngine.CreateFrameAndCopyValueStack(this.Nlocals, runtimeEngine.NArgs0());
             if (nargs != this.Nargs)
             {
                 throw

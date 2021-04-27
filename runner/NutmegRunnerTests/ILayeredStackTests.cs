@@ -419,7 +419,7 @@ namespace NutmegRunnerTests {
             vstack.Push( "b" );
             var cstack = new UncheckedLayeredStack<string>();
             //  Act
-            cstack.RawLock( 4, vstack );
+            cstack.RawLock( 4, 2, vstack );
             //  Assert
             Assert.Equal( 1, vstack.LockCount() );
             Assert.Equal( 0, vstack.Size() );

@@ -51,7 +51,7 @@ namespace NutmegRunner {
         /// Soon we will need to replace this with a custom implementation of a layered stack.
         /// The emphasis is on efficient pushing and popping from the top of the stack.
         /// </summary>
-        CheckedLayeredStack<object> _valueStack = new CheckedLayeredStack<object>();
+        CheckedLayeredStack<object> _valueStack = new();
 
         public bool Debug { get; }
 
@@ -165,8 +165,8 @@ namespace NutmegRunner {
             }
         }
 
-        public int CreateFrameAndCopyValueStack( int nlocals ) {
-            return this._callStack.RawLock( nlocals, this._valueStack );
+        public int CreateFrameAndCopyValueStack( int nlocals, int nargs ) {
+            return this._callStack.RawLock( nlocals, nargs, this._valueStack );
         }
 
         public bool PopBool() {
@@ -199,6 +199,15 @@ namespace NutmegRunner {
 
         public void ClearValueStack() {
             this._valueStack.Clear();
+        }
+
+        public void ResetStacks() {
+            this._valueStack.Reset();
+            this._callStack.Reset();
+        }
+
+        public void DropValues( int n ) {
+            this._valueStack.Drop( n );
         }
 
         public void Bind( string idName, Codelet codelet ) {
@@ -258,11 +267,15 @@ namespace NutmegRunner {
             if (runlet is FunctionRunlet fwc) {
                 if (Debug) stdErr.WriteLine( $"Running codelet ..." );
                 try {
-                    Runlet currentInstruction = new LockRunlet( ListToPushQChain( args, new CallQRunlet( fwc, new HaltRunlet( usePrint ) ) ) );
+                    Runlet currentInstruction = new LockRunlet( ListToPushQChain( args, new CountAndUnlockRunlet( new CallQRunlet( fwc, new HaltRunlet( usePrint ) ) ) ) );
                     if (Debug) {
                         while (true) {
                             Console.WriteLine( $"Instruction: {currentInstruction}" );
                             currentInstruction = currentInstruction.ExecuteRunlet( this );
+                            Console.WriteLine( $"  StackCount: {this.ValueStackLength()}, LockCount: {this.ValueStackLockCount()}" );
+                            for ( int i = 0; i < this.ValueStackLength(); i++ ) {
+                                Console.WriteLine( $"  {i}. {this.GetItem( i )}" );
+                            }
                         }
                     } else {
                         while (true) {
