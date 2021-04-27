@@ -6,6 +6,7 @@ def summation( n ):
     endif
 enddef 
 
+@unittest
 def main():
-    println( summation( 10 ) )  ### Expects 55
+    assert 55 == summation( 10 )
 enddef
