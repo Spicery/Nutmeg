@@ -21,12 +21,29 @@ namespace NutmegRunner {
         public Runlet Next { get; set; }
 
         public Runlet Call( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
-            this.ExecuteRunlet( runtimeEngine );
+            if (alt) {
+                this.AltExecuteRunlet( runtimeEngine );
+            } else {
+                this.ExecuteRunlet( runtimeEngine );
+            }
             return next;
         }
 
+        public virtual Runlet UpdateRunlet( RuntimeEngine runtimeEngine ) {
+            throw new NutmegException( "No updater defined" );
+        }
+
+        public virtual Runlet AltUpdateRunlet( RuntimeEngine runtimeEngine ) {
+            throw new NutmegException( "No updater defined" );
+        }
+
         public virtual Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
-            throw new NutmegException( "Update not defined for this system function" ).Culprit( "System Function", $"{this}" );
+            if (alt) {
+                this.AltUpdateRunlet( runtimeEngine );
+            } else {
+                this.UpdateRunlet( runtimeEngine );
+            }
+            return next;
         }
 
         public override IEnumerable<Runlet> Neighbors() {
@@ -76,6 +93,10 @@ namespace NutmegRunner {
 
 
     ////////////////////////////////////////////////////////////////
+
+    public interface IFixedAritySystemUpdater {
+        public ( int, int ) UNargs { get; }
+    }
 
     public abstract class FixedAritySystemFunction : SystemFunction {
 
@@ -144,7 +165,7 @@ namespace NutmegRunner {
             var sep = " ";
             var first = true;
             var nargs = runtimeEngine.NArgs0();
-            foreach (var item in runtimeEngine.PopAll( nargs ) ) {
+            foreach (var item in runtimeEngine.PopManyToList( nargs ) ) {
                 if (!first) {
                     Console.Write( sep );
                 }
@@ -202,7 +223,7 @@ namespace NutmegRunner {
             var sep = " ";
             var first = true;
             var n = runtimeEngine.NArgs0();
-            foreach (var item in runtimeEngine.PopAll( n ) ) {
+            foreach (var item in runtimeEngine.PopManyToList( n ) ) {
                 if (!first) {
                     Console.Write( sep );
                 }
@@ -265,7 +286,7 @@ namespace NutmegRunner {
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             var n = runtimeEngine.NArgs0();
-            runtimeEngine.PushValue( runtimeEngine.PopAll( n, immutable: true ) );
+            runtimeEngine.PushValue( runtimeEngine.PopManyToImmutableList( n ) );
             return this.Next;
         }
     }
@@ -427,7 +448,7 @@ namespace NutmegRunner {
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             int N = runtimeEngine.NArgs0();
-            var args = runtimeEngine.PopMany( N - 1 );
+            var args = runtimeEngine.PopManyToList( N - 1 );
             ICallable fn = (ICallable)runtimeEngine.PopValue();
             runtimeEngine.PushValue( new PartialApplication( fn, args, null ) );
             return this.Next;

@@ -63,8 +63,8 @@ namespace NutmegRunner.Modules.Seqs {
                     }
                     break;
                 default: {
-                        var args = runtimeEngine.PopMany( N - 1 );
-                        object x = runtimeEngine.PopValue1();
+                        var args = runtimeEngine.PopManyToList( N - 1 );
+                        object x = runtimeEngine.PopValue();
                         foreach (var arg in args) {
                             GeneralPush( runtimeEngine, x, (int)(long)arg );
                         }

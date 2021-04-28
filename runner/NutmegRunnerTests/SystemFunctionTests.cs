@@ -2,7 +2,6 @@
 using NutmegRunner;
 using NutmegRunner.Modules.Ranges;
 using NutmegRunner.Modules.Seqs;
-using NutmegRunner.Modules.Strings;
 using Xunit;
 
 namespace NutmegRunnerTests {

@@ -320,6 +320,41 @@ namespace NutmegRunner {
         }
     }
 
+    public class CheckedDoubleUnlockRunlet : RunletWithNext {
+
+        int _sumargs, _unargs;
+
+        public CheckedDoubleUnlockRunlet( int nargs, int unargs, Runlet next ) : base( next ) {
+            this._sumargs = nargs + unargs;
+            this._unargs = unargs;
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            if ( runtimeEngine.ValueStackLength() != this._unargs ) { 
+                throw (
+                    new NutmegException( "Unexpected number of arguments" ).
+                    Culprit( "Expected RHS", $"{this._unargs}" ).
+                    Culprit( "Actual RHS", $"{runtimeEngine.ValueStackLength()}" )
+                );
+            }
+            runtimeEngine.UnlockValueStack();
+            if ( runtimeEngine.ValueStackLength() != this._sumargs ) {
+                throw(
+                    new NutmegException( "Unexpected number of arguments" ).
+                    Culprit( "Expected LHS", $"{this._sumargs - this._unargs}" ).
+                    Culprit( "Actual LHS", $"{runtimeEngine.ValueStackLength() - this._unargs}" )
+                );
+            }
+            runtimeEngine.UnlockValueStack();
+            return this.Next;
+        }
+
+        public override string ShortTitle() {
+            return $"CheckedDoubleUnlockRunlet {this._sumargs - this._unargs} {this._unargs}";
+        }
+
+    }
+
     public class PopGlobalRunlet : RunletWithNext
     {
         Ident _ident;
@@ -331,7 +366,7 @@ namespace NutmegRunner {
 
         public override Runlet ExecuteRunlet(RuntimeEngine runtimeEngine)
         {
-            this._ident.Value = runtimeEngine.PopValue1();
+            this._ident.Value = runtimeEngine.PopValue();
             return _next;
         }
     }
@@ -367,6 +402,24 @@ namespace NutmegRunner {
         Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt );
     }
 
+    public class UpdateSystemFunctionRunlet : Runlet {
+
+        private SystemFunction _sysfn;
+
+        public UpdateSystemFunctionRunlet( SystemFunction sysfn ) {
+            this._sysfn = sysfn;
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            return this._sysfn.UpdateRunlet( runtimeEngine );
+        }
+
+        public override IEnumerable<Runlet> Neighbors() {
+            return new List<Runlet> { this._sysfn };
+        }
+
+    }
+
     public class PartialApplication : RunletWithNext, ICallable {
 
         ICallable _fn;
@@ -392,6 +445,8 @@ namespace NutmegRunner {
         }
 
     }
+
+
 
     public class FunctionRunlet : RunletWithNext, ICallable
     {
@@ -454,6 +509,17 @@ namespace NutmegRunner {
                 default:
                     throw new NutmegException( $"Cannot update this object: {obj}" );
             }
+        }
+
+    }
+
+    public class CountAndDoubleUnlockRunlet : RunletWithNext {
+
+        public CountAndDoubleUnlockRunlet( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.CountAndDoubleUnlockValueStack();
+            return Next;
         }
 
     }

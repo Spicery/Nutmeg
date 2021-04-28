@@ -132,6 +132,10 @@ class Resolver( codetree.CodeletVisitor ):
         for c in codelet.members():
             c.visit( self, scopes )
 
+    def visitSysupdateCodelet( self, codelet, scopes ):
+        for c in codelet.members():
+            c.visit( self, scopes )
+
     def visitForCodelet( self, codelet, scopes ):
         new_scope = LexicalScope( previous = scopes )
         codelet.query().visit( self, new_scope )
@@ -154,6 +158,10 @@ class Resolver( codetree.CodeletVisitor ):
         in_codelet.streamable().visit( self, scopes )
 
     def visitCallCodelet( self, codelet, scopes ):
+        for c in codelet.members():
+            c.visit( self, scopes )
+
+    def visitUpdateCodelet( self, codelet, scopes ):
         for c in codelet.members():
             c.visit( self, scopes )
 

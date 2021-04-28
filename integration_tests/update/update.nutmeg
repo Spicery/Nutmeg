@@ -1,0 +1,7 @@
+@unittest
+@command
+def test():
+    x := newVarRef( 88 )
+    x! <-- 99
+    assert x! == 99
+enddef

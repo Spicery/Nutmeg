@@ -79,7 +79,7 @@ namespace NutmegRunner.Modules.Refs {
 
     }
 
-    public class ItemRefSystemFunction : UnarySystemFunction {
+    public class ItemRefSystemFunction : UnarySystemFunction, IFixedAritySystemUpdater {
 
         public ItemRefSystemFunction( Runlet next ) : base( next ) { }
 
@@ -92,11 +92,15 @@ namespace NutmegRunner.Modules.Refs {
             return this.Next;
         }
 
-        public override Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
-            //  TODO: implement this
-            base.Update( runtimeEngine, next, alt );
-            return next;
+        public override Runlet UpdateRunlet( RuntimeEngine runtimeEngine ) {
+            var v = runtimeEngine.PopValue();
+            var r = runtimeEngine.PopValue();
+            //Console.WriteLine( $"v = {v}, r = {r}" );
+            ( (VarRef)r).SetItem( v );
+            return this.Next;
         }
+
+        public (int, int) UNargs => (1, 1);
 
     }
 

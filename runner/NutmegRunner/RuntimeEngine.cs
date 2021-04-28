@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 
 namespace NutmegRunner {
@@ -45,13 +46,17 @@ namespace NutmegRunner {
         /// </summary>
         UncheckedLayeredStack<object> _callStack = new UncheckedLayeredStack<object>();
 
+        /// <summary>
+        /// These variables are used to briefly store the transient stack count between locking
+        /// and unlocking.
+        /// </summary>
         int _nargs0, _nargs1;
 
         /// <summary>
         /// Soon we will need to replace this with a custom implementation of a layered stack.
         /// The emphasis is on efficient pushing and popping from the top of the stack.
         /// </summary>
-        CheckedLayeredStack<object> _valueStack = new();
+        UncheckedLayeredStack<object> _valueStack = new();
 
         public bool Debug { get; }
 
@@ -61,7 +66,7 @@ namespace NutmegRunner {
 
         public void Reset() {
             this._callStack = new UncheckedLayeredStack<object>();
-            this._valueStack = new CheckedLayeredStack<object>();
+            this._valueStack = new UncheckedLayeredStack<object>();
         }
 
         public int ValueStackLockCount() {
@@ -207,7 +212,7 @@ namespace NutmegRunner {
         }
 
         public void DropValues( int n ) {
-            this._valueStack.Drop( n );
+            this._valueStack.DropMany( n );
         }
 
         public void Bind( string idName, Codelet codelet ) {
@@ -308,23 +313,19 @@ namespace NutmegRunner {
             var halt = new HaltRunlet( false );
             var unlock = new UnlockRunlet( halt );
             var pop = new PopGlobalRunlet( this._dictionary.Get( key ), unlock );
-            var init = value.Weave( pop, this._dictionary );
+            var init = value.Weave1( pop, this._dictionary );
             Runlet currentInstruction = new LockRunlet( init );
             while (true) {
                 currentInstruction = currentInstruction.ExecuteRunlet( this );
             }
         }
 
-        public IList<object> PopAllAndUnlock( int n ) {
-            return this._valueStack.PopAllAndUnlock( n );
+        public ImmutableList<object> PopManyToImmutableList( int count ) {
+            return this._valueStack.PopManyToImmutableList( count );
         }
 
-        public IList<object> PopAll( int count, bool immutable = false ) {
-            return immutable ? (IList<object>)this._valueStack.ImmutablePopAll( count ) : (IList<object>)this._valueStack.PopAll( count );
-        }
-
-        public IList<object> PopMany( int m ) {
-            return (IList<object>)this._valueStack.PopMany(m);
+        public IList<object> PopManyToList( int m ) {
+            return (IList<object>)this._valueStack.PopManyToList(m);
         }
 
     }
