@@ -33,7 +33,7 @@ SYSCONSTS = {
     "isLowercase", "isUppercase",
     "lowercase", "uppercase",
     # Ref functions
-    "newVarRef", "newValRef", "sealObject", "isRef",
+    "newVarRef", "newValRef", "lockObject", "isRef",
 }
 
 def isSysconst( name ):

@@ -55,9 +55,9 @@ namespace NutmegRunner.Modules.Refs {
 
     }
 
-    public class SealObjectSystemFunction : FixedAritySystemFunction {
+    public class LockObjectSystemFunction : FixedAritySystemFunction {
 
-        public SealObjectSystemFunction( Runlet next ) : base( next ) { }
+        public LockObjectSystemFunction( Runlet next ) : base( next ) { }
 
         public override int Nargs => 1;
 
@@ -115,7 +115,7 @@ namespace NutmegRunner.Modules.Refs {
         public override void AddAll() {
             Add( "newVarRef", r => new NewVarRef( r ) );
             Add( "newValRef", r => new NewValRef( r ) );
-            Add( "sealObject", r => new SealObjectSystemFunction( r ) );
+            Add( "lockObject", r => new LockObjectSystemFunction( r ) );
             Add( "isRef", r => new IsRefSystemFunction( r ) );
             Add( "itemRef", r => new ItemRefSystemFunction( r ) );
             Add( "setItemRef", r => new SetItemRefSystemFunction( r ) );
