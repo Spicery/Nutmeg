@@ -48,7 +48,7 @@ namespace NutmegRunner.Modules.Seqs {
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int N = runtimeEngine.ValueStackLength();
+            int N = runtimeEngine.NArgs0();
             switch (N) {
                 case 0:
                     throw new NutmegException( "No arguments for get" ).Hint( "At least 1 is needed" );
@@ -63,8 +63,8 @@ namespace NutmegRunner.Modules.Seqs {
                     }
                     break;
                 default: {
-                        var args = runtimeEngine.PopMany( N - 1 );
-                        object x = runtimeEngine.PopValue1();
+                        var args = runtimeEngine.PopManyToList( N - 1 );
+                        object x = runtimeEngine.PopValue();
                         foreach (var arg in args) {
                             GeneralPush( runtimeEngine, x, (int)(long)arg );
                         }

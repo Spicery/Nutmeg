@@ -175,6 +175,7 @@ namespace NutmegRunner {
                     Console.WriteLine();
                 }
             }
+            //runtimeEngine.ResetStacks();
             throw new NormalExitNutmegException();
         }
 
@@ -281,11 +282,23 @@ namespace NutmegRunner {
         }
     }
 
+    public class CountAndUnlockRunlet : RunletWithNext {
+
+        public CountAndUnlockRunlet( Runlet next ) : base( next ) {
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.CountAndUnlockValueStack();
+            return _next;
+        }
+
+    }
+
     public class CheckedUnlockRunlet : RunletWithNext {
 
         int _nargs;
 
-        public CheckedUnlockRunlet( int nargs, Runlet next ) : base( next ) {
+        public  CheckedUnlockRunlet( int nargs, Runlet next ) : base( next ) {
             this._nargs = nargs;
         }
 
@@ -295,13 +308,51 @@ namespace NutmegRunner {
                 return _next;
             } else {
                 //  TODO: more detailed message needed.
-                throw new NutmegException( "Unexpected number of arguments" );
+                throw
+                    new NutmegException( "Unexpected number of arguments" ).
+                    Culprit( "Expected", $"{this._nargs}" ).
+                    Culprit( "Actual", $"{runtimeEngine.ValueStackLength()}" );
             }
         }
 
         public override string ShortTitle() {
             return $"CheckedUnlock {this._nargs}";
         }
+    }
+
+    public class CheckedDoubleUnlockRunlet : RunletWithNext {
+
+        int _sumargs, _unargs;
+
+        public CheckedDoubleUnlockRunlet( int nargs, int unargs, Runlet next ) : base( next ) {
+            this._sumargs = nargs + unargs;
+            this._unargs = unargs;
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            if ( runtimeEngine.ValueStackLength() != this._unargs ) { 
+                throw (
+                    new NutmegException( "Unexpected number of arguments" ).
+                    Culprit( "Expected RHS", $"{this._unargs}" ).
+                    Culprit( "Actual RHS", $"{runtimeEngine.ValueStackLength()}" )
+                );
+            }
+            runtimeEngine.UnlockValueStack();
+            if ( runtimeEngine.ValueStackLength() != this._sumargs ) {
+                throw(
+                    new NutmegException( "Unexpected number of arguments" ).
+                    Culprit( "Expected LHS", $"{this._sumargs - this._unargs}" ).
+                    Culprit( "Actual LHS", $"{runtimeEngine.ValueStackLength() - this._unargs}" )
+                );
+            }
+            runtimeEngine.UnlockValueStack();
+            return this.Next;
+        }
+
+        public override string ShortTitle() {
+            return $"CheckedDoubleUnlockRunlet {this._sumargs - this._unargs} {this._unargs}";
+        }
+
     }
 
     public class PopGlobalRunlet : RunletWithNext
@@ -315,7 +366,7 @@ namespace NutmegRunner {
 
         public override Runlet ExecuteRunlet(RuntimeEngine runtimeEngine)
         {
-            this._ident.Value = runtimeEngine.PopValue1();
+            this._ident.Value = runtimeEngine.PopValue();
             return _next;
         }
     }
@@ -348,6 +399,25 @@ namespace NutmegRunner {
 
     public interface ICallable {
         Runlet Call( RuntimeEngine runtimeEngine, Runlet next, bool alt );
+        Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt );
+    }
+
+    public class UpdateSystemFunctionRunlet : Runlet {
+
+        private SystemFunction _sysfn;
+
+        public UpdateSystemFunctionRunlet( SystemFunction sysfn ) {
+            this._sysfn = sysfn;
+        }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            return this._sysfn.UpdateRunlet( runtimeEngine );
+        }
+
+        public override IEnumerable<Runlet> Neighbors() {
+            return new List<Runlet> { this._sysfn };
+        }
+
     }
 
     public class PartialApplication : RunletWithNext, ICallable {
@@ -369,7 +439,14 @@ namespace NutmegRunner {
             runtimeEngine.PushValue( this );
             return this.Next;
         }
+
+        public Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
+            throw new UnimplementedNutmegException();
+        }
+
     }
+
+
 
     public class FunctionRunlet : RunletWithNext, ICallable
     {
@@ -389,7 +466,7 @@ namespace NutmegRunner {
         public Runlet Call(RuntimeEngine runtimeEngine, Runlet next, bool alt )
         {
             runtimeEngine.PushReturnAddress( next, alt: false );
-            var nargs = runtimeEngine.CreateFrameAndCopyValueStack(this.Nlocals);
+            var nargs = runtimeEngine.CreateFrameAndCopyValueStack(this.Nlocals, runtimeEngine.NArgs0());
             if (nargs != this.Nargs)
             {
                 throw
@@ -413,6 +490,38 @@ namespace NutmegRunner {
             return new List<Runlet> { this._startCodelet, this._next };
         }
 
+        public Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
+            throw new UnimplementedNutmegException();
+        }
+
+    }
+
+    public class UpdateSRunlet : RunletWithNext {
+
+        public UpdateSRunlet( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            var obj = runtimeEngine.PopValue();
+            runtimeEngine.CountAndDoubleUnlockValueStack();
+            switch ( obj ) {
+                case ICallable f:
+                    return f.Update( runtimeEngine, this.Next, alt: false );
+                default:
+                    throw new NutmegException( $"Cannot update this object: {obj}" );
+            }
+        }
+
+    }
+
+    public class CountAndDoubleUnlockRunlet : RunletWithNext {
+
+        public CountAndDoubleUnlockRunlet( Runlet next ) : base( next ) { }
+
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.CountAndDoubleUnlockValueStack();
+            return Next;
+        }
+
     }
 
     public class CallSRunlet : RunletWithNext
@@ -425,6 +534,7 @@ namespace NutmegRunner {
         public override Runlet ExecuteRunlet(RuntimeEngine runtimeEngine)
         {
             var obj = runtimeEngine.PopValue();
+            runtimeEngine.CountAndUnlockValueStack();
             switch ( obj ) {
                 case ICallable f:
                     return f.Call( runtimeEngine, this.Next, alt: false );

@@ -5,7 +5,7 @@
         public RangeSystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int n = runtimeEngine.ValueStackLength();
+            int n = runtimeEngine.NArgs0();
             long step = 1;
             switch (n) {
                 case 2:

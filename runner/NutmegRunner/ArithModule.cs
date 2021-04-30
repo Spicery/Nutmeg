@@ -6,7 +6,7 @@
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int N = runtimeEngine.ValueStackLength();
+            int N = runtimeEngine.NArgs0();
             switch (N) {
                 case 0:
                     throw new NutmegException( "Cannot take max of no arguments" ).Hint( "Full arithmetic not yet implemented" );
@@ -34,7 +34,7 @@
         }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int N = runtimeEngine.ValueStackLength();
+            int N = runtimeEngine.NArgs0();
             switch (N) {
                 case 0:
                     throw new NutmegException( "Cannot take min of no arguments" ).Hint( "Full arithmetic not yet implemented" );

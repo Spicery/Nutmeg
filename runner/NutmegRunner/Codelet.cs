@@ -52,6 +52,7 @@ namespace NutmegRunner {
                 "lambda" => new LambdaCodelet(),
                 "syscall" => new SyscallCodelet(),
                 "sysfn" => new SysfnCodelet(),
+                "sysupdate" => new SysupdateCodelet(),
                 "string" => new StringCodelet(),
                 "int" => new IntCodelet(),
                 "char" => new CharCodelet(),
@@ -310,20 +311,20 @@ namespace NutmegRunner {
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
             if (this.Scope == "global") {
-                Ident ident = g.Get( Name );
+                Ident ident = g.Get( this.Name );
                 if (this.Reftype == "get") {
                     return new PushIdentRunlet( ident, continuation );
                 } else {
-                    throw new UnimplementedNutmegException( "IdCodelet 1" );
+                    throw new UnimplementedNutmegException( "IdCodelet.1" );
                 }
             } else if (this.Scope == "local" && this.Slot >= 0 ) {
                 if (this.Reftype == "get") {
                     return new PushSlotRunlet( this.Slot, continuation );
                 } else {
-                    throw new UnimplementedNutmegException( "IdCodelet 2" );
+                    throw new UnimplementedNutmegException( "IdCodelet.2" );
                 }
             } else {
-                throw new UnimplementedNutmegException( "IdCodelet 3" );
+                throw new UnimplementedNutmegException( "IdCodelet.3" );
             }
         }
     }
@@ -374,7 +375,7 @@ namespace NutmegRunner {
         }
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            return new LockRunlet( Arguments.Weave( Funarg.Weave( new CallSRunlet( continuation ), g ), g ) );
+            return new LockRunlet( Arguments.Weave( Funarg.Weave1( new CallSRunlet( continuation ), g ), g ) );
         }
 
     }
@@ -469,7 +470,7 @@ namespace NutmegRunner {
 
 
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
-            return TestPart.Weave( new ForkRunlet( ThenPart.Weave( continuation, g ), ElsePart.Weave( continuation, g ) ), g );
+            return this.TestPart.Weave( new ForkRunlet( ThenPart.Weave( continuation, g ), ElsePart.Weave( continuation, g ) ), g );
         }
 
     }
@@ -486,15 +487,8 @@ namespace NutmegRunner {
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
             switch (this.LHS) {
                 case IdCodelet lhs_id:
-                    Arity a = this.RHS.GetArity();
                     var c4 = new PopValueIntoSlotRunlet( lhs_id.Slot, continuation );
-                    if ( a.HasExactArity( 1 ) ) {
-                        return this.RHS.Weave( c4, g );
-                    } else {
-                        var c3 = new CheckedUnlockRunlet( 1, c4 );
-                        var c2 = this.RHS.Weave( c3, g );
-                        return new LockRunlet( c2 );
-                    }
+                    return this.RHS.Weave1( c4, g );
                 default:
                     throw new NutmegException( "Left hand side of binding not a simple variable" );
             }
@@ -506,6 +500,38 @@ namespace NutmegRunner {
     }
 
     public class BindingCodelet : AssignLikeCodelet {
+    }
+
+    public class UpdateCodelet : Codelet {
+
+        [JsonProperty( "function" )]        //  TODO: I propose we change this to "run".
+        Codelet Funarg { get; set; }
+
+        [JsonProperty( "arguments" )]
+        Codelet Arguments { get; set; }
+
+        [JsonProperty( "values" )]
+        Codelet Values { get; set; }
+
+        public UpdateCodelet() {
+            //  Used by deserialisation.
+        }
+
+        public UpdateCodelet( Codelet f, Codelet a, Codelet v ) {
+            this.Funarg = f;
+            this.Arguments = a;
+            this.Values = v;
+        }
+
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            return new LockRunlet(
+                this.Arguments.Weave(
+                    new LockRunlet( this.Values.Weave( this.Funarg.Weave1( new UpdateSRunlet( continuation ), g ), g ) ),
+                    g
+                )
+            );
+        }
+
     }
 
     public class SysfnCodelet : Codelet {
@@ -524,6 +550,7 @@ namespace NutmegRunner {
         public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
             return this._systemFunction( null );
         }
+
     }
 
     public class SyscallCodelet : Codelet {
@@ -569,16 +596,74 @@ namespace NutmegRunner {
                         return new LockRunlet( this.Arguments.Weave( new CheckedUnlockRunlet( nargs, f_sysfn ), g ) );
                     }
                 case VariadicSystemFunction v_sysfn:
-                    //  If nargs is null then we cannot unlock the stack until after it runs. But
-                    //  we can forgo the value-stack length check.
-                    var altsysfn = this._systemFunction( new UnlockRunlet( continuation ) );
-                    return new LockRunlet( this.Arguments.Weave( altsysfn, g ) );
+                    //  If nargs is null then we must count the arguments.
+                    var altsysfn = new CountAndUnlockRunlet( this._systemFunction( continuation ) );
+                    return new LockRunlet( this.Arguments.Weave( altsysfn, g ) ); 
                 default:
                     throw new UnreachableNutmegException();
             }
         }
 
     }
+
+    public class SysupdateCodelet : Codelet {
+
+        string _name;
+        [JsonProperty( "name" )]
+        public string Name {
+            get { return _name; }
+            set {
+                _systemFunction = NutmegSystem.Find( value );
+                _name = value;
+            }
+        }
+
+        private SystemFunctionMaker _systemFunction;
+
+        [JsonProperty( "lhs" )]
+        public Codelet LHS { get; set; }
+
+        [JsonProperty( "rhs" )]
+        public Codelet RHS { get; set; }
+
+        public SysupdateCodelet() {
+            //  Used by deserialisation.
+        }
+
+        /// <summary>
+        /// The goal is to take the burden of un/locking the value-stack away from
+        /// system functions. So we compile the arguments on a locked stack and
+        /// arity check them, unlock the stack, and launch into the system-function
+        /// which we may assume is correctly coded.
+        /// </summary>
+        public override Runlet Weave( Runlet continuation, GlobalDictionary g ) {
+            var sysfn = this._systemFunction( continuation );
+            switch (sysfn) {
+                //  TODO: These should be methods of the system-function object. The natural
+                //  way of doing this is to implement SystemFunctionFactories - but that seems
+                //  like overkill right now.
+                case IFixedAritySystemUpdater f_sysfn:
+                    //Console.WriteLine( "ALPHA" );
+                    var ( nargs, unargs ) = f_sysfn.UNargs;
+                    Arity a = this.LHS.GetArity();
+                    Arity b = this.RHS.GetArity();
+                    if ( a.HasExactArity( nargs ) && b.HasExactArity( unargs ) ) {
+                        //Console.WriteLine( "ALPHA.1" );
+                        return this.LHS.Weave( this.RHS.Weave( new UpdateSystemFunctionRunlet( sysfn ), g ), g );
+                    } else {
+                        //Console.WriteLine( "ALPHA.2" );
+                        var c0 = new CheckedDoubleUnlockRunlet( nargs, unargs, new UpdateSystemFunctionRunlet( sysfn ) );
+                        return new LockRunlet( this.LHS.Weave( new LockRunlet( this.RHS.Weave( c0, g ) ), g ) );
+                    }
+                default:
+                    //Console.WriteLine( "BETA" );
+                    var d0 = new CountAndDoubleUnlockRunlet( new UpdateSystemFunctionRunlet( sysfn ) );
+                    return new LockRunlet( this.LHS.Weave( new LockRunlet( this.RHS.Weave( d0, g ) ), g ) );
+            }
+        }
+
+    }
+
 
     public class StringCodelet : Codelet {
 

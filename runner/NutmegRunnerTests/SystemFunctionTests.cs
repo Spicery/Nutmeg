@@ -2,7 +2,6 @@
 using NutmegRunner;
 using NutmegRunner.Modules.Ranges;
 using NutmegRunner.Modules.Seqs;
-using NutmegRunner.Modules.Strings;
 using Xunit;
 
 namespace NutmegRunnerTests {
@@ -14,11 +13,14 @@ namespace NutmegRunnerTests {
         public void Empty_ListSystemFunction_Test() {
             //  Arrange
             var runtime = new RuntimeEngine( false );
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
+            runtime.CountAndUnlockValueStack();
             var list_sysfn = new ListSystemFunction( null );
             //  Act
             list_sysfn.ExecuteRunlet( runtime );
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal( 1, runtime.ValueStackLength() );
             object list_maybe = runtime.PopValue1();
             var list = list_maybe as IList<object>;
@@ -30,13 +32,16 @@ namespace NutmegRunnerTests {
         public void Simple_ListSystemFunction_Test() {
             //  Arrange
             var runtime = new RuntimeEngine( false );
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue( 0L );
             runtime.PushValue( 0L );
+            runtime.CountAndUnlockValueStack();
             var list_sysfn = new ListSystemFunction( null );
             //  Act
             list_sysfn.ExecuteRunlet( runtime );
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal( 1, runtime.ValueStackLength() );
             object list_maybe = runtime.PopValue1();
             var list = list_maybe as IList<object>;
@@ -49,13 +54,16 @@ namespace NutmegRunnerTests {
         {
             //  Arrange
             var runtime = new RuntimeEngine(false);
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue(0L);
             runtime.PushValue(0L);
+            runtime.CountAndUnlockValueStack();
             var empty = new HalfOpenRangeSystemFunction(null);
             //  Act
             empty.ExecuteRunlet(runtime);
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal(0, runtime.ValueStackLength());
         }
 
@@ -64,13 +72,16 @@ namespace NutmegRunnerTests {
         {
             //  Arrange
             var runtime = new RuntimeEngine(false);
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue(10L);
             runtime.PushValue(15L);
+            runtime.CountAndUnlockValueStack();
             var empty = new HalfOpenRangeSystemFunction(null);
             //  Act
             empty.ExecuteRunlet(runtime);
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal(5, runtime.ValueStackLength());
             Assert.Equal(14L, runtime.PopValue());
             Assert.Equal(13L, runtime.PopValue());
@@ -89,13 +100,16 @@ namespace NutmegRunnerTests {
         {
             //  Arrange
             var runtime = new RuntimeEngine(false);
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue(0L);
             runtime.PushValue(-7L);
+            runtime.CountAndUnlockValueStack();
             var empty = new ClosedRangeSystemFunction(null);
             //  Act
             empty.ExecuteRunlet(runtime);
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal(0, runtime.ValueStackLength());
         }
 
@@ -104,13 +118,16 @@ namespace NutmegRunnerTests {
         {
             //  Arrange
             var runtime = new RuntimeEngine(false);
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue(10L);
             runtime.PushValue(15L);
+            runtime.CountAndUnlockValueStack();
             var empty = new ClosedRangeSystemFunction(null);
             //  Act
             empty.ExecuteRunlet(runtime);
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal(6, runtime.ValueStackLength());
             Assert.Equal(15L, runtime.PopValue());
             Assert.Equal(14L, runtime.PopValue());
@@ -131,14 +148,17 @@ namespace NutmegRunnerTests {
         {
             //  Arrange
             var runtime = new RuntimeEngine(false);
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue(0L);
             runtime.PushValue(0L);
+            runtime.CountAndUnlockValueStack();
             var empty = new HalfOpenRangeListSystemFunction(null);
             //  Act
             empty.ExecuteRunlet(runtime);
             var result = (IReadOnlyList<object>)runtime.PopValue1();
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal(0, result.Count);
         }
 
@@ -147,14 +167,17 @@ namespace NutmegRunnerTests {
         {
             //  Arrange
             var runtime = new RuntimeEngine(false);
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue(10L);
             runtime.PushValue(15L);
+            runtime.CountAndUnlockValueStack();
             var empty = new HalfOpenRangeListSystemFunction(null);
             //  Act
             empty.ExecuteRunlet(runtime);
             var result = (IReadOnlyList<object>)runtime.PopValue1();
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal(5, result.Count);
             Assert.Equal(10L, result[0]);
             Assert.Equal(14L, result[4]);
@@ -165,17 +188,19 @@ namespace NutmegRunnerTests {
         {
             //  Arrange
             var runtime = new RuntimeEngine(false);
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue(10L);
             runtime.PushValue(15L);
+            runtime.CountAndUnlockValueStack();
             var empty = new HalfOpenRangeListSystemFunction(null);
             //  Act
             empty.ExecuteRunlet(runtime);
             var result = (IReadOnlyList<object>)runtime.PopValue1();
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             var n = 10L;
-            foreach (var i in result)
-            {
+            foreach (var i in result) {
                 Assert.Equal(n++, i);
             }
         }
@@ -191,14 +216,17 @@ namespace NutmegRunnerTests {
         {
             //  Arrange
             var runtime = new RuntimeEngine(false);
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue(0L);
             runtime.PushValue(-7L);
+            runtime.CountAndUnlockValueStack();
             var empty = new ClosedRangeListSystemFunction(null);
             //  Act
             empty.ExecuteRunlet(runtime);
             var result = (IReadOnlyList<object>)runtime.PopValue1();
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal(0, result.Count);
         }
 
@@ -207,14 +235,17 @@ namespace NutmegRunnerTests {
         {
             //  Arrange
             var runtime = new RuntimeEngine(false);
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue(10L);
             runtime.PushValue(15L);
+            runtime.CountAndUnlockValueStack();
             var empty = new ClosedRangeListSystemFunction(null);
             //  Act
             empty.ExecuteRunlet(runtime);
             var result = (IReadOnlyList<object>)runtime.PopValue1();
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal(6, result.Count);
             Assert.Equal(10L, result[0]);
             Assert.Equal(15L, result[5]);
@@ -225,14 +256,17 @@ namespace NutmegRunnerTests {
         {
             //  Arrange
             var runtime = new RuntimeEngine(false);
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue(10L);
             runtime.PushValue(15L);
+            runtime.CountAndUnlockValueStack();
             var empty = new ClosedRangeListSystemFunction(null);
             //  Act
             empty.ExecuteRunlet(runtime);
             var result = (IReadOnlyList<object>)runtime.PopValue1();
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             var n = 10L;
             foreach (var i in result)
             {
@@ -246,14 +280,17 @@ namespace NutmegRunnerTests {
         public void String_Get_Test() {
             //  Arrange
             var runtime = new RuntimeEngine( false );
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue( "foo" );
             runtime.PushValue( 0L );
+            runtime.CountAndUnlockValueStack();
             var empty = new Get( null );
             //  Act
             empty.ExecuteRunlet( runtime );
             var c = runtime.PopValue1();
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal( "foo"[0], c );
         }
 
@@ -261,14 +298,17 @@ namespace NutmegRunnerTests {
         public void List_Get_Test() {
             //  Arrange
             var runtime = new RuntimeEngine( false );
+            var deep = runtime.ValueStackLockCount();
             runtime.LockValueStack();
             runtime.PushValue( new List<object> { 0L, 100L, 200L, 300L } );
             runtime.PushValue( 1L );
+            runtime.CountAndUnlockValueStack();
             var empty = new Get( null );
             //  Act
             empty.ExecuteRunlet( runtime );
             var c = runtime.PopValue1();
             //  Assert
+            Assert.Equal( deep, runtime.ValueStackLockCount() );
             Assert.Equal( 100L, c );
         }
 

@@ -1,0 +1,26 @@
+@unittest
+def testVarRef():
+    x := newVarRef( 88 )
+    x! <-- 99
+    assert x.isRef
+    assert x! == 99
+enddef
+
+@unittest
+def testValRef():
+    x := newValRef( 88 )
+    ### x! <-- 99
+    assert x.isRef
+    assert x! == 88
+    x.lockObject
+enddef
+
+@command
+### This should be turned into another test but we don't have the ability
+### to assert failures, yet. So I have made this a command which can be
+### run and the failure observed.
+def main():
+    x := newVarRef( 88 )
+    x.lockObject
+    x! <-- 99 
+enddef

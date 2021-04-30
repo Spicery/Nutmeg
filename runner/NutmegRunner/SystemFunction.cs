@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using NutmegRunner.Modules.Arith;
@@ -7,6 +6,7 @@ using NutmegRunner.Modules.Assert;
 using NutmegRunner.Modules.Bitwise;
 using NutmegRunner.Modules.Characters;
 using NutmegRunner.Modules.Ranges;
+using NutmegRunner.Modules.Refs;
 using NutmegRunner.Modules.Seqs;
 using NutmegRunner.Modules.Strings;
 
@@ -21,7 +21,28 @@ namespace NutmegRunner {
         public Runlet Next { get; set; }
 
         public Runlet Call( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
-            this.ExecuteRunlet( runtimeEngine );
+            if (alt) {
+                this.AltExecuteRunlet( runtimeEngine );
+            } else {
+                this.ExecuteRunlet( runtimeEngine );
+            }
+            return next;
+        }
+
+        public virtual Runlet UpdateRunlet( RuntimeEngine runtimeEngine ) {
+            throw new NutmegException( "No updater defined" );
+        }
+
+        public virtual Runlet AltUpdateRunlet( RuntimeEngine runtimeEngine ) {
+            throw new NutmegException( "No updater defined" );
+        }
+
+        public virtual Runlet Update( RuntimeEngine runtimeEngine, Runlet next, bool alt ) {
+            if (alt) {
+                this.AltUpdateRunlet( runtimeEngine );
+            } else {
+                this.UpdateRunlet( runtimeEngine );
+            }
             return next;
         }
 
@@ -73,6 +94,10 @@ namespace NutmegRunner {
 
     ////////////////////////////////////////////////////////////////
 
+    public interface IFixedAritySystemUpdater {
+        public ( int, int ) UNargs { get; }
+    }
+
     public abstract class FixedAritySystemFunction : SystemFunction {
 
         public FixedAritySystemFunction( Runlet next ) : base( next ) {
@@ -82,6 +107,27 @@ namespace NutmegRunner {
 
     }
 
+    public abstract class UnarySystemFunction : FixedAritySystemFunction {
+        public UnarySystemFunction( Runlet next ) : base( next ) {
+        }
+        public override int Nargs => 1;
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.ApplyUnaryFunction( this.Apply );
+            return this.Next;
+        }
+        public abstract object Apply( object x );
+    }
+
+    public abstract class UnaryToVoidSystemFunction : FixedAritySystemFunction {
+        public UnaryToVoidSystemFunction( Runlet next ) : base( next ) {
+        }
+        public override int Nargs => 1;
+        public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
+            runtimeEngine.ApplyUnaryToVoidFunction( this.Apply );
+            return this.Next;
+        }
+        public abstract void Apply( object x );
+    }
 
     public abstract class VariadicSystemFunction : SystemFunction {
 
@@ -118,7 +164,8 @@ namespace NutmegRunner {
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             var sep = " ";
             var first = true;
-            foreach (var item in runtimeEngine.PopAll()) {
+            var nargs = runtimeEngine.NArgs0();
+            foreach (var item in runtimeEngine.PopManyToList( nargs ) ) {
                 if (!first) {
                     Console.Write( sep );
                 }
@@ -175,7 +222,8 @@ namespace NutmegRunner {
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
             var sep = " ";
             var first = true;
-            foreach (var item in runtimeEngine.PopAll()) {
+            var n = runtimeEngine.NArgs0();
+            foreach (var item in runtimeEngine.PopManyToList( n ) ) {
                 if (!first) {
                     Console.Write( sep );
                 }
@@ -237,7 +285,8 @@ namespace NutmegRunner {
         public ListSystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            runtimeEngine.PushValue( runtimeEngine.PopAll( immutable: true ) );
+            var n = runtimeEngine.NArgs0();
+            runtimeEngine.PushValue( runtimeEngine.PopManyToImmutableList( n ) );
             return this.Next;
         }
     }
@@ -372,8 +421,8 @@ namespace NutmegRunner {
         public CountArgumentsSystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int n = runtimeEngine.ValueStackLength();
-            runtimeEngine.ClearValueStack();
+            int n = runtimeEngine.NArgs0();
+            runtimeEngine.DropValues( n );
             runtimeEngine.PushValue( (long)n );
             return this.Next;
         }
@@ -398,8 +447,8 @@ namespace NutmegRunner {
         public PartApplySystemFunction( Runlet next ) : base( next ) { }
 
         public override Runlet ExecuteRunlet( RuntimeEngine runtimeEngine ) {
-            int N = runtimeEngine.ValueStackLength();
-            var args = runtimeEngine.PopMany( N - 1 );
+            int N = runtimeEngine.NArgs0();
+            var args = runtimeEngine.PopManyToList( N - 1 );
             ICallable fn = (ICallable)runtimeEngine.PopValue();
             runtimeEngine.PushValue( new PartialApplication( fn, args, null ) );
             return this.Next;
@@ -431,6 +480,7 @@ namespace NutmegRunner {
             .Add( new CharactersModule() )
             .Add( new SeqsModule() )
             .Add( new BitwiseModule() )
+            .Add( new RefsModule() )
             .Table;
 
         public static SystemFunctionMaker Find( string name ) {

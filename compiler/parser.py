@@ -442,6 +442,19 @@ def andOrPostfixMiniParser( parser : TableDrivenParser, p, lhs, token, source : 
     make = codetree.AndCodelet if token.category() == "AND" else codetree.OrCodelet
     return make( lhs=lhs, rhs=rhs )
 
+def derefPostfixMiniParser( parser: TableDrivenParser, p, lhs: codetree.Codelet, token, source: PeekablePushable ):
+    return codetree.SyscallCodelet( name="itemRef", arguments=lhs )
+
+def updatePostfixMiniParser( parser: TableDrivenParser, p, lhs: codetree.Codelet, token, source: PeekablePushable ):
+    if isinstance( lhs, codetree.SyscallCodelet ):
+        rhs = parser.readExpr( p, source )
+        return codetree.SysupdateCodelet( name=lhs.name(), lhs=lhs.arguments(), rhs=rhs )
+    elif isinstance( lhs, codetree.CallCodelet ):
+        rhs = parser.readExpr( p, source )
+        return codetree.UpdateCodelet( function=lhs.function(), lhs=lhs.arguments(), rhs=rhs )
+    else:
+        raise Mishap( "Do not know how to update this expression" )
+
 POSTFIX_TABLE = {
     "SEQ": commaPostfixMiniParser,
     "DOT": dotPostfixMiniParser,
@@ -455,6 +468,8 @@ POSTFIX_TABLE = {
     "AFTERWARDS": afterwardsPostfixMiniParser,
     "AND": andOrPostfixMiniParser,
     "OR": andOrPostfixMiniParser,
+    "DEREF": derefPostfixMiniParser,
+    "UPDATE": updatePostfixMiniParser,
 }
 
 def standardParser( unit=None ):

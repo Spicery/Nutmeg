@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 
 namespace NutmegRunner {
@@ -45,13 +46,17 @@ namespace NutmegRunner {
         /// </summary>
         UncheckedLayeredStack<object> _callStack = new UncheckedLayeredStack<object>();
 
-
+        /// <summary>
+        /// These variables are used to briefly store the transient stack count between locking
+        /// and unlocking.
+        /// </summary>
+        int _nargs0, _nargs1;
 
         /// <summary>
         /// Soon we will need to replace this with a custom implementation of a layered stack.
         /// The emphasis is on efficient pushing and popping from the top of the stack.
         /// </summary>
-        CheckedLayeredStack<object> _valueStack = new CheckedLayeredStack<object>();
+        UncheckedLayeredStack<object> _valueStack = new();
 
         public bool Debug { get; }
 
@@ -61,7 +66,11 @@ namespace NutmegRunner {
 
         public void Reset() {
             this._callStack = new UncheckedLayeredStack<object>();
-            this._valueStack = new CheckedLayeredStack<object>();
+            this._valueStack = new UncheckedLayeredStack<object>();
+        }
+
+        public int ValueStackLockCount() {
+            return this._valueStack.LockCount(); 
         }
 
         public void LockValueStack() {
@@ -72,6 +81,14 @@ namespace NutmegRunner {
             this._valueStack.Unlock();
         }
 
+        public void CountAndUnlockValueStack() {
+            this._nargs0 = this._valueStack.CountAndUnlock();
+        }
+
+        public void CountAndDoubleUnlockValueStack() {
+            this._nargs1 = this._valueStack.CountAndUnlock();
+            this._nargs0 = this._valueStack.CountAndUnlock() - this._nargs1;
+        }
 
         public void Unlock1ValueStack() {
             if (this._valueStack.Size() == 1) {
@@ -112,6 +129,14 @@ namespace NutmegRunner {
             }
         }
 
+        public void ApplyUnaryFunction( Func<object, object> f ) {
+            this._valueStack.ApplyUnaryFunction( f );
+        }
+
+        public void ApplyUnaryToVoidFunction( Action<object> a ) {
+            a( this._valueStack.Pop() );
+        }
+
         public object PopValue() {
             return this._valueStack.Pop();
         }
@@ -126,6 +151,9 @@ namespace NutmegRunner {
             }
         }
 
+        public int NArgs0() {
+            return this._nargs0;
+        }
 
         public void PopValueIntoSlot( int slot ) {
             this._callStack[slot] = this._valueStack.Pop();
@@ -142,8 +170,8 @@ namespace NutmegRunner {
             }
         }
 
-        public int CreateFrameAndCopyValueStack( int nlocals ) {
-            return this._callStack.RawLock( nlocals, this._valueStack );
+        public int CreateFrameAndCopyValueStack( int nlocals, int nargs ) {
+            return this._callStack.RawLock( nlocals, nargs, this._valueStack );
         }
 
         public bool PopBool() {
@@ -178,6 +206,15 @@ namespace NutmegRunner {
             this._valueStack.Clear();
         }
 
+        public void ResetStacks() {
+            this._valueStack.Reset();
+            this._callStack.Reset();
+        }
+
+        public void DropValues( int n ) {
+            this._valueStack.DropMany( n );
+        }
+
         public void Bind( string idName, Codelet codelet ) {
             this._dictionary.Add( idName, codelet.Weave( null, this._dictionary ) );
         }
@@ -187,8 +224,7 @@ namespace NutmegRunner {
         }
 
         public Runlet Return() {
-            this._valueStack.Unlock();              //  Merge the top two value-stack frames.
-            this._callStack.ClearAndUnlock();       //  Tear down the current call-stack frame.
+            this._callStack.ClearAndUnlock();
             this._callStack.Drop();                 //  Remove alt flag from callstack.
             return (Runlet)this._callStack.Pop();   //  And continue from the return runlet.
         }
@@ -236,11 +272,15 @@ namespace NutmegRunner {
             if (runlet is FunctionRunlet fwc) {
                 if (Debug) stdErr.WriteLine( $"Running codelet ..." );
                 try {
-                    Runlet currentInstruction = new LockRunlet( ListToPushQChain( args, new CallQRunlet( fwc, new HaltRunlet( usePrint ) ) ) );
+                    Runlet currentInstruction = new LockRunlet( ListToPushQChain( args, new CountAndUnlockRunlet( new CallQRunlet( fwc, new HaltRunlet( usePrint ) ) ) ) );
                     if (Debug) {
                         while (true) {
                             Console.WriteLine( $"Instruction: {currentInstruction}" );
                             currentInstruction = currentInstruction.ExecuteRunlet( this );
+                            Console.WriteLine( $"  StackCount: {this.ValueStackLength()}, LockCount: {this.ValueStackLockCount()}" );
+                            for ( int i = 0; i < this.ValueStackLength(); i++ ) {
+                                Console.WriteLine( $"  {i}. {this.GetItem( i )}" );
+                            }
                         }
                     } else {
                         while (true) {
@@ -273,23 +313,19 @@ namespace NutmegRunner {
             var halt = new HaltRunlet( false );
             var unlock = new UnlockRunlet( halt );
             var pop = new PopGlobalRunlet( this._dictionary.Get( key ), unlock );
-            var init = value.Weave( pop, this._dictionary );
+            var init = value.Weave1( pop, this._dictionary );
             Runlet currentInstruction = new LockRunlet( init );
             while (true) {
                 currentInstruction = currentInstruction.ExecuteRunlet( this );
             }
         }
 
-        public IList<object> PopAllAndUnlock() {
-            return this._valueStack.PopAllAndUnlock();
+        public ImmutableList<object> PopManyToImmutableList( int count ) {
+            return this._valueStack.PopManyToImmutableList( count );
         }
 
-        public IList<object> PopAll( bool immutable = false ) {
-            return immutable ? (IList<object>)this._valueStack.ImmutablePopAll() : (IList<object>)this._valueStack.PopAll();
-        }
-
-        public IList<object> PopMany( int m ) {
-            return (IList<object>)this._valueStack.PopMany(m);
+        public IList<object> PopManyToList( int m ) {
+            return (IList<object>)this._valueStack.PopManyToList(m);
         }
 
     }
