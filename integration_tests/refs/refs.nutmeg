@@ -12,6 +12,7 @@ def testValRef():
     ### x! <-- 99
     assert x.isRef
     assert x! == 88
+    x.lockObject
 enddef
 
 @command
