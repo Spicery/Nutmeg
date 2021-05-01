@@ -492,6 +492,18 @@ namespace NutmegRunner {
             }
         }
 
+        public static IEnumerable<dynamic> SystemInfo() {
+            foreach (var i in SYSTEM_FUNCTION_TABLE) {
+                SystemFunction sysfn = i.Value( null );
+                yield return new {
+                    Name = i.Key,
+                    ShortTitle = sysfn.ShortTitle()
+                };
+
+            }
+
+        }
+
     }
 
 }

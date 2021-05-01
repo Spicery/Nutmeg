@@ -5,7 +5,7 @@ import argparse
 
 TEMPLATE = """#!/bin/bash
 case $1 in
-    run|unittest|script)
+    run|unittest|script|info)
         case $2 in
             --help|-h)
                 exec $(INSTALL_DIR)/compiler/nutmeg $1 --help
@@ -14,6 +14,9 @@ case $1 in
         ;;
     compile|parse|resolve|optimize|codegen|bundle|trace|help)
         exec $(INSTALL_DIR)/compiler/nutmeg $*
+        ;;
+    --help)
+        exec $(INSTALL_DIR)/compiler/nutmeg --help
         ;;
     *)
         set - run "$*"
@@ -33,6 +36,10 @@ case $1 in
     unittest)
         shift
         exec $(INSTALL_DIR)/runner/NutmegRunner --unittest $*
+        ;;
+    info)
+        shift
+        exec $(INSTALL_DIR)/runner/NutmegRunner --info $*
         ;;
     *)
         echo "Error in nutmeg script" >&2

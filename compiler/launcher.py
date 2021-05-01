@@ -114,6 +114,7 @@ COMMANDS = {
     "run": "run",
     "unittest": "unittest",
     "script": "script",
+    "info": "info",
 }
 
 def main():
@@ -206,6 +207,10 @@ def main():
     )
     mode_unittest.add_argument( 'file', nargs=1, help="The bundle file to search for unit tests" )
 
+    mode_info = subparsers.add_parser(
+        COMMANDS[ "info" ], help="Dumps information about the runtime engine in JSON to stdout (developer option)"
+    )
+    
     args = parser.parse_args( args=sys.argv[1:] )
     try:
         args.mode(args).launch()
