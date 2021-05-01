@@ -1,0 +1,23 @@
+# Stripped down version of venv's activate.
+deactivate () {
+    # reset old environment variables
+    if [ -n "${_SAVED_VIRTUAL_PATH:-}" ] ; then
+        PATH="${_SAVED_VIRTUAL_PATH:-}"
+        export PATH
+        unset _SAVED_VIRTUAL_PATH
+    fi
+
+    # This should detect bash and zsh, which have a hash command that must
+    # be called to get it to forget past commands.  Without forgetting
+    # past commands the $PATH changes we made may not be respected
+    if [ -n "${BASH:-}" -o -n "${ZSH_VERSION:-}" ] ; then
+        hash -r
+    fi
+
+    unset -f deactivate
+}
+
+_SAVED_VIRTUAL_PATH=$PATH
+
+# Protect against being sourced multiple times.
+[[ ":$PATH:" != *":$(realpath _local/bin):"* ]] && PATH=$(realpath _local/bin):$PATH
