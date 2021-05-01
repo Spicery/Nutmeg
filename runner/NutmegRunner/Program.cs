@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace NutmegRunner {
 
@@ -66,6 +67,8 @@ namespace NutmegRunner {
         bool _print = false;
         bool _test = false;
         string _title = null;
+        bool _info = false;
+
         LinkedList<string> _args;
 
         public bool InTestMode => this._test;
@@ -88,9 +91,12 @@ namespace NutmegRunner {
         }
 
         private void ProcessBundleFile( LinkedList<string> args ) {
-            if (args.Count < 1) throw new NutmegException( "No bundle-file specified" );
-            this._bundleFile = args.First.Value;
-            args.RemoveFirst();
+            if (args.Count >= 1) {
+                this._bundleFile = args.First.Value;
+                args.RemoveFirst();
+            } else if (! this._info) {
+                throw new NutmegException( "No bundle-file specified" );
+            }
         }
 
         private void ProcessRunnerOptions( LinkedList<string> args ) {
@@ -113,24 +119,27 @@ namespace NutmegRunner {
                                 throw new UsageNutmegException();
                             }
                             break;
-                        case "--print":
-                            this._print = true;
-                            break;
                         case "--debug":
                             this._debug = true;
                             this._trace = true;
                             break;
-                        case "--trace":
-                            this._trace = true;
+                        case "--info":
+                            this._info = true;
                             break;
                         case "--graphviz":
                             this._graphviz = parameter;
                             break;
-                        case "--unittest":
-                            this._test = true;
+                        case "--print":
+                            this._print = true;
                             break;
                         case "--title":
                             this._title = parameter;
+                            break;
+                        case "--trace":
+                            this._trace = true;
+                            break;
+                        case "--unittest":
+                            this._test = true;
                             break;
                         default:
                             throw new NutmegException( $"Unrecognised option: {option}" ).Culprit( "Option", option );
@@ -164,8 +173,18 @@ namespace NutmegRunner {
             }
         }
 
-        private void Run()
-        {
+        private void Info() {
+            Console.WriteLine(
+                JsonConvert.SerializeObject(
+                    new {
+                        SystemFunctions = NutmegSystem.SystemInfo().ToDictionary( x => x.Name )
+                    },
+                    Formatting.Indented
+                )
+            );
+        }
+
+        private void Run() {
             TextWriter stdErr = Console.Error;
             if (this._debug) {
                 stdErr.WriteLine( "Nutmeg kicks the ball ..." );
@@ -173,7 +192,17 @@ namespace NutmegRunner {
                 stdErr.WriteLine( $"Entry point: {this._entryPoint}" );
                 stdErr.WriteLine( $"Unittests: {this.InTestMode}" );
                 stdErr.WriteLine( $"GraphViz: {this._graphviz}" );
+                stdErr.WriteLine( $"Info: {this._info}" );
             }
+            if (this._info) {
+                this.Info();
+            } else {
+                this.RunProgram();
+            }
+        }
+
+        private void RunProgram() {
+            TextWriter stdErr = Console.Error;
             try {
                 RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
                 using (SqliteConnection connection = GetConnection()) {
