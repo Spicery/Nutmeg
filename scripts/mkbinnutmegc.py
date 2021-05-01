@@ -4,11 +4,13 @@ import os
 import argparse
 
 TEMPLATE = """#!/bin/bash
-exec $(INSTALL_DIR)/compiler/nutmeg compile $*
+exec {{{INSTALL_DIR}}}/compiler/nutmeg compile $*
 """
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser( prog='mkinstaller' )
     parser.add_argument( "--install_dir", required=True )
+    parser.add_argument( "--local", required=True )
     args = parser.parse_args()
-    print( TEMPLATE.replace( '$(INSTALL_DIR)', args.install_dir ) )
+    script = TEMPLATE.replace( '{{{INSTALL_DIR}}}', args.install_dir )
+    print( script )

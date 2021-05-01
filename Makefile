@@ -13,6 +13,7 @@ help:
 	#	make unittests
 	#   make inttests
 
+LOCAL=SYSTEM
 PREFIX=/opt/nutmeg
 INSTALL_DIR=$(PREFIX)/libexec/nutmeg
 EXEC_DIR=/usr/local/bin
@@ -49,6 +50,7 @@ clean:
 	make clean-compiler
 	make clean-runner
 	rm -rf _build
+	rm -rf _local
 
 .PHONEY: clean-compiler
 clean-compiler: 
@@ -103,12 +105,20 @@ mkinstaller: build
 	( cd _build; zip -qr nutmeg-installer.zip nutmeg-installer )
 	( cd _build; tar cf - nutmeg-installer ) | gzip > _build/nutmeg-installer.tgz
 
+
+.PHONEY: local-install
+local-install:
+	mkdir -p _local/bin
+	mkdir -p _local/libexec
+	rm -rf _local/bin _local/libexec
+	$(MAKE) install PREFIX=`realpath _local` EXEC_DIR=`realpath _local/bin` LOCAL=LOCAL
+
 # Do a local installation. Will need to be run as sudo.
 .PHONEY: install
 install:
 	mkdir -p $(EXEC_DIR)
-	python3 scripts/mkbinnutmeg.py --install_dir=$(INSTALL_DIR) > $(EXEC_DIR)/nutmeg
-	python3 scripts/mkbinnutmegc.py --install_dir=$(INSTALL_DIR) > $(EXEC_DIR)/nutmegc
+	python3 scripts/mkbinnutmeg.py --install_dir=$(INSTALL_DIR) --local=$(LOCAL) > $(EXEC_DIR)/nutmeg
+	python3 scripts/mkbinnutmegc.py --install_dir=$(INSTALL_DIR) --local=$(LOCAL) > $(EXEC_DIR)/nutmegc
 	chmod a+rx,a-w $(EXEC_DIR)/nutmeg
 	chmod a+rx,a-w $(EXEC_DIR)/nutmegc
 	make install-compiler

@@ -134,6 +134,7 @@ dmypy.json
 /.vscode
 /_build/
 /_dist/
+/_local/
 /compiler/_working/
 /scrapbook/
 /attic/
