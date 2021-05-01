@@ -4,7 +4,6 @@ import os
 import argparse
 
 TEMPLATE = """#!/bin/bash
-{{{MOTD}}}
 case $1 in
     run|unittest|script|info)
         case $2 in
@@ -55,5 +54,4 @@ if __name__ == "__main__":
     parser.add_argument( "--local", required=True )
     args = parser.parse_args()
     script = TEMPLATE.replace( '{{{INSTALL_DIR}}}', args.install_dir )
-    script = script.replace( '{{{MOTD}}}', 'echo "Using development version of nutmeg" 1>&2' if args.local == 'LOCAL' else '' )
     print( script )

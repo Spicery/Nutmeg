@@ -50,6 +50,7 @@ clean:
 	make clean-compiler
 	make clean-runner
 	rm -rf _build
+	rm -rf _local
 
 .PHONEY: clean-compiler
 clean-compiler: 
