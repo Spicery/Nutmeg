@@ -1,5 +1,5 @@
 # Stripped down version of venv's activate.
-deactivate () {
+inactivate () {
     # reset old environment variables
     if [ -n "${_SAVED_VIRTUAL_PATH:-}" ] ; then
         PATH="${_SAVED_VIRTUAL_PATH:-}"
@@ -14,7 +14,7 @@ deactivate () {
         hash -r
     fi
 
-    unset -f deactivate
+    unset -f inactivate
 }
 
 _SAVED_VIRTUAL_PATH=$PATH
