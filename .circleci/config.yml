@@ -54,6 +54,7 @@ jobs:
           name: Integration tests
           working_directory: ~/project
           command: |
+            echo $PATH
             make build
             make local-install
             make inttests

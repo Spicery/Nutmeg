@@ -112,15 +112,14 @@ local-install:
 	mkdir -p _local/bin
 	mkdir -p _local/libexec
 	rm -rf _local/bin _local/libexec
-	$(MAKE) install PREFIX=`realpath _local` EXEC_DIR=`realpath _local/bin` LOCAL=LOCAL
-	. .activate
+	$(MAKE) install PREFIX=`realpath _local` EXEC_DIR=`realpath _local/bin`
 
 # Do a local installation. Will need to be run as sudo.
 .PHONEY: install
 install:
 	mkdir -p $(EXEC_DIR)
-	python3 scripts/mkbinnutmeg.py --install_dir=$(INSTALL_DIR) --local=$(LOCAL) > $(EXEC_DIR)/nutmeg
-	python3 scripts/mkbinnutmegc.py --install_dir=$(INSTALL_DIR) --local=$(LOCAL) > $(EXEC_DIR)/nutmegc
+	python3 scripts/mkbinnutmeg.py --install_dir=$(INSTALL_DIR) > $(EXEC_DIR)/nutmeg
+	python3 scripts/mkbinnutmegc.py --install_dir=$(INSTALL_DIR) > $(EXEC_DIR)/nutmegc
 	chmod a+rx,a-w $(EXEC_DIR)/nutmeg
 	chmod a+rx,a-w $(EXEC_DIR)/nutmegc
 	make install-compiler
