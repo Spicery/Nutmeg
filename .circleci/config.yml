@@ -54,10 +54,9 @@ jobs:
           name: Integration tests
           working_directory: ~/project
           command: |
-            echo $PATH
-            ls -alR /home/circleci/.local
             make build
-            make local-install
+            mkdir -p /home/circleci/.local/bin
+            make install PREFIX=/home/circleci/.local EXEC_DIR=/home/circleci/.local/bin
             make inttests
   
 
