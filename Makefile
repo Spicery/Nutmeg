@@ -113,6 +113,7 @@ local-install:
 	mkdir -p _local/libexec
 	rm -rf _local/bin _local/libexec
 	$(MAKE) install PREFIX=`realpath _local` EXEC_DIR=`realpath _local/bin` LOCAL=LOCAL
+	source .activate
 
 # Do a local installation. Will need to be run as sudo.
 .PHONEY: install
