@@ -18,14 +18,11 @@ jobs:
     executor: python/default
     steps:
       - checkout
-      - python/install-packages:
-          app-dir: ~/project/compiler
-          pkg-manager: pip
       - run:
           name: Test Compiler
           working_directory: ~/project/compiler
           command: |
-            pip install -r test/test_requirements.txt
+            pip3 install -r test/test_requirements.txt
             mkdir test-report
             pytest --junit-xml=test-report/report.xml test
 
