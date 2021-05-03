@@ -11,6 +11,21 @@ filters:
     only: /v0\.1\/114*/
 
 jobs:
+  test-compiler2:
+    ### Use bare image rather than CircleCI Python convenience image.
+    docker:
+      - image: philallen117/nutmeg-circleci
+        auth:
+          username: philallen117
+          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+    steps:
+      - checkout
+      - run: 
+          name: Test Runner
+          working_directory: ~/project
+          command: |
+            make build
+ 
   test-compiler:
     ### Cannot use predefined python/test does not let you run the tests in a subdirectory.
     executor: python/default
@@ -27,8 +42,7 @@ jobs:
             pip install pytest
             mkdir test-report
             pytest --junit-xml=test-report/report.xml test
-            pytest 
-          
+         
 
   ### Start with pre-defined Windows docker image.
   ### TODO: define image by adding .net core deps onto a vanilla linux image
