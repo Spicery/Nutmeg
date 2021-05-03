@@ -27,7 +27,7 @@ jumpstart:
 	#	Add UNIX tools and the Python SDK.
 	apt-get update
 	apt-get install -y build-essential python3 wget zip python3-pip 
-	pip3 install str2bool pyinstaller
+	pip3 install pyinstaller
 	# 	Now add the .NET SDK.
 	wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
 	dpkg -i packages-microsoft-prod.deb
@@ -76,7 +76,7 @@ build-compiler:
 
 _build/compiler/nutmeg/nutmeg:
 	#cxfreeze launcher.py -O --silent --target-dir=_build/compiler --target-name=nutmeg
-	( cd compiler; pyinstaller --noconfirm --workpath=_working --distpath=../_build/compiler --name=nutmeg launcher.py )
+	( cd compiler; pip install -r requirements.txt; pyinstaller --noconfirm --workpath=_working --distpath=../_build/compiler --name=nutmeg launcher.py )
 
 # Builds into runner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish
 # Where $(RID) is the target architecture to build for. For a list of archhitectures
