@@ -5,14 +5,14 @@ orbs:
   win: circleci/windows@2.2.0
   python: circleci/python@1.2.0
 
-# filters:
-#   branches:
-#     only: /v0\.1\/24_cont\.*/
+### Use branch filter when testing changes to this file
+filters:
+  branches:
+    only: /v0\.1\/114*/
 
 jobs:
-  ### This job description takes some manual control but as far down as docker image.
-  ### Predefined python/test does not let you run the tests in a subdirectory.
   test-compiler:
+    ### Cannot use predefined python/test does not let you run the tests in a subdirectory.
     executor: python/default
     steps:
       - checkout
@@ -48,6 +48,23 @@ jobs:
             dotnet build
             dotnet test
 
+  inttests:
+    docker:
+      - image: philallen117/nutmeg-circleci
+        auth:
+          username: philallen117
+          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+    steps:
+      - checkout
+      - run: 
+          name: Integration tests
+          working_directory: ~/project
+          command: |
+            make build
+            make install
+            make inttests
+  
+
 ### Can worflows be scoped by folder? Or maybe by pattern on branch name?
 workflows:
   all:
@@ -59,3 +76,4 @@ workflows:
     #     test-tool: pytest
     - test-compiler
     - test-runner
+    - inttests
