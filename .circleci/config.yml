@@ -20,13 +20,12 @@ jobs:
       - checkout
       - python/install-packages:
           app-dir: ~/project/compiler
-          pip-dependency-file: requirements.txt
           pkg-manager: pip
       - run:
           name: Test Compiler
           working_directory: ~/project/compiler
           command: |
-            pip install pytest
+            pip install -r test/test_requirements.txt
             mkdir test-report
             pytest --junit-xml=test-report/report.xml test
 
@@ -67,11 +66,6 @@ jobs:
 workflows:
   all:
     jobs:
-    # - python/test:
-    #     app-dir: ~/project/compiler
-    #     pip-dependency-file: requirements.txt
-    #     pkg-manager: pip
-    #     test-tool: pytest
     - test-compiler
     - test-runner
     - inttests
