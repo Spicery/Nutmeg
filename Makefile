@@ -27,7 +27,6 @@ jumpstart:
 	#	Add UNIX tools and the Python SDK.
 	apt-get update
 	apt-get install -y build-essential python3 wget zip python3-pip 
-	pip3 install pyinstaller
 	# 	Now add the .NET SDK.
 	wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
 	dpkg -i packages-microsoft-prod.deb
