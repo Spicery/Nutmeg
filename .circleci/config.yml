@@ -55,7 +55,7 @@ jobs:
           working_directory: ~/project
           command: |
             make build
-            make install
+            make local-install
             make inttests
   
 
