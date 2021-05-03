@@ -55,6 +55,7 @@ jobs:
           working_directory: ~/project
           command: |
             echo $PATH
+            ls -alR /home/circleci/.local/bin
             make build
             make local-install
             make inttests
