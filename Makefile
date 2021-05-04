@@ -127,7 +127,7 @@ install:
 
 .PHONEY: install-compiler
 install-compiler:
-	makeuninstall-compiler
+	make uninstall-compiler
 	mkdir -p $(INSTALL_DIR)
 	( cd _build; tar cf - compiler ) | ( cd $(INSTALL_DIR); tar xf - )
 
