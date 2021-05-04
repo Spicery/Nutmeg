@@ -159,5 +159,4 @@ unittests:
 
 .PHONEY: inttests
 inttests: 
-	python3 scripts/unittest_here.py examples/kata/*/
-	python3 scripts/unittest_here.py integration_tests/*/	
+	python3 scripts/unittest_here.py examples/kata/*/ integration_tests/*/	
