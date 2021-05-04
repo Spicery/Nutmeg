@@ -20,8 +20,10 @@ build: _build/nutmeg/nutmeg
 
 _build/nutmeg/nutmeg:
 	#cxfreeze launcher.py -O --silent --target-dir=_build/compiler --target-name=nutmeg
+	pip3 install -r packaging_requirements.txt
 	pyinstaller --noconfirm --workpath=_working --distpath=_build --name=nutmeg launcher.py
 
 .PHONEY: unittests
 unittests: 
+	pip3 install -r test/test_requirements.txt
 	pytest test/

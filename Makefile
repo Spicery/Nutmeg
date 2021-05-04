@@ -27,7 +27,6 @@ jumpstart:
 	#	Add UNIX tools and the Python SDK.
 	apt-get update
 	apt-get install -y build-essential python3 wget zip python3-pip 
-	pip3 install str2bool pyinstaller
 	# 	Now add the .NET SDK.
 	wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
 	dpkg -i packages-microsoft-prod.deb
@@ -64,7 +63,7 @@ clean-runner:
 .PHONEY: build
 build:
 	make build-compiler
-	make build-runner
+	make build-runner RID=$(RID)
 
 # This actually builds a lot of files but we use the executable to indicate a successful build
 .PHONEY: build-compiler
@@ -74,8 +73,10 @@ build-compiler:
 	mkdir -p _build/
 	mv compiler/_build/nutmeg _build/compiler
 
+# Redundant because compiler/Makefile?
 _build/compiler/nutmeg/nutmeg:
 	#cxfreeze launcher.py -O --silent --target-dir=_build/compiler --target-name=nutmeg
+	pip3 install -r compiler/packaging_requirements.txt
 	( cd compiler; pyinstaller --noconfirm --workpath=_working --distpath=../_build/compiler --name=nutmeg launcher.py )
 
 # Builds into runner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish
@@ -111,18 +112,18 @@ local-install:
 	mkdir -p _local/bin
 	mkdir -p _local/libexec
 	rm -rf _local/bin _local/libexec
-	$(MAKE) install PREFIX=`realpath _local` EXEC_DIR=`realpath _local/bin` LOCAL=LOCAL
+	make install PREFIX=`realpath _local` EXEC_DIR=`realpath _local/bin` RID=$(RID)
 
 # Do a local installation. Will need to be run as sudo.
 .PHONEY: install
 install:
 	mkdir -p $(EXEC_DIR)
-	python3 scripts/mkbinnutmeg.py --install_dir=$(INSTALL_DIR) --local=$(LOCAL) > $(EXEC_DIR)/nutmeg
-	python3 scripts/mkbinnutmegc.py --install_dir=$(INSTALL_DIR) --local=$(LOCAL) > $(EXEC_DIR)/nutmegc
+	python3 scripts/mkbinnutmeg.py --install_dir=$(INSTALL_DIR) > $(EXEC_DIR)/nutmeg
+	python3 scripts/mkbinnutmegc.py --install_dir=$(INSTALL_DIR) > $(EXEC_DIR)/nutmegc
 	chmod a+rx,a-w $(EXEC_DIR)/nutmeg
 	chmod a+rx,a-w $(EXEC_DIR)/nutmegc
 	make install-compiler
-	make install-runner
+	make install-runner RID=$(RID)
 
 .PHONEY: install-compiler
 install-compiler:
@@ -158,5 +159,4 @@ unittests:
 
 .PHONEY: inttests
 inttests: 
-	python3 scripts/unittest_here.py examples/kata/*/
-	python3 scripts/unittest_here.py integration_tests/*/	
+	python3 scripts/unittest_here.py examples/kata/*/ integration_tests/*/	

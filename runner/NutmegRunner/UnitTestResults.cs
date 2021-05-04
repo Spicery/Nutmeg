@@ -6,9 +6,9 @@ namespace NutmegRunner {
 
     public class UnitTestResults {
 
-        private const string red = "RED";
-        private const string amber = "AMBER";
-        private const string green = "GREEN";
+        public const string red = "RED";
+        public const string amber = "AMBER";
+        public const string green = "GREEN";
 
         private SqliteConnection _connection;
         private List<string> _passes = new List<string>();
@@ -34,6 +34,10 @@ namespace NutmegRunner {
                 _passes.Count == 0 ? amber :
                 green
             );
+        }
+
+        public bool NoFailures() {
+            return _failures.Count == 0;
         }
 
         public void ShowResults() {

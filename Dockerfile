@@ -20,8 +20,6 @@ RUN apt-get install -y --no-install-recommends dotnet-sdk-3.1
 # 
 FROM base AS packaged
 ARG DEBIAN_FRONTEND=noninteractive
-RUN pip3 install str2bool pyinstaller
-# TODO: #66 change to install from requirements files - with pyinstaller in separate build_requirements
 RUN mkdir -p /tmp/nutmeg
 COPY compiler/ /tmp/nutmeg/compiler/
 COPY runner/ /tmp/nutmeg/runner/

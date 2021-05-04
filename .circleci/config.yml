@@ -2,37 +2,31 @@ version: 2.1
 
 orbs:
   ### Orbs are basically libraries
-  win: circleci/windows@2.2.0
   python: circleci/python@1.2.0
 
-# filters:
-#   branches:
-#     only: /v0\.1\/24_cont\.*/
+### Use branch filter when testing changes to this file
+filters:
+  branches:
+    only: /v0\.1\/114*/
+
+### TODO: Unit tests from Makefile, over project Docker image.
 
 jobs:
-  ### This job description takes some manual control but as far down as docker image.
-  ### Predefined python/test does not let you run the tests in a subdirectory.
+ 
   test-compiler:
+    ### Cannot use predefined python/test does not let you run the tests in a subdirectory.
     executor: python/default
     steps:
       - checkout
-      - python/install-packages:
-          app-dir: ~/project/compiler
-          pip-dependency-file: requirements.txt
-          pkg-manager: pip
       - run:
           name: Test Compiler
           working_directory: ~/project/compiler
           command: |
-            pip install pytest
+            pip3 install -r test/test_requirements.txt
             mkdir test-report
             pytest --junit-xml=test-report/report.xml test
-            pytest 
-          
 
-  ### Start with pre-defined Windows docker image.
-  ### TODO: define image by adding .net core deps onto a vanilla linux image
-  ###       Challenge is to define dev and CI images in one file. Use stages?
+  ### TODO: Define dev and CI images in one file.
   test-runner:
     docker:
       - image: philallen117/nutmeg-circleci
@@ -48,14 +42,28 @@ jobs:
             dotnet build
             dotnet test
 
+  inttests:
+    docker:
+      - image: philallen117/nutmeg-circleci
+        auth:
+          username: philallen117
+          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+    steps:
+      - checkout
+      - run: 
+          name: Integration tests
+          working_directory: ~/project
+          command: |
+            make build RID=linux-x64
+            mkdir -p /home/circleci/.local/bin
+            make install PREFIX=/home/circleci/.local EXEC_DIR=/home/circleci/.local/bin RID=linux-x64
+            make inttests
+  
+
 ### Can worflows be scoped by folder? Or maybe by pattern on branch name?
 workflows:
   all:
     jobs:
-    # - python/test:
-    #     app-dir: ~/project/compiler
-    #     pip-dependency-file: requirements.txt
-    #     pkg-manager: pip
-    #     test-tool: pytest
     - test-compiler
     - test-runner
+    - inttests
