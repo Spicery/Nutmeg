@@ -62,8 +62,8 @@ clean-runner:
 # Builds the compiler in the _build/compiler folder and the runner in the appropriate dotnet publish folder.
 .PHONEY: build
 build:
-	make build-compiler
-	make build-runner
+	$(MAKE) build-compiler
+	$(MAKE) build-runner RID=RID
 
 # This actually builds a lot of files but we use the executable to indicate a successful build
 .PHONEY: build-compiler
