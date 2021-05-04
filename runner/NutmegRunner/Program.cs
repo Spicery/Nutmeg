@@ -23,7 +23,7 @@ namespace NutmegRunner {
 
         public bool Debug => this._runtimeEngine.Debug;
 
-        public void RunTests() { 
+        public int RunTests() { 
             using (SqliteConnection connection = this._getConnection()) {
                 connection.Open();
                 var tests_to_run = this.GetTestsToRun( connection );
@@ -40,6 +40,7 @@ namespace NutmegRunner {
                     }
                 }
                 utresults.ShowResults();
+                return utresults.NoFailures() ? 0 : 1;
             }
         }
 
@@ -184,7 +185,7 @@ namespace NutmegRunner {
             );
         }
 
-        private void Run() {
+        private int Run() {
             TextWriter stdErr = Console.Error;
             if (this._debug) {
                 stdErr.WriteLine( "Nutmeg kicks the ball ..." );
@@ -196,12 +197,13 @@ namespace NutmegRunner {
             }
             if (this._info) {
                 this.Info();
+                return 0;
             } else {
-                this.RunProgram();
+                return this.RunProgram();
             }
         }
 
-        private void RunProgram() {
+        private int RunProgram() {
             TextWriter stdErr = Console.Error;
             try {
                 RuntimeEngine runtimeEngine = new RuntimeEngine( this._debug );
@@ -257,11 +259,13 @@ namespace NutmegRunner {
                 }
                 if (this._graphviz != null) {
                     runtimeEngine.GraphViz( this._graphviz );
+                    return 0;
                 } else if (this.InTestMode) {
                     UnitTestRunner utrunner = new( this.TestTitle, runtimeEngine, this.GetConnection );
-                    utrunner.RunTests();
+                    return utrunner.RunTests();
                 } else {
                     runtimeEngine.Start( this._entryPoint, this._args, useEvaluate: false, usePrint: this._print );
+                    return 0;
                 }
             } catch (SqliteException sqlexn) {
                 if (sqlexn.SqliteErrorCode == 26) {
@@ -297,14 +301,14 @@ namespace NutmegRunner {
             }
         }
 
-        static void Main( string[] args ) {
+        static int Main( string[] args ) {
             var program = new Program( new LinkedList<string>( args ) );
             try {
-                program.Run();
+                return program.Run();
             } catch (NutmegException nme) {
                 nme.WriteMessage();
                 if (program.Trace) throw;
-                Environment.Exit( -1 );
+                return 1;
             }
         }
     }
