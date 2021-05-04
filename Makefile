@@ -122,18 +122,18 @@ install:
 	python3 scripts/mkbinnutmegc.py --install_dir=$(INSTALL_DIR) > $(EXEC_DIR)/nutmegc
 	chmod a+rx,a-w $(EXEC_DIR)/nutmeg
 	chmod a+rx,a-w $(EXEC_DIR)/nutmegc
-	make install-compiler
-	make install-runner
+	$(MAKE) install-compiler
+	$(MAKE) install-runner RID=$(RID)
 
 .PHONEY: install-compiler
 install-compiler:
-	make uninstall-compiler
+	$(MAKE) uninstall-compiler
 	mkdir -p $(INSTALL_DIR)
 	( cd _build; tar cf - compiler ) | ( cd $(INSTALL_DIR); tar xf - )
 
 .PHONEY: install-runner
 install-runner:
-	mkdir -p $(INSTALL_DIR)/runner
+	$(MAKE) -p $(INSTALL_DIR)/runner
 	( cd runner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd $(INSTALL_DIR)/runner; tar xf - )
 
 # Uninstall the application locally.
