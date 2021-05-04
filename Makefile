@@ -63,7 +63,7 @@ clean-runner:
 .PHONEY: build
 build:
 	$(MAKE) build-compiler
-	$(MAKE) build-runner RID=RID
+	$(MAKE) build-runner RID=$(RID)
 
 # This actually builds a lot of files but we use the executable to indicate a successful build
 .PHONEY: build-compiler
