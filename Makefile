@@ -133,7 +133,7 @@ install-compiler:
 
 .PHONEY: install-runner
 install-runner:
-	make -p $(INSTALL_DIR)/runner
+	mkdir -p $(INSTALL_DIR)/runner
 	( cd runner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd $(INSTALL_DIR)/runner; tar xf - )
 
 # Uninstall the application locally.
