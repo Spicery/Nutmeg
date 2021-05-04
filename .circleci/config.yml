@@ -56,7 +56,7 @@ jobs:
           command: |
             make build RID=linux-x64
             mkdir -p /home/circleci/.local/bin
-            make install PREFIX=/home/circleci/.local EXEC_DIR=/home/circleci/.local/bin
+            make install PREFIX=/home/circleci/.local EXEC_DIR=/home/circleci/.local/bin RID=linux-x64
             make inttests
   
 
