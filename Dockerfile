@@ -4,7 +4,7 @@ RUN apt-get update --fix-missing
 RUN apt-get install -y apt-transport-https
 RUN apt-get install -y tar gzip zip wget curl 
 RUN apt-get install -y build-essential software-properties-common
-RUN apt-get install -y python3 python3-pip git-all
+RUN apt-get install -y python3.8 python3-pip git-all
 # Dotnet deb packages in dedicated repo; update to get fresh data.
 # Install utilities first
 RUN apt-get install -y ca-certificates software-properties-common
