@@ -76,7 +76,7 @@ build-compiler:
 # Redundant because compiler/Makefile?
 _build/compiler/nutmeg/nutmeg:
 	#cxfreeze launcher.py -O --silent --target-dir=_build/compiler --target-name=nutmeg
-	pip install -r compiler/packaging_requirements.txt
+	pip3 install -r compiler/packaging_requirements.txt
 	( cd compiler; pyinstaller --noconfirm --workpath=_working --distpath=../_build/compiler --name=nutmeg launcher.py )
 
 # Builds into runner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish
