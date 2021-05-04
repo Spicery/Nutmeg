@@ -62,8 +62,8 @@ clean-runner:
 # Builds the compiler in the _build/compiler folder and the runner in the appropriate dotnet publish folder.
 .PHONEY: build
 build:
-	$(MAKE) build-compiler
-	$(MAKE) build-runner RID=$(RID)
+	make build-compiler
+	make build-runner RID=$(RID)
 
 # This actually builds a lot of files but we use the executable to indicate a successful build
 .PHONEY: build-compiler
@@ -112,7 +112,7 @@ local-install:
 	mkdir -p _local/bin
 	mkdir -p _local/libexec
 	rm -rf _local/bin _local/libexec
-	$(MAKE) install PREFIX=`realpath _local` EXEC_DIR=`realpath _local/bin` RID=$(RID)
+	make install PREFIX=`realpath _local` EXEC_DIR=`realpath _local/bin` RID=$(RID)
 
 # Do a local installation. Will need to be run as sudo.
 .PHONEY: install
@@ -122,18 +122,18 @@ install:
 	python3 scripts/mkbinnutmegc.py --install_dir=$(INSTALL_DIR) > $(EXEC_DIR)/nutmegc
 	chmod a+rx,a-w $(EXEC_DIR)/nutmeg
 	chmod a+rx,a-w $(EXEC_DIR)/nutmegc
-	$(MAKE) install-compiler
-	$(MAKE) install-runner RID=$(RID)
+	make install-compiler
+	make install-runner RID=$(RID)
 
 .PHONEY: install-compiler
 install-compiler:
-	$(MAKE) uninstall-compiler
+	makeuninstall-compiler
 	mkdir -p $(INSTALL_DIR)
 	( cd _build; tar cf - compiler ) | ( cd $(INSTALL_DIR); tar xf - )
 
 .PHONEY: install-runner
 install-runner:
-	$(MAKE) -p $(INSTALL_DIR)/runner
+	make -p $(INSTALL_DIR)/runner
 	( cd runner/NutmegRunner/bin/Debug/netcoreapp3.1/$(RID)/publish; tar cf - . ) | ( cd $(INSTALL_DIR)/runner; tar xf - )
 
 # Uninstall the application locally.
