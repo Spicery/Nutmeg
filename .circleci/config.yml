@@ -4,11 +4,6 @@ orbs:
   ### Orbs are basically libraries
   python: circleci/python@1.2.0
 
-### Use branch filter when testing changes to this file
-filters:
-  branches:
-    only: /v0\.1\/114*/
-
 ### TODO: Unit tests from Makefile, over project Docker image.
 
 jobs:
