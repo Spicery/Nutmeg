@@ -1,0 +1,26 @@
+HELP ADDLANGUAGE            Thu Feb  8, 1990            Steve Knight
+
+addlanguage( assoc-list );
+
+This package provides a friendly interface to the subsystem capabilities of
+Poplog.  It allows you to add a new programming language to Poplog with
+relative ease.
+
+The argument to addlanguage consists of an association list (see * ASSOC)
+with the following fields in any order.  Some fields are optional.
+
+[
+    [name               <word for subsystem>]
+    [compiler           <compiler for language>]
+    [top_level_name     <word for top-level subsystem>] ;;; optional
+    [top_level_compiler <compiler for top-level>]       ;;; optional
+    [file_ext           <file extension for VED>]
+    [prompt             <prompt for new language>]      ;;; optional
+    [reset              <procedure to run on setpop>]   ;;; optional
+]
+
+Note that some languages (eg. Prolog) are best defined in terms of an
+top-level, interactive mode and a compilation mode.  The addlanguage
+capability caters for this by allowing you to specify two compilers, one for
+each mode.  This means that immediate mode will use the top-level mode
+and ved_lmr will use the compilation mode.
