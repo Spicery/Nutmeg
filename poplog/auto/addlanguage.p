@@ -1,11 +1,12 @@
+compile_mode :pop11 +strict;
+section;
+
+include subsystem.ph;
+
+
 ;;; -- Adding a new language -----------------------------------------------
 
 uses subsystem;
-
-;;; Correct long-standing bug in subsystem
-if subscr_subsystem( 4, "pop11" ) = ':  ' then
-    ': ' -> subscr_subsystem( 4, "pop11" )
-endif;
 
 define lconstant procedure subsystem_exists( name ); lvars name;
     lvars ss;
@@ -17,33 +18,33 @@ define lconstant procedure subsystem_exists( name ); lvars name;
     return( false );
 enddefine;
 
-define set_ved_compiler( file_ext, comp ); lvars file_ext, comp;
+define set_ved_compiler( file_ext, name ); lvars file_ext, name;
     lvars i, v;
     for i in vedfiletypes do
         if i.islist
         and i(1) = file_ext
         and (i(2) ->> v).isvector
         and v.length = 2
-        and v(1) = "popcompiler"
+        and v(1) = "subsystem"
         then
-            comp -> v( 2 );         ;;; in-place update of vedfiletypes!
+            name -> v( 3 );         ;;; in-place update of vedfiletypes!
             return;
         endif;
     endfor;
-    [[^file_ext {popcompiler ^comp}] ^^vedfiletypes] -> vedfiletypes;
+    [[^file_ext {subsystem " ^name}] ^^vedfiletypes] -> vedfiletypes;
 enddefine;
 
 define lconstant procedure set_subsystem( name, comp, file_ext, prompt, reset );
     lvars name, comp, file_ext, prompt, reset;
     if subsystem_exists( name ) then
-        comp        -> subscr_subsystem( 2, name );
-        file_ext    -> subscr_subsystem( 3, name );
-        prompt      -> subscr_subsystem( 4, name );
-        reset       -> subscr_subsystem( 5, name );
+        comp        -> subscr_subsystem( SS_COMPILER, name );
+        file_ext    -> subscr_subsystem( SS_FILE_EXTN, name );
+        prompt      -> subscr_subsystem( SS_PROMPT, name );
+        reset       -> subscr_subsystem( SS_RESET, name );
     else
-        [[^name ^comp ^file_ext ^prompt ^reset] ^^sys_subsystem_table ] -> sys_subsystem_table;
+        subsystem_add_new( name, { ^comp ^reset }, file_ext, prompt, [], name.word_string );
     endif;
-    set_ved_compiler( file_ext, comp );
+    set_ved_compiler( file_ext, name );
     unless member( file_ext, vednonbreakfiles ) do
         [^file_ext ^^vednonbreakfiles] -> vednonbreakfiles;
     endunless;
@@ -60,13 +61,13 @@ define addlanguage( d ); lvars d;
 
     ;;; WARNING : lib subsystem asks us to always call cucharin!
 
-    define lvars procedure i_call_comp( cucharin ); dlocal cucharin;
+    define lvars procedure i_call_comp( source );
         dlocal popprompt = prompt;
         if is_in_ved_im() then
             top
         else
             comp
-        endif( cucharin )
+        endif( source )
     enddefine;
 
     define lvars procedure i_call_top( cucharin ); dlocal cucharin;
@@ -100,4 +101,4 @@ define macro language( name ); lvars name;
     'output' <> file_ext -> vedlmr_print_in_file;
 enddefine;
 
-;;; -------------------------------------------------------------------------
+endsection;

@@ -14,8 +14,8 @@ with the following fields in any order.  Some fields are optional.
     [compiler           <compiler for language>]
     [top_level_name     <word for top-level subsystem>] ;;; optional
     [top_level_compiler <compiler for top-level>]       ;;; optional
-    [file_ext           <file extension for VED>]
-    [prompt             <prompt for new language>]      ;;; optional
+    [file_ext           <file extension for VED, string incl the '.' prefix>]
+    [prompt             <prompt for new language, string>]      ;;; optional
     [reset              <procedure to run on setpop>]   ;;; optional
 ]
 
