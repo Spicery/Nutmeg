@@ -10,5 +10,7 @@ defclass Id {
     nameId
 };
 
+defclass Seq;
+
 
 endsection;

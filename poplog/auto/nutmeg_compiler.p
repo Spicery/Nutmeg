@@ -26,29 +26,46 @@ vars procedure punctuation_table =
         false, false
     );
 
-define read_expr();
+define try_read_expr();
     lvars item = readitem();
     if item == termin or punctuation_table( item ) then
-        mishap( 'Unexpected end of input', [ ^item ] )
+        false
     elseif item.isstring or item.isnumber then
-        [constant ^item]
+        consConstant( item )
     else
         lvars mini_parser = prefix_table( item );
         if mini_parser then
             mini_parser()
         else
-            [id ^item]
+            consId( item )
         endif
     endif;
 enddefine;
 
+define peekitem();
+    dlocal proglist;
+    readitem()
+enddefine;
+
+define read_ne_expr() -> e;
+    lvars item = peekitem();
+    lvars e = try_read_expr();
+    unless e do
+        if item == termin then
+            mishap( 'Unexpected end of input', [ ^item ] )
+        else
+            mishap( 'Unexpected item (missing expression?)', [ ^item ] )
+        endif
+    endunless;
+enddefine;
+
 define read_stmnt();
-    [%
+    consSeq(#|
         repeat
             read_expr();
             quitunless( pop11_try_nextreaditem([, ;]) )
         endrepeat
-    %]
+    |#)
 enddefine;
 
 define plant_expr( expr );
@@ -67,7 +84,7 @@ define procedure nutmeg_compiler( source );
     dlocal proglist_state = proglist_new_state(source);
     procedure();
         until null(proglist) do
-            lvars e = read_expr();
+            lvars e = read_ne_expr();
             plant_expr( e );
             sysEXECUTE();
         enduntil;

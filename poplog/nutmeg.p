@@ -20,6 +20,7 @@ extend_searchlist(
 ) -> vedhelplist;
 
 uses addlanguage
+uses nuttree
 uses nutmeg_compiler
 
 [
