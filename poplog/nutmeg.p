@@ -20,24 +20,14 @@ extend_searchlist(
 ) -> vedhelplist;
 
 uses addlanguage
-
-define procedure nutmeg_compiler( cucharin );
-    dlocal cucharin;
-    lvars ch;
-    for ch from_repeater cucharin do
-        ch =>
-    endfor
-enddefine;
-
-vars procedure nutmeg_reset = identfn;
-
+uses nutmeg_compiler
 
 [
     [ name       nutmeg ]
-    [ compiler   ^nutmeg_compiler ]
+    [ compiler   ^(procedure() with_nargs 1; nutmeg_compiler() endprocedure) ]
     [ file_ext   '.nutmeg' ]
     [ prompt     'o-/-\-> ' ]
-    [ reset      ^nutmeg_reset ]
+    [ reset      ^(procedure(); nutmeg_reset() endprocedure) ]
 ].addlanguage;
 
 
