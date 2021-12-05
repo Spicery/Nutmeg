@@ -24,12 +24,12 @@ extend_searchlist(
     vedhelplist
 ) -> vedhelplist;
 
-loadlib( "nuttree", popuseslist );
-loadlib( "nutmeg_parse", popuseslist );
-loadlib( "nutmeg_arity", popuseslist );
-loadlib( "nutmeg_resolve", popuseslist );
-loadlib( "nutmeg_compiler", popuseslist );
-loadlib( "nutmeg_reset", popuseslist );
+loadlib( "nuttree", vedsrclist );
+loadlib( "nutmeg_parse", vedsrclist );
+loadlib( "nutmeg_arity", vedsrclist );
+loadlib( "nutmeg_resolve", vedsrclist );
+loadlib( "nutmeg_compiler", vedsrclist );
+loadlib( "nutmeg_reset", vedsrclist );
 
 uses addlanguage
 
