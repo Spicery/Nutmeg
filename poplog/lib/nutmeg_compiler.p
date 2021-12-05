@@ -6,6 +6,9 @@ define plant_expr( expr );
     if expr.isConstant then
         sysPUSHQ( expr.valueConstant )
     elseif expr.isId then
+        lvars idref = resolve( expr );
+        sysPUSHQ( idref );
+        sysFIELD( 1, IdRef_key.class_spec, false );
         sysPUSHQ( [id ^(expr.nameId)] )
     elseif expr.isSeq then
         appdata( expr, plant_expr )

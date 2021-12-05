@@ -15,15 +15,21 @@ extend_searchlist(
 ) -> popuseslist;
 
 extend_searchlist(
+    nutmeg_directory dir_>< 'src',
+    vedsrclist
+) -> vedsrclist;
+
+extend_searchlist(
     nutmeg_directory dir_>< 'help',
     vedhelplist
 ) -> vedhelplist;
 
-uses nuttree
-uses read_expr
-uses arity
-uses nutmeg_compiler
-uses nutmeg_reset
+loadlib( "nuttree", popuseslist );
+loadlib( "nutmeg_parse", popuseslist );
+loadlib( "nutmeg_arity", popuseslist );
+loadlib( "nutmeg_resolve", popuseslist );
+loadlib( "nutmeg_compiler", popuseslist );
+loadlib( "nutmeg_reset", popuseslist );
 
 uses addlanguage
 
@@ -34,6 +40,5 @@ uses addlanguage
     [ prompt     'o-/-\-> ' ]
     [ reset      ^(procedure(); nutmeg_reset() endprocedure) ]
 ].addlanguage;
-
 
 endsection;
