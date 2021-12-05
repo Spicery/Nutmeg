@@ -19,9 +19,13 @@ extend_searchlist(
     vedhelplist
 ) -> vedhelplist;
 
-uses addlanguage
 uses nuttree
+uses read_expr
+uses arity
 uses nutmeg_compiler
+uses nutmeg_reset
+
+uses addlanguage
 
 [
     [ name       nutmeg ]
