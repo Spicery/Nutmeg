@@ -18,15 +18,13 @@ define plant_expr( expr );
         sysPOP( stack_count );
         plant_expr( expr.argsApply );
         sysCALL( "stacklength" );
-        sysPUSH( "stack_count" );
-        sysCALL( "fi_-" );
+        sysPUSH( stack_count );
+        sysCALL( "-" );
         plant_expr( expr.fnApply );
         sysCALLS( _ );
     else
         mishap( 'Do not know how to compile this', [ ^expr ] )
     endif;
-    sysPUSHQ( true );
-    sysCALL( "sysprarrow" );
 enddefine;
 
 ;;;
@@ -38,10 +36,14 @@ enddefine;
 define procedure nutmeg_compiler( source );
     dlocal proglist_state = proglist_new_state(source);
     procedure();
+        dlocal popnewline = true;
         until null(proglist) do
-            lvars e = read_ne_expr();
+            lvars e = read_expr();
             plant_expr( e );
+            sysPUSHQ( true );
+            sysCALL( "sysprarrow" );
             sysEXECUTE();
+            pop11_need_nextreaditem([, ; ^newline]) -> _;
         enduntil;
     endprocedure.sysCOMPILE;
 enddefine;
