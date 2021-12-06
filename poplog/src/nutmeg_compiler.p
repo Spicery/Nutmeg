@@ -8,8 +8,7 @@ define plant_expr( expr );
     elseif expr.isId then
         lvars idref = resolve( expr );
         sysPUSHQ( idref );
-        sysFIELD( 1, IdRef_key.class_spec, false );
-        sysPUSHQ( [id ^(expr.nameId)] )
+        sysFIELD( 1, IdRef_key.class_spec, false, false );
     elseif expr.isSeq then
         appdata( expr, plant_expr )
     elseif expr.isApply then

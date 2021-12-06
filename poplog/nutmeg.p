@@ -24,12 +24,14 @@ extend_searchlist(
     vedhelplist
 ) -> vedhelplist;
 
+uses dict
 loadlib( "nuttree", vedsrclist );
 loadlib( "nutmeg_parse", vedsrclist );
 loadlib( "nutmeg_arity", vedsrclist );
 loadlib( "nutmeg_resolve", vedsrclist );
 loadlib( "nutmeg_compiler", vedsrclist );
 loadlib( "nutmeg_reset", vedsrclist );
+loadlib( "nutmeg_builtins", vedsrclist );
 
 uses addlanguage
 
