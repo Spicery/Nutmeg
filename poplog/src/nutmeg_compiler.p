@@ -1,5 +1,9 @@
 compile_mode :pop11 +strict;
 
+uses $-nutmeg$-nutmeg_tree;
+uses $-nutmeg$-nutmeg_parse;
+uses $-nutmeg$-nutmeg_resolve;
+
 section $-nutmeg => nutmeg_compiler;
 
 define plant_expr( expr );
@@ -38,11 +42,13 @@ define procedure nutmeg_compiler( source );
     procedure();
         dlocal popnewline = true;
         until null(proglist) do
-            lvars e = read_expr();
-            plant_expr( e );
-            sysPUSHQ( true );
-            sysCALL( "sysprarrow" );
-            sysEXECUTE();
+            lvars e = read_optexpr();
+            if e then
+                plant_expr( e );
+                sysPUSHQ( true );
+                sysCALL( "sysprarrow" );
+                sysEXECUTE();
+            endif;
             pop11_need_nextreaditem([, ; ^newline]) -> _;
         enduntil;
     endprocedure.sysCOMPILE;

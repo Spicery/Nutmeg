@@ -1,5 +1,8 @@
 compile_mode :pop11 +strict;
 
+uses $-nutmeg$-nutmeg_arity;
+
+
 section $-nutmeg;
 
 define arity_expr( expr );

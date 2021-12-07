@@ -1,6 +1,8 @@
 compile_mode :pop11 +strict;
 
 uses dict
+uses $-nutmeg$-nutmeg_resolve;
+uses $-nutmeg$-arity_expr;
 
 section $-nutmeg;
 vars nutmeg_builtins = _;

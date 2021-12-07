@@ -26,10 +26,6 @@ extend_searchlist(
 
 uses dict
 
-uses $-nutmeg$-nutmeg_arity;
-uses $-nutmeg$-nutmeg_tree.p;
-uses $-nutmeg$-nutmeg_parse;
-uses $-nutmeg$-nutmeg_resolve;
 uses nutmeg_compiler;
 uses nutmeg_reset;
 uses $-nutmeg$-nutmeg_builtins;
