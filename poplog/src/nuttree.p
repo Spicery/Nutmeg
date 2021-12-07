@@ -30,4 +30,10 @@ defclass Apply {
 };
 vars procedure newApply = consApply;
 
+defclass Define {
+    formDefine,
+    bodyDefine
+};
+vars procedure newDefine = consDefine;
+
 endsection;

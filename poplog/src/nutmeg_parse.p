@@ -1,5 +1,7 @@
 compile_mode :pop11 +strict;
 
+uses int_parameters
+
 section $-nutmeg;
 
 vars procedure prefix_table =
@@ -9,6 +11,11 @@ vars procedure prefix_table =
         false, false
     );
 
+defclass PostfixEntry {
+    precedencePostfixEntry,
+    miniParserPostfixEntry
+};
+
 vars procedure postfix_table =
     newanyproperty(
         [], 8, 1, false,
@@ -16,7 +23,7 @@ vars procedure postfix_table =
         false, false
     );
 
-lconstant punctuation_list = [ , ; ) ];
+lconstant punctuation_list = [ , ; ) ^newline end enddef ];
 vars procedure punctuation_table =
     newanyproperty(
         maplist( punctuation_list, procedure( w ); [ ^w true ] endprocedure ),
@@ -31,7 +38,7 @@ define peekitem();
     readitem()
 enddefine;
 
-define try_read_expr();
+define try_read_expr( prec ) -> sofar;
     lvars item = peekitem();
     if item == termin or punctuation_table( item ) then
         false
@@ -47,11 +54,24 @@ define try_read_expr();
                 consId( item )
             endif
         endif
-    endif
+    endif -> sofar;
+    repeat
+        peekitem() -> item;
+        lvars postfix_entry = postfix_table( item );
+        quitunless( postfix_entry );
+        lvars p = postfix_entry.precedencePostfixEntry;
+        quitif( p > prec );
+        proglist.back -> proglist;
+        miniParserPostfixEntry( postfix_entry )( p, sofar, item ) -> sofar
+    endrepeat;
 enddefine;
 
-define read_ne_expr() -> e;
-    lvars e = try_read_expr();
+define read_optexpr() -> e;
+    try_read_expr( pop_max_int ) -> e
+enddefine;
+
+define read_expr() -> e;
+    lvars e = read_optexpr();
     unless e do
         lvars item = readitem();
         if item == termin then
@@ -62,21 +82,59 @@ define read_ne_expr() -> e;
     endunless;
 enddefine;
 
-define read_seq_ne_expr();
+define read_expr_seq();
     newSeq(#|
         repeat
-            lvars e = try_read_expr();
+            lvars e = try_read_expr( pop_max_int );
             quitunless( e );
             e;
-            quitunless( pop11_try_nextreaditem([, ;]) )
+            quitunless( pop11_try_nextreaditem([, ; ^newline]) )
         endrepeat
     |#)
 enddefine;
 
+define read_optexpr_seq();
+    newSeq(#|
+        repeat
+            lvars e = try_read_expr( pop_max_int );
+            if e then e endif;
+            quitunless( pop11_try_nextreaditem([, ; ^newline]) )
+        endrepeat
+    |#)
+enddefine;
+
+define read_stmnt_seq(popnewline);
+    dlocal popnewline;
+    read_optexpr_seq()
+enddefine;
+
+;;; -- def --------------------------------------------------------------------
+
+define def_prefix_parser();
+    lvars name = read_expr();
+    pop11_need_nextreaditem( ":" ) -> _;
+    lvars stmnts = read_stmnt_seq( true );
+    pop11_need_nextreaditem( [end enddef] ) -> _;
+    newDefine( name, stmnts )
+enddefine;
+def_prefix_parser -> prefix_table( "def" );
+
+
+;;; -- (-----------------------------------------------------------------------
+
 define parenthesis_prefix_parser();
-    read_seq_ne_expr();
-    pop11_need_nextreaditem(")") -> _;
+    dlocal popnewline = false;
+    read_expr_seq();
+    pop11_need_nextreaditem( ")" ) -> _;
 enddefine;
 parenthesis_prefix_parser -> prefix_table( "(" );
+
+define parenthesis_postfix_parser( prec, lhs, token );
+    dlocal popnewline = false;
+    lvars rhs = read_expr_seq();
+    pop11_need_nextreaditem( ")" ) -> _;
+    newApply( lhs, rhs )
+enddefine;
+consPostfixEntry( 10, parenthesis_postfix_parser ) -> postfix_table( "(" );
 
 endsection;
