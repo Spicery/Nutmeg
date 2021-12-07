@@ -1,8 +1,10 @@
 compile_mode :pop11 +strict;
 
+uses nutmeg_toplevel_print;
 uses $-nutmeg$-nutmeg_tree;
 uses $-nutmeg$-nutmeg_parse;
 uses $-nutmeg$-nutmeg_resolve;
+uses $-nutmeg$-nutmeg_builtins;
 
 section $-nutmeg => nutmeg_compiler;
 
@@ -13,6 +15,17 @@ vars procedure plant_table = (
         false, false
     )
 );
+
+;;; A list of lists.
+vars local_variables = [];
+
+define is_local( name );
+    lvars vs;
+    for vs in local_variables do
+        returnif( lmember( name, vs ) )( true )
+    endfor;
+    false
+enddefine;
 
 define plant_expr( expr );
     lvars p = plant_table( expr.datakey );
@@ -40,9 +53,14 @@ procedure( expr ) with_props plant_constant;
 endprocedure -> plant_table( Constant_key );
 
 procedure( expr ) with_props plant_id;
-    lvars idref = resolve( expr );
-    sysPUSHQ( idref );
-    sysFIELD( 1, IdRef_key.class_spec, false, false );
+    lvars name = expr.nameId;
+    if is_local( name ) then
+        sysPUSH( name )
+    else 
+        lvars idref = resolve( expr );
+        sysPUSHQ( idref );
+        sysFIELD( 1, IdRef_key.class_spec, false, false );
+    endif
 endprocedure -> plant_table( Id_key );
 
 procedure( expr ) with_props plant_seq;
@@ -62,6 +80,41 @@ procedure( expr ) with_props plant_apply;
     sysCALLS( _ );
 endprocedure -> plant_table( Apply_key );
 
+define dumpParams( args );
+    if args.isId then
+        args.nameId
+    elseif args.isSeq then
+        appdata( args, dumpParams )
+    endif        
+enddefine;
+
+define gatherParamsInReverse( args ) -> ( L, N );
+    #| args.dumpParams |# -> N;
+    nil;
+    repeat N times 
+        conspair() 
+    endrepeat -> L;
+enddefine;
+
+procedure( expr ) with_props plant_fn;
+    dlocal local_variables;
+    lvars name = expr.nameFn;
+    lvars ( params, N ) = expr.paramsFn.gatherParamsInReverse;
+    lvars N = length( params );
+    lvars body = expr.bodyFn;
+    sysPROCEDURE( name, N );
+    lvars a;
+    for a in params do
+        sysLVARS( a, 0 );
+        sysPOP( a );
+    endfor;
+    conspair( params, local_variables ) -> local_variables;
+    plant_expr( body );
+    sysPUSHQ( sysENDPROCEDURE() );
+    sysPUSHQ( N );
+    sysCALLQ( check_exact_arity );
+endprocedure -> plant_table( Fn_key );
+
 ;;;
 ;;; Here we use -proglist_state- and -proglist_new_state-, even though it is
 ;;; overkill, to convert various kinds of source into a character repeater.
@@ -70,6 +123,8 @@ endprocedure -> plant_table( Apply_key );
 ;;;
 define procedure nutmeg_compiler( source );
     dlocal proglist_state = proglist_new_state(source);
+    lvars itemiser = proglist.isdynamic;
+    item_chartype( `,`, itemiser ) -> item_chartype( `\\`, itemiser );
     dlocal pop_pr_quotes = true;
     procedure();
         dlocal popnewline = true;
@@ -77,8 +132,7 @@ define procedure nutmeg_compiler( source );
             lvars e = read_optexpr();
             if e then
                 plant_expr( e );
-                sysPUSHQ( true );
-                sysCALL( "sysprarrow" );
+                sysCALL( "nutmeg_toplevel_print" );
                 sysEXECUTE();
             endif;
             pop11_need_nextreaditem([, ; ^newline]) -> _;

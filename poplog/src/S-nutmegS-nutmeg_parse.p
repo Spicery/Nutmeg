@@ -53,6 +53,10 @@ define try_read_expr_prec( prec ) -> sofar;
             lvars mini_parser = prefix_table( item );
             if mini_parser then
                 mini_parser()
+            elseif punctuation_table( item ) then
+                mishap( 'Unexpected punctation while reading expression', [ ^item ] )
+            elseif postfix_table( item ) then
+                mishap( 'Missing expression before operator/keyword', [ ^item ] )
             else
                 newId( item )
             endif
@@ -60,6 +64,7 @@ define try_read_expr_prec( prec ) -> sofar;
     endif -> sofar;
     repeat
         peekitem() -> item;
+        ;;; TODO add special case for negative integer.
         lvars postfix_entry = postfix_table( item );
         quitunless( postfix_entry );
         lvars p = postfix_entry.precedencePostfixEntry;
@@ -69,12 +74,8 @@ define try_read_expr_prec( prec ) -> sofar;
     endrepeat;
 enddefine;
 
-define read_optexpr() -> e;
-    try_read_expr_prec( pop_max_int ) -> e
-enddefine;
-
-define read_expr() -> e;
-    lvars e = read_optexpr();
+define read_expr_prec( prec ) -> e;
+    lvars e = try_read_expr_prec( prec );
     unless e do
         lvars item = readitem();
         if item == termin then
@@ -83,6 +84,14 @@ define read_expr() -> e;
             mishap( 'Unexpected item (missing expression?)', [ ^item ] )
         endif
     endunless;
+enddefine;
+
+define read_optexpr() -> e;
+    try_read_expr_prec( pop_max_int ) -> e
+enddefine;
+
+define read_expr() -> e;
+    read_expr_prec( pop_max_int ) -> e
 enddefine;
 
 define read_expr_seq();
@@ -182,10 +191,31 @@ consPostfixEntry( 11, dot_postfix_parser ) -> postfix_table( "." );
 ;;; -- := ----------------------------------------------------------------------
 
 define bind_postfix_parser( prec, lhs, token );
-    lvars rhs = try_read_expr_prec( prec );
+    lvars rhs = read_expr_prec( prec );
     newBind( lhs, rhs )
 enddefine;
 consPostfixEntry( 990, bind_postfix_parser ) -> postfix_table( ":=" );
+
+;;; --- Arithmetic -------------------------------------------------------------
+
+define arith_postfix_parser( prec, lhs, token );
+    lvars rhs = read_expr_prec( prec );
+    newApply( newId( token ), newSeq(#| lhs, rhs |#) )
+enddefine;
+consPostfixEntry( 190, arith_postfix_parser ) -> postfix_table( "-" );
+
+;;; --- Nonfix -----------------------------------------------------------------
+
+procedure() with_props nonfix_prefix_parser;
+    lvars item = readitem();
+    if item.isword then
+        newId( item )
+    elseif item.isstring then
+        newId( consword( item ) )
+    else 
+        mishap( 'Word or string needed', [ ^item ] )
+    endif
+endprocedure -> prefix_table( "\" );
 
 
 endsection;

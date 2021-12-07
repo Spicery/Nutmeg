@@ -115,7 +115,27 @@ define Map( list, procedure fn );
 enddefine;
 add_info( Map, false ) -> nutmeg_valof( "Map" );
 
+;;; --- Zip --------------------------------------------------------------------
 
+define Zip( procedure p, list1, list2 );
+    [%
+        lvars i, j;
+        for i, j in list1, list2 do
+            p( i, j, 2 )
+        endfor
+    %]
+enddefine;
+add_info( Zip, false ) -> nutmeg_valof( "Zip" );
+
+;;; --- Tail -------------------------------------------------------------------
+
+;;; TODO: The name is incorrect
+add_info( tl, false ) -> nutmeg_valof( "Tail" );
+
+;;; --- Arithmetic -------------------------------------------------------------
+
+;;; TODO: the name is incorrect
+add_info( nonop -, false ) -> nutmeg_valof( "-" );
 
 endsection;
 
