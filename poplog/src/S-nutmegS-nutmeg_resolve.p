@@ -1,7 +1,7 @@
 compile_mode :pop11 +strict;
 
 section $-nutmeg => nutmeg_valof;
-
+vars nutmeg_resolve = _;
 
 defclass IdRef {
     contIdRef

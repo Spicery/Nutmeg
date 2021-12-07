@@ -1,6 +1,7 @@
 compile_mode :pop11 +strict;
 
 section $-nutmeg;
+vars nutmeg_arity = _;
 
 defclass Arity {
     isExactArity,

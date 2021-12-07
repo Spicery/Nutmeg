@@ -3,6 +3,7 @@ compile_mode :pop11 +strict;
 uses dict
 
 section $-nutmeg;
+vars nutmeg_builtins = _;
 
 define add_info( dict, p ) -> p;
     if dict.isprocedure then

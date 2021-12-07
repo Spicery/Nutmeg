@@ -5,6 +5,7 @@ uses int_parameters
 uses $-nutmeg$-newSingleValue;
 
 section $-nutmeg;
+vars nutmeg_parse = _;
 
 vars procedure prefix_table =
     newanyproperty(
