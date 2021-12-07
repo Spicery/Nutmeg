@@ -54,7 +54,7 @@ define try_read_expr( prec ) -> sofar;
             if mini_parser then
                 mini_parser()
             else
-                consId( item )
+                newId( item )
             endif
         endif
     endif -> sofar;
