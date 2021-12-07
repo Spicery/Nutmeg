@@ -36,7 +36,7 @@ uses addlanguage
     [ name       nutmeg ]
     [ compiler   ^(procedure() with_nargs 1; nutmeg_compiler() endprocedure) ]
     [ file_ext   '.nutmeg' ]
-    [ prompt     'o-/-\-> ' ]
+    [ prompt     'o-/-\\-> ' ]
     [ reset      ^(procedure(); nutmeg_reset() endprocedure) ]
 ].addlanguage;
 

@@ -14,13 +14,13 @@ vars procedure nutmeg_packages =
         false, false
     );
 
-define declare_name( name );
+define declare_name( name ) -> result;
     lvars idref = nutmeg_packages( name );
     if idref then
         idref
     else
         consIdRef( _ ) ->> nutmeg_packages( name );
-    endif
+    endif -> result;
 enddefine;
 
 define resolve_name( name );

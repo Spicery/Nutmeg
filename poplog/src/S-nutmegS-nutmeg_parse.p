@@ -41,7 +41,7 @@ define peekitem();
     readitem()
 enddefine;
 
-define try_read_expr( prec ) -> sofar;
+define try_read_expr_prec( prec ) -> sofar;
     lvars item = peekitem();
     if item == termin or punctuation_table( item ) then
         false
@@ -70,7 +70,7 @@ define try_read_expr( prec ) -> sofar;
 enddefine;
 
 define read_optexpr() -> e;
-    try_read_expr( pop_max_int ) -> e
+    try_read_expr_prec( pop_max_int ) -> e
 enddefine;
 
 define read_expr() -> e;
@@ -88,7 +88,7 @@ enddefine;
 define read_expr_seq();
     newSeq(#|
         repeat
-            lvars e = try_read_expr( pop_max_int );
+            lvars e = try_read_expr_prec( pop_max_int );
             quitunless( e );
             e;
             quitunless( pop11_try_nextreaditem([, ; ^newline]) )
@@ -99,7 +99,7 @@ enddefine;
 define read_optexpr_seq();
     newSeq(#|
         repeat
-            lvars e = try_read_expr( pop_max_int );
+            lvars e = try_read_expr_prec( pop_max_int );
             if e then e endif;
             quitunless( pop11_try_nextreaditem([, ; ^newline]) )
         endrepeat
@@ -145,11 +145,47 @@ enddefine;
 parenthesis_prefix_parser -> prefix_table( "(" );
 
 define parenthesis_postfix_parser( prec, lhs, token );
-    dlocal popnewline = false;
+    dlocal popnewline = false;;
     lvars rhs = read_expr_seq();
     pop11_need_nextreaditem( ")" ) -> _;
     newApply( lhs, rhs )
 enddefine;
 consPostfixEntry( 10, parenthesis_postfix_parser ) -> postfix_table( "(" );
+
+;;; -- . -----------------------------------------------------------------------
+
+define is_ordinary( word );
+    returnunless( word.isword )( false );
+    returnif( word.punctuation_table )( false );
+    returnif( word.postfix_table )( false );
+    returnif( word.prefix_table )( false );
+    true
+enddefine;
+
+define dot_postfix_parser( prec, lhs, token );
+    dlocal popnewline;
+    lvars name = readitem();
+    unless name.is_ordinary then    
+        mishap( 'Unexpected token following dot (.)', [ ^name ] )
+    endunless; 
+    if pop11_try_nextreaditem( "(" ) then
+        false -> popnewline;
+        lvars rhs = read_expr_seq();
+        pop11_need_nextreaditem( ")" ) -> _;
+        newApply( newId( name ), newSeq(#| lhs, rhs |#) )
+    else
+        newApply( newId( name ), lhs )
+    endif
+enddefine;
+consPostfixEntry( 11, dot_postfix_parser ) -> postfix_table( "." );
+
+;;; -- := ----------------------------------------------------------------------
+
+define bind_postfix_parser( prec, lhs, token );
+    lvars rhs = try_read_expr_prec( prec );
+    newBind( lhs, rhs )
+enddefine;
+consPostfixEntry( 990, bind_postfix_parser ) -> postfix_table( ":=" );
+
 
 endsection;

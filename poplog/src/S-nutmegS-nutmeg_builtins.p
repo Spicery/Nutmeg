@@ -100,7 +100,7 @@ add_info( ToInteger, false ) -> nutmeg_valof( "ToInteger" );
 ;;; --- Map
 
 ;;; TODO: This is almost certainly incorrect. We need Map to work over anything of type Series.
-define Map( procedure fn, list );
+define Map( list, procedure fn );
     lvars p = has_exact_arity( fn, 1 );
     if p then
         maplist( list, p )
