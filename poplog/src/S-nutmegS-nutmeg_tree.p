@@ -30,10 +30,23 @@ defclass Apply {
 };
 vars procedure newApply = consApply;
 
-defclass Define {
-    formDefine,
-    bodyDefine
+defclass Fn {
+    nameFn,
+    paramsFn,
+    bodyFn
 };
-vars procedure newDefine = consDefine;
+vars procedure newFn = consFn;
+
+defclass Bind {
+    patternBind,
+    valueBind
+};
+vars procedure newBind = consBind;
+
+
+defclass FixedArity {
+    arityFixedArity,
+    valueFixedArity
+};
 
 endsection;

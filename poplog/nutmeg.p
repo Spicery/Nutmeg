@@ -16,8 +16,8 @@ extend_searchlist(
 
 extend_searchlist(
     nutmeg_directory dir_>< 'src',
-    vedsrclist
-) -> vedsrclist;
+    popuseslist
+) -> popuseslist;
 
 extend_searchlist(
     nutmeg_directory dir_>< 'help',
@@ -25,13 +25,14 @@ extend_searchlist(
 ) -> vedhelplist;
 
 uses dict
-loadlib( "nuttree", vedsrclist );
-loadlib( "nutmeg_parse", vedsrclist );
-loadlib( "nutmeg_arity", vedsrclist );
-loadlib( "nutmeg_resolve", vedsrclist );
-loadlib( "nutmeg_compiler", vedsrclist );
-loadlib( "nutmeg_reset", vedsrclist );
-loadlib( "nutmeg_builtins", vedsrclist );
+
+uses $-nutmeg$-nutmeg_arity;
+uses $-nutmeg$-nutmeg_tree.p;
+uses $-nutmeg$-nutmeg_parse;
+uses $-nutmeg$-nutmeg_resolve;
+uses nutmeg_compiler;
+uses nutmeg_reset;
+uses $-nutmeg$-nutmeg_builtins;
 
 uses addlanguage
 

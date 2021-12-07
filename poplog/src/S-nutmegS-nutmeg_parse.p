@@ -2,6 +2,8 @@ compile_mode :pop11 +strict;
 
 uses int_parameters
 
+uses $-nutmeg$-newSingleValue;
+
 section $-nutmeg;
 
 vars procedure prefix_table =
@@ -111,11 +113,23 @@ enddefine;
 ;;; -- def --------------------------------------------------------------------
 
 define def_prefix_parser();
-    lvars name = read_expr();
+    lvars template = read_expr();
     pop11_need_nextreaditem( ":" ) -> _;
     lvars stmnts = read_stmnt_seq( true );
     pop11_need_nextreaditem( [end enddef] ) -> _;
-    newDefine( name, stmnts )
+    if template.isApply then
+        lvars fn = template.fnApply;
+        lvars args = template.argsApply;
+        if fn.isId then
+            newBind( fn, newFn( fn.nameId, args, stmnts ) )
+        else
+            mishap( 'Invalid function header', [% fn %] )
+        endif
+    elseif template.isId then
+        newBind( template, newSingleValue( stmnts ) )
+    else
+        mishap( 'Invalid def header', [ ^fn ] )
+    endif
 enddefine;
 def_prefix_parser -> prefix_table( "def" );
 
