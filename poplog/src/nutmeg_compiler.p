@@ -69,13 +69,19 @@ endprocedure -> plant_table( Seq_key );
 
 procedure( expr ) with_props plant_apply;
     dlocal pop_new_lvar_list;
-    lvars stack_count = sysNEW_LVAR();
-    sysCALL( "stacklength" );
-    sysPOP( stack_count );
-    plant_expr( expr.argsApply );
-    sysCALL( "stacklength" );
-    sysPUSH( stack_count );
-    sysCALL( "-" );
+    lvars args_arity = arity_expr( expr.argsApply );
+    if args_arity.isExactArity then
+        plant_expr( expr.argsApply );
+        sysPUSHQ( args_arity.countArity );
+    else
+        lvars stack_count = sysNEW_LVAR();
+        sysCALL( "stacklength" );
+        sysPOP( stack_count );
+        plant_expr( expr.argsApply );
+        sysCALL( "stacklength" );
+        sysPUSH( stack_count );
+        sysCALL( "-" );
+    endif;
     plant_expr( expr.fnApply );
     sysCALLS( _ );
 endprocedure -> plant_table( Apply_key );
