@@ -1,0 +1,11 @@
+
+DAY01_EXAMPLE_FILE := 'aoc/day01/example.txt'
+
+def puzzle( file_path ):
+    data := FilePath( file_path ).ReadLines.Select( ToInteger )
+    (\-).Zip( data, data.Tail ).Where( $( _ < 0 ) ).Length
+end
+
+def day01part1():
+    puzzle( DAY01_EXAMPLE_FILE )
+end

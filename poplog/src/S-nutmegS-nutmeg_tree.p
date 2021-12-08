@@ -11,7 +11,9 @@ vars procedure newConstant = consConstant;
 defclass Id {
     nameId
 };
-vars procedure newId = consId;
+define newId( name );
+    consId( name )
+enddefine;
 
 defclass Seq;
 lconstant empty_seq = consSeq(0);
@@ -44,6 +46,9 @@ defclass Bind {
 };
 vars procedure newBind = consBind;
 
+defclass Hole {
+};
+vars procedure newHole = consHole;
 
 defclass FixedArity {
     arityFixedArity,

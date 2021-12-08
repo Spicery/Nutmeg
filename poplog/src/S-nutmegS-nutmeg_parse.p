@@ -3,6 +3,7 @@ compile_mode :pop11 +strict;
 uses int_parameters
 
 uses $-nutmeg$-newSingleValue;
+uses $-nutmeg$-replace_holes;
 
 section $-nutmeg;
 vars nutmeg_parse = _;
@@ -144,7 +145,28 @@ enddefine;
 def_prefix_parser -> prefix_table( "def" );
 
 
-;;; -- (-----------------------------------------------------------------------
+
+;;; --- $( ---------------------------------------------------------------------
+
+procedure() with_props hole_prefix_parser;
+    newHole()
+endprocedure -> prefix_table( "_" );
+
+define dollar_prefix_parser() -> expr;
+    dlocal popnewline = false;
+    pop11_need_nextreaditem( "(" ) -> _;
+    lvars expr_with_holes = read_expr_seq();
+    lvars ( expr_without_holes, new_tmp_vars ) = replace_holes( expr_with_holes );
+    pop11_need_nextreaditem( ")" ) -> _;
+    newFn(
+        false, 
+        newSeq(#| applist( new_tmp_vars.rev, newId ) |#),
+        expr_without_holes
+    ) -> expr;
+enddefine;
+dollar_prefix_parser -> prefix_table( "$" );
+
+;;; --- (-----------------------------------------------------------------------
 
 define parenthesis_prefix_parser();
     dlocal popnewline = false;
@@ -198,11 +220,14 @@ consPostfixEntry( 990, bind_postfix_parser ) -> postfix_table( ":=" );
 
 ;;; --- Arithmetic -------------------------------------------------------------
 
-define arith_postfix_parser( prec, lhs, token );
+define infix_postfix_parser( prec, lhs, token );
     lvars rhs = read_expr_prec( prec );
     newApply( newId( token ), newSeq(#| lhs, rhs |#) )
 enddefine;
-consPostfixEntry( 190, arith_postfix_parser ) -> postfix_table( "-" );
+
+consPostfixEntry( 190, infix_postfix_parser ) -> postfix_table( "-" );
+
+consPostfixEntry( 570, infix_postfix_parser ) -> postfix_table( "<" );
 
 ;;; --- Nonfix -----------------------------------------------------------------
 

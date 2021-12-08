@@ -37,6 +37,7 @@ define add_info( dict, p ) -> p;
 enddefine;
 
 define has_exact_arity( p, count );
+    returnunless( p.pdprops.ispair )( false );
     lvars d = p.pdprops.back;
     lvars a = d( "arity" );
     if a.countArity == count and a.isExactArity then
@@ -97,10 +98,16 @@ define ToInteger( str );
 enddefine;
 add_info( ToInteger, false ) -> nutmeg_valof( "ToInteger" );
 
-;;; --- Map
+;;; --- Length -----------------------------------------------------------------
 
-;;; TODO: This is almost certainly incorrect. We need Map to work over anything of type Series.
-define Map( list, procedure fn );
+;;; TODO: This is almost certainly incorrect. We need Length to work over anything of type Series.
+add_info( length, false ) -> nutmeg_valof( "Length" );
+
+;;; --- Select -----------------------------------------------------------------
+
+;;; TODO: This is almost certainly incorrect. We need Select to work over anything of type Series.
+;;; TODO: Got to handle out-arity /= 1
+define Select( list, procedure fn );
     lvars p = has_exact_arity( fn, 1 );
     if p then
         maplist( list, p )
@@ -113,7 +120,30 @@ define Map( list, procedure fn );
         %]
     endif
 enddefine;
-add_info( Map, false ) -> nutmeg_valof( "Map" );
+add_info( Select, false ) -> nutmeg_valof( "Select" );
+
+;;; --- Where ------------------------------------------------------------------
+
+;;; TODO: Got to handle out-arity /= 1
+define Where( list, procedure fn );
+    lvars p = has_exact_arity( fn, 1 );
+    if p then
+        [% 
+            lvars i;
+            for i in list do
+                if p( i ) then i endif
+            endfor
+        %]
+    else
+        [%
+            lvars i;
+            for i in list do
+                if fn( i, 1 ) then i endif
+            endfor
+        %]
+    endif
+enddefine;
+add_info( Where, false ) -> nutmeg_valof( "Where" );
 
 ;;; --- Zip --------------------------------------------------------------------
 
@@ -136,6 +166,10 @@ add_info( tl, false ) -> nutmeg_valof( "Tail" );
 
 ;;; TODO: the name is incorrect
 add_info( nonop -, false ) -> nutmeg_valof( "-" );
+
+;;; --- Comparison -------------------------------------------------------------
+
+add_info( nonop <, false ) -> nutmeg_valof( "<" );
 
 endsection;
 
