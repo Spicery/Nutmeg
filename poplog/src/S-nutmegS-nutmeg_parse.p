@@ -225,7 +225,10 @@ define infix_postfix_parser( prec, lhs, token );
     newApply( newId( token ), newSeq(#| lhs, rhs |#) )
 enddefine;
 
-consPostfixEntry( 190, infix_postfix_parser ) -> postfix_table( "-" );
+consPostfixEntry( 190, infix_postfix_parser ) -> postfix_table( "+" );
+consPostfixEntry( 180, infix_postfix_parser ) -> postfix_table( "-" );
+consPostfixEntry( 180, infix_postfix_parser ) -> postfix_table( "*" );
+consPostfixEntry( 180, infix_postfix_parser ) -> postfix_table( "/" );
 
 consPostfixEntry( 570, infix_postfix_parser ) -> postfix_table( "<" );
 

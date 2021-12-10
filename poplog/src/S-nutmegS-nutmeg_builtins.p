@@ -147,15 +147,47 @@ add_info( Where, false ) -> nutmeg_valof( "Where" );
 
 ;;; --- Zip --------------------------------------------------------------------
 
-define Zip( procedure p, list1, list2 );
-    [%
-        lvars i, j;
-        for i, j in list1, list2 do
-            p( i, j, 2 )
-        endfor
-    %]
+define Zip( N );
+    if N == 3 then
+        lvars ( procedure p, list1, list2 ) = ();
+        [%
+            lvars i, j;
+            for i, j in list1, list2 do
+                p( i, j, 2 )
+            endfor
+        %]
+    elseif N == 2 then
+        lvars (procedure p, list) = ();
+        Select( list, p )
+    elseif N == 0 then  
+        ;;; Skip.
+    elseif N >= 1 then
+        lvars L = N - 1;
+        lvars lists = conslist( L );
+        lvars procedure p = ();
+        [%
+            repeat 
+                lvars a;
+                for a on lists do
+                    if a.front.null do
+                        _;              ;;; to ensure stack balances
+                        erasenum -> p;  ;;; force cleanup! And signal end of processing.
+                    else
+                        a.front.destpair -> a.front 
+                    endif
+                endfor;
+                p( L );                     ;;; call the procedure (or erasenum)
+                quitif( p == erasenum );    ;;; break if any list has exhausted
+            endrepeat 
+        %]
+    else
+        mishap( 'No arguments to Zip', [] )
+    endif
 enddefine;
-add_info( Zip, false ) -> nutmeg_valof( "Zip" );
+add_info(
+    ${ arity = newInexactArity( 1 ) }, 
+    Zip
+) -> nutmeg_valof( "Zip" );
 
 ;;; --- Tail -------------------------------------------------------------------
 
@@ -166,6 +198,20 @@ add_info( tl, false ) -> nutmeg_valof( "Tail" );
 
 ;;; TODO: the name is incorrect
 add_info( nonop -, false ) -> nutmeg_valof( "-" );
+add_info( nonop +, false ) -> nutmeg_valof( "+" );
+add_info( nonop /, false ) -> nutmeg_valof( "/" );
+add_info( nonop *, false ) -> nutmeg_valof( "*" );
+
+define Sum( N );
+    0;
+    repeat N times
+        nonop +()
+    endrepeat
+enddefine;
+add_info(
+    ${ arity = newInexactArity( 0 ) },
+    Sum
+) -> nutmeg_valof( "Sum" );
 
 ;;; --- Comparison -------------------------------------------------------------
 

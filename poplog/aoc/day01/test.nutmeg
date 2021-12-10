@@ -1,11 +1,26 @@
 
+DAY01_INPUT_FILE := 'aoc/day01/input'
 DAY01_EXAMPLE_FILE := 'aoc/day01/example.txt'
 
-def puzzle( file_path ):
-    data := FilePath( file_path ).ReadLines.Select( ToInteger )
+def readInput( file_path ):
+    FilePath( file_path ).ReadLines.Select( ToInteger )
+end
+
+def part1( data ):
     (\-).Zip( data, data.Tail ).Where( $( _ < 0 ) ).Length
 end
 
 def day01part1():
-    puzzle( DAY01_EXAMPLE_FILE )
+    input := readInput( DAY01_INPUT_FILE )
+    part1( input )
+end
+
+
+def part2( data ):
+    part1( Sum.Zip( data, data.Tail, data.Tail.Tail ) )
+end
+
+def day01part2():
+    input := readInput( DAY01_INPUT_FILE )
+    part2( input )
 end
