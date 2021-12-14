@@ -127,25 +127,45 @@ procedure( expr ) with_props plant_fn;
     sysCALLQ( check_exact_arity );
 endprocedure -> plant_table( Fn_key );
 
+define switch_failure( item );
+    mishap( 'No matching case in switch expression', [ ^item ] )
+enddefine;
+
 procedure( expr ) with_props plant_switch;
     dlocal pop_new_lvar_list;
     lvars tmp = sysNEW_LVAR();
     plant_expr( expr.selectorSwitch );
     sysPOP( tmp );
     lvars endswitch_label = sysNEW_LABEL();
+    lvars pending_fallthru_labels = [];
     lvars ct;
     for ct in expr.caseThenListSwitch do
         plant_expr( ct.predicateCaseThen );
         sysPUSH( tmp );
         sysCALL( "=" );
-        lvars next_case_label = sysNEW_LABEL();
-        sysIFNOT( next_case_label );
-        plant_expr( ct.actionCaseThen );
-        sysGOTO( endswitch_label );
-        sysLABEL( next_case_label );
+        lvars a = ct.actionCaseThen;
+        if a.isFallThru then
+            lvars fallthru_lab = sysNEW_LABEL();
+            conspair( fallthru_lab, pending_fallthru_labels ) -> pending_fallthru_labels;
+            sysIFSO( fallthru_lab );
+        else
+            lvars next_case_label = sysNEW_LABEL();
+            sysIFNOT( next_case_label );
+            lvars lab;
+            for lab in pending_fallthru_labels do
+                sysLABEL( lab )
+            endfor;
+            [] -> pending_fallthru_labels;
+            plant_expr( a );
+            sysGOTO( endswitch_label );
+            sysLABEL( next_case_label );
+        endif;
     endfor;
     if expr.elseSwitch then
         plant_expr( expr.elseSwitch )
+    else
+        sysPUSHQ( tmp );
+        sysCALLQ( switch_failure )
     endif;
     sysLABEL( endswitch_label );
 endprocedure -> plant_table( Switch_key );

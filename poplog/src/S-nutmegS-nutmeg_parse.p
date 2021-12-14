@@ -106,28 +106,48 @@ define read_expr_seq();
     |#)
 enddefine;
 
-define read_optexpr_seq();
+define read_optexpr_seq_helper() -> ( expr, non_empty );
+    false -> non_empty;
     newSeq(#|
         repeat
             lvars e = try_read_expr_prec( pop_max_int );
-            if e then e endif;
+            if e then 
+                true -> non_empty;
+                e 
+            endif;
             quitunless( pop11_try_nextreaditem([, ; ^newline]) )
         endrepeat
-    |#)
+    |#) -> expr
+enddefine;
+
+define read_optexpr_seq();
+    read_optexpr_seq_helper().erase
 enddefine;
 
 define read_stmnt_seq(popnewline);
     dlocal popnewline;
-    read_optexpr_seq()
+    lvars ( expr, non_empty ) = read_optexpr_seq_helper();
+    if non_empty then
+        expr
+    else
+        mishap( 'Missing statements', [] )
+    endif
 enddefine;
 
+;;; --- handy constants
+
+lconstant end_list = [end];
+
 ;;; -- def --------------------------------------------------------------------
+
+
+lconstant def_end_list = [ enddef ^^end_list ];
 
 define def_prefix_parser();
     lvars template = read_expr();
     pop11_need_nextreaditem( ":" ) -> _;
     lvars stmnts = read_stmnt_seq( true );
-    pop11_need_nextreaditem( [end enddef] ) -> _;
+    pop11_need_nextreaditem( def_end_list ) -> _;
     if template.isApply then
         lvars fn = template.fnApply;
         lvars args = template.argsApply;
@@ -146,12 +166,14 @@ def_prefix_parser -> prefix_table( "def" );
 
 ;;; --- switch -----------------------------------------------------------------
 
+lconstant switch_end_list = [ switch ^^end_list ];
+
 define switch_prefix_parser();
     dlocal popnewline = false;
     lvars selector_expr = newSingleValue( read_expr() );
     lvars cases_exprs = new_list_builder();
     lvars else_expr = false;
-    until pop11_try_nextreaditem( [ end endswitch ] ) do
+    until pop11_try_nextreaditem( switch_end_list ) do
         if pop11_try_nextreaditem( "else" ) then
             pop11_try_nextreaditem( ":" ) -> _;
             if else_expr then
@@ -161,12 +183,13 @@ define switch_prefix_parser();
         else
             pop11_need_nextreaditem( "case" ) -> _;
             lvars c_predicate = newSingleValue( read_expr() );
-            lvars item = pop11_need_nextreaditem( [then :] );
-            if item == "then" then  
-                pop11_try_nextreaditem( ":" ) -> _;
-            endif;
-            lvars c_action = read_stmnt_seq( true );
-            cases_exprs( newCaseThen( c_predicate, c_action) )
+            if nextreaditem() == "case" then
+                cases_exprs( newCaseThen( c_predicate, FallThru ) )
+            else
+                lvars item = pop11_need_nextreaditem( [then :] );
+                lvars c_action = read_stmnt_seq( true );
+                cases_exprs( newCaseThen( c_predicate, c_action) )
+            endif
         endif
     enduntil;
     newSwitch( selector_expr, cases_exprs.list_builder_newlist, else_expr )
@@ -273,5 +296,10 @@ procedure() with_props nonfix_prefix_parser;
     endif
 endprocedure -> prefix_table( "\" );
 
+;;; --- skip -------------------------------------------------------------------
+
+procedure() with_props skip_prefix_parser;
+    newSeq( 0 )
+endprocedure -> prefix_table( "skip" );
 
 endsection;
