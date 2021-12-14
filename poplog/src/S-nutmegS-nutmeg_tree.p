@@ -55,4 +55,17 @@ defclass FixedArity {
     valueFixedArity
 };
 
+defclass CaseThen {
+    predicateCaseThen,
+    actionCaseThen
+};
+vars procedure newCaseThen = consCaseThen;
+
+defclass Switch {
+    selectorSwitch,
+    caseThenListSwitch,
+    elseSwitch
+};
+vars procedure newSwitch = consSwitch;
+
 endsection;

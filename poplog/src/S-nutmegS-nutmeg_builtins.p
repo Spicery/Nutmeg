@@ -42,7 +42,7 @@ define has_exact_arity( p, count );
     lvars a = d( "arity" );
     if a.countArity == count and a.isExactArity then
         d( "arityChecked" )
-    else    
+    else
         false
     endif
 enddefine;
@@ -92,7 +92,7 @@ define ToInteger( str );
     lvars n = strnumber( str );
     if n.isintegral then
         n
-    else    
+    else
         mishap( 'String is not an integer (radix 10)', [ ^str ] )
     endif
 enddefine;
@@ -128,7 +128,7 @@ add_info( Select, false ) -> nutmeg_valof( "Select" );
 define Where( list, procedure fn );
     lvars p = has_exact_arity( fn, 1 );
     if p then
-        [% 
+        [%
             lvars i;
             for i in list do
                 if p( i ) then i endif
@@ -159,40 +159,54 @@ define Zip( N );
     elseif N == 2 then
         lvars (procedure p, list) = ();
         Select( list, p )
-    elseif N == 0 then  
+    elseif N == 0 then
         ;;; Skip.
     elseif N >= 1 then
         lvars L = N - 1;
         lvars lists = conslist( L );
         lvars procedure p = ();
         [%
-            repeat 
+            repeat
                 lvars a;
                 for a on lists do
                     if a.front.null do
                         _;              ;;; to ensure stack balances
                         erasenum -> p;  ;;; force cleanup! And signal end of processing.
                     else
-                        a.front.destpair -> a.front 
+                        a.front.destpair -> a.front
                     endif
                 endfor;
                 p( L );                     ;;; call the procedure (or erasenum)
                 quitif( p == erasenum );    ;;; break if any list has exhausted
-            endrepeat 
+            endrepeat
         %]
     else
         mishap( 'No arguments to Zip', [] )
     endif
 enddefine;
 add_info(
-    ${ arity = newInexactArity( 1 ) }, 
+    ${ arity = newInexactArity( 1 ) },
     Zip
 ) -> nutmeg_valof( "Zip" );
 
-;;; --- Tail -------------------------------------------------------------------
+
+;;; --- Split ------------------------------------------------------------------
+
+define Split( string );
+    split_by_spaces( string, false, conslist )
+enddefine;
+add_info(
+    Split,
+    false
+) -> nutmeg_valof( "Split" );
+
+;;; --- Head, Tail & IsEmpty ---------------------------------------------------
+;;; Consider First, Rest and Last. IsEmpty is fine, I think.
 
 ;;; TODO: The name is incorrect
 add_info( tl, false ) -> nutmeg_valof( "Tail" );
+add_info( hd, false ) -> nutmeg_valof( "Head" );
+add_info( null, false ) -> nutmeg_valof( "IsEmpty" );
 
 ;;; --- Arithmetic -------------------------------------------------------------
 
@@ -202,7 +216,7 @@ add_info( nonop +, false ) -> nutmeg_valof( "+" );
 add_info( nonop /, false ) -> nutmeg_valof( "/" );
 add_info( nonop *, false ) -> nutmeg_valof( "*" );
 
-define Sum( N );
+define SumOf( N );
     0;
     repeat N times
         nonop +()
@@ -210,12 +224,24 @@ define Sum( N );
 enddefine;
 add_info(
     ${ arity = newInexactArity( 0 ) },
-    Sum
+    SumOf
+) -> nutmeg_valof( "SumOf" );
+
+define Sum( L );
+    if L.islist then 
+        applist( 0, L, nonop + )
+    else
+        mishap( 'Series needed', [^L] )
+    endif
+enddefine;
+add_info(
+    Sum,
+    false
 ) -> nutmeg_valof( "Sum" );
 
 ;;; --- Comparison -------------------------------------------------------------
 
 add_info( nonop <, false ) -> nutmeg_valof( "<" );
+add_info( nonop =, false ) -> nutmeg_valof( "==" );
 
 endsection;
-

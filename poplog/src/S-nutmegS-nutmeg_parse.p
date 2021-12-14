@@ -27,7 +27,7 @@ vars procedure postfix_table =
         false, false
     );
 
-lconstant punctuation_list = [ , ; ) ^newline end enddef ];
+lconstant punctuation_list = [ , ; ) ^newline end enddef endswitch case then else ];
 vars procedure punctuation_table =
     newanyproperty(
         maplist( punctuation_list, procedure( w ); [ ^w true ] endprocedure ),
@@ -144,7 +144,34 @@ define def_prefix_parser();
 enddefine;
 def_prefix_parser -> prefix_table( "def" );
 
+;;; --- switch -----------------------------------------------------------------
 
+define switch_prefix_parser();
+    dlocal popnewline = false;
+    lvars selector_expr = newSingleValue( read_expr() );
+    lvars cases_exprs = new_list_builder();
+    lvars else_expr = false;
+    until pop11_try_nextreaditem( [ end endswitch ] ) do
+        if pop11_try_nextreaditem( "else" ) then
+            pop11_try_nextreaditem( ":" ) -> _;
+            if else_expr then
+                mishap( 'Multiple else clauses in switch expression', [] )
+            endif;
+            read_stmnt_seq( true ) -> else_expr
+        else
+            pop11_need_nextreaditem( "case" ) -> _;
+            lvars c_predicate = newSingleValue( read_expr() );
+            lvars item = pop11_need_nextreaditem( [then :] );
+            if item == "then" then  
+                pop11_try_nextreaditem( ":" ) -> _;
+            endif;
+            lvars c_action = read_stmnt_seq( true );
+            cases_exprs( newCaseThen( c_predicate, c_action) )
+        endif
+    enduntil;
+    newSwitch( selector_expr, cases_exprs.list_builder_newlist, else_expr )
+enddefine;
+switch_prefix_parser -> prefix_table( "switch" );
 
 ;;; --- $( ---------------------------------------------------------------------
 
@@ -159,14 +186,14 @@ define dollar_prefix_parser() -> expr;
     lvars ( expr_without_holes, new_tmp_vars ) = replace_holes( expr_with_holes );
     pop11_need_nextreaditem( ")" ) -> _;
     newFn(
-        false, 
+        false,
         newSeq(#| applist( new_tmp_vars.rev, newId ) |#),
         expr_without_holes
     ) -> expr;
 enddefine;
 dollar_prefix_parser -> prefix_table( "$" );
 
-;;; --- (-----------------------------------------------------------------------
+;;; --- ( ----------------------------------------------------------------------
 
 define parenthesis_prefix_parser();
     dlocal popnewline = false;
@@ -196,9 +223,9 @@ enddefine;
 define dot_postfix_parser( prec, lhs, token );
     dlocal popnewline;
     lvars name = readitem();
-    unless name.is_ordinary then    
+    unless name.is_ordinary then
         mishap( 'Unexpected token following dot (.)', [ ^name ] )
-    endunless; 
+    endunless;
     if pop11_try_nextreaditem( "(" ) then
         false -> popnewline;
         lvars rhs = read_expr_seq();
@@ -231,6 +258,7 @@ consPostfixEntry( 180, infix_postfix_parser ) -> postfix_table( "*" );
 consPostfixEntry( 180, infix_postfix_parser ) -> postfix_table( "/" );
 
 consPostfixEntry( 570, infix_postfix_parser ) -> postfix_table( "<" );
+consPostfixEntry( 580, infix_postfix_parser ) -> postfix_table( "==" );
 
 ;;; --- Nonfix -----------------------------------------------------------------
 
@@ -240,7 +268,7 @@ procedure() with_props nonfix_prefix_parser;
         newId( item )
     elseif item.isstring then
         newId( consword( item ) )
-    else 
+    else
         mishap( 'Word or string needed', [ ^item ] )
     endif
 endprocedure -> prefix_table( "\" );

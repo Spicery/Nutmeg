@@ -1,0 +1,45 @@
+
+DAY02_INPUT_FILE := 'aoc/day02/input'
+DAY02_EXAMPLE_FILE := 'aoc/day02/example'
+
+def readInput( file_path ):
+    FilePath( file_path ).ReadLines.Select( Split )
+end
+
+def sumWhere( L, token ):
+    L.Where( $( _.Head == token ) ).Select( $( _.Tail.Head.ToInteger ) ).Sum
+end
+
+def part1( data ):
+    fwd := data.sumWhere( 'forward' )
+    dwn := data.sumWhere( 'down' )
+    up := data.sumWhere( 'up' )
+    fwd * ( dwn - up )
+end
+
+def day02part1():
+    input := readInput( DAY02_INPUT_FILE )
+    part1( input )
+end
+
+def part2( data ):
+    var x := 0
+    var d := 0
+    var aim := 0
+    for p in data:
+        n := p.Tail.Head.ToInteger
+        switch p.Head
+        case 'forward':
+            x <- $$_ + n
+            d <- $$ + n * aim
+        case 'up':
+            aim <- $$ - n
+        case 'down':
+            aim <- $$ + n
+        end
+    end
+    return( x * d )
+end
+
+def day01part2():
+end

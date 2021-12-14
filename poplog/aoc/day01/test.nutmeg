@@ -15,9 +15,8 @@ def day01part1():
     part1( input )
 end
 
-
 def part2( data ):
-    part1( Sum.Zip( data, data.Tail, data.Tail.Tail ) )
+    part1( SumOf.Zip( data, data.Tail, data.Tail.Tail ) )
 end
 
 def day01part2():

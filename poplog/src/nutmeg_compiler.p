@@ -94,12 +94,18 @@ define dumpParams( args );
     endif        
 enddefine;
 
+define consrevlist( N );
+    if N <= 0 then
+        nil
+    else
+        lvars h = ();
+        lvars t = consrevlist( N - 1 );
+        conspair( h, t )
+    endif
+enddefine;
+
 define gatherParamsInReverse( args ) -> ( L, N );
-    #| args.dumpParams |# -> N;
-    nil;
-    repeat N times 
-        conspair() 
-    endrepeat -> L;
+    consrevlist(#| args.dumpParams |# ->> N) -> L
 enddefine;
 
 procedure( expr ) with_props plant_fn;
@@ -120,6 +126,29 @@ procedure( expr ) with_props plant_fn;
     sysPUSHQ( N );
     sysCALLQ( check_exact_arity );
 endprocedure -> plant_table( Fn_key );
+
+procedure( expr ) with_props plant_switch;
+    dlocal pop_new_lvar_list;
+    lvars tmp = sysNEW_LVAR();
+    plant_expr( expr.selectorSwitch );
+    sysPOP( tmp );
+    lvars endswitch_label = sysNEW_LABEL();
+    lvars ct;
+    for ct in expr.caseThenListSwitch do
+        plant_expr( ct.predicateCaseThen );
+        sysPUSH( tmp );
+        sysCALL( "=" );
+        lvars next_case_label = sysNEW_LABEL();
+        sysIFNOT( next_case_label );
+        plant_expr( ct.actionCaseThen );
+        sysGOTO( endswitch_label );
+        sysLABEL( next_case_label );
+    endfor;
+    if expr.elseSwitch then
+        plant_expr( expr.elseSwitch )
+    endif;
+    sysLABEL( endswitch_label );
+endprocedure -> plant_table( Switch_key );
 
 ;;;
 ;;; Here we use -proglist_state- and -proglist_new_state-, even though it is
