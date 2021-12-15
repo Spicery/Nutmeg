@@ -16,17 +16,6 @@ vars procedure plant_table = (
     )
 );
 
-;;; A list of lists.
-vars local_variables = [];
-
-define is_local( name );
-    lvars vs;
-    for vs in local_variables do
-        returnif( lmember( name, vs ) )( true )
-    endfor;
-    false
-enddefine;
-
 define plant_expr( expr );
     lvars p = plant_table( expr.datakey );
     if p then   
@@ -40,13 +29,35 @@ procedure( expr ) with_props plant_binding;
     plant_expr( expr.valueBind );
     lvars pattern = expr.patternBind;
     if pattern.isId then
-        lvars idref = declare_name( pattern.nameId );
-        sysPUSHQ( idref );
-        sysUFIELD( 1, IdRef_key.class_spec, false, false );
+        if pattern.isLocalId then
+            sysLVARS( pattern.nameId, 0 );
+            sysPOP( pattern.nameId );
+        else
+            lvars idref = pattern.idRefId;
+            sysPUSHQ( idref );
+            sysUFIELD( 1, IdRef_key.class_spec, false, false );
+        endif
     else 
         mishap( 'Only simple identifiers supported at the moment', [ ^pattern ] )   
     endif
 endprocedure -> plant_table( Bind_key );
+
+
+procedure( expr ) with_props plant_assign;
+    plant_expr( expr.sourceAssign );
+    lvars target = expr.targetAssign;
+    if target.isId then
+        if target.isLocalId then
+            sysPOP( target.nameId );
+        else
+            lvars idref = target.idRefId;
+            sysPUSHQ( idref );
+            sysUFIELD( 1, IdRef_key.class_spec, false, false );
+        endif
+    else 
+        mishap( 'Assignment is limited to simple identifiers at the moment', [ ^target ] )   
+    endif
+endprocedure -> plant_table( Assign_key );
 
 procedure( expr ) with_props plant_constant;
     sysPUSHQ( expr.valueConstant )
@@ -54,10 +65,10 @@ endprocedure -> plant_table( Constant_key );
 
 procedure( expr ) with_props plant_id;
     lvars name = expr.nameId;
-    if is_local( name ) then
+    if expr.isLocalId then
         sysPUSH( name )
     else 
-        lvars idref = resolve( expr );
+        lvars idref = expr.idRefId;
         sysPUSHQ( idref );
         sysFIELD( 1, IdRef_key.class_spec, false, false );
     endif
@@ -109,7 +120,6 @@ define gatherParamsInReverse( args ) -> ( L, N );
 enddefine;
 
 procedure( expr ) with_props plant_fn;
-    dlocal local_variables;
     lvars name = expr.nameFn;
     lvars ( params, N ) = expr.paramsFn.gatherParamsInReverse;
     lvars N = length( params );
@@ -120,7 +130,6 @@ procedure( expr ) with_props plant_fn;
         sysLVARS( a, 0 );
         sysPOP( a );
     endfor;
-    conspair( params, local_variables ) -> local_variables;
     plant_expr( body );
     sysPUSHQ( sysENDPROCEDURE() );
     sysPUSHQ( N );
@@ -186,6 +195,7 @@ define procedure nutmeg_compiler( source );
         until null(proglist) do
             lvars e = read_optexpr();
             if e then
+                nutmeg_resolve( e );
                 plant_expr( e );
                 sysCALL( "nutmeg_toplevel_print" );
                 sysEXECUTE();

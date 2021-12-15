@@ -268,6 +268,12 @@ define bind_postfix_parser( prec, lhs, token );
 enddefine;
 consPostfixEntry( 990, bind_postfix_parser ) -> postfix_table( ":=" );
 
+define assign_postfix_parser( prec, lhs, token );
+    lvars rhs = read_expr_prec( prec );
+    newAssign( lhs, rhs )  
+enddefine;
+consPostfixEntry( 990, assign_postfix_parser ) -> postfix_table( "<-" );
+
 ;;; --- Arithmetic -------------------------------------------------------------
 
 define infix_postfix_parser( prec, lhs, token );

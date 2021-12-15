@@ -9,10 +9,13 @@ defclass Constant {
 vars procedure newConstant = consConstant;
 
 defclass Id {
-    nameId
+    nameId,
+    isLocalId,
+    isAssignableId,
+    idRefId
 };
 define newId( name );
-    consId( name )
+    consId( name, true, true, _ )
 enddefine;
 
 defclass Seq;
@@ -71,6 +74,12 @@ defclass Bind {
     valueBind
 };
 vars procedure newBind = consBind;
+
+defclass Assign {
+    targetAssign,
+    sourceAssign
+};
+vars procedure newAssign = consAssign;
 
 defclass Hole {
 };
