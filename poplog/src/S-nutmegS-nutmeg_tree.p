@@ -8,15 +8,59 @@ defclass Constant {
 };
 vars procedure newConstant = consConstant;
 
+defclass LocalData {
+    isOuterLocalData
+};
+
 defclass Id {
     nameId,
     isLocalId,
+    localDataId,
     isAssignableId,
     idRefId
 };
 define newId( name );
-    consId( name, true, false, _ )
+    consId( name, true, false, false, _ )
 enddefine;
+
+define hasNonLocalRefToId( id );
+    lvars ld = id.localDataId;
+    if ld then
+        ld.isOuterLocalData
+    else
+        false
+    endif
+enddefine;
+
+define updaterof hasNonLocalRefToId( bool, id );
+    unless id.localDataId do
+        consLocalData( false ) -> id.localDataId;
+    endunless;
+    bool -> id.localDataId.isOuterLocalData;
+enddefine;
+
+define shareLocalDataId( parent, child );
+    unless parent.localDataId do
+        consLocalData( false ) -> parent.localDataId;
+    endunless;
+    parent.localDataId -> child.localDataId
+enddefine;
+
+procedure( id ) with_props printId;
+    if id.isLocalId then
+        cucharout( '<' );
+        if id.hasNonLocalRefToId then
+            cucharout( 'Non' )
+        endif; 
+        cucharout( 'Local ' );
+        appdata( id.nameId, cucharout );
+        cucharout( '>' )
+    else
+        cucharout( '<Global ' );
+        appdata( id.nameId, cucharout );
+        cucharout( '>' )        
+    endif 
+endprocedure -> class_print( Id_key );
 
 defclass Seq;
 lconstant empty_seq = consSeq(0);
@@ -105,5 +149,17 @@ vars procedure newSwitch = consSwitch;
 
 defclass FallThru;
 vars FallThru = consFallThru( 0 );
+
+defclass In {
+    idIn,
+    valueIn
+};
+vars procedure newIn = consIn;
+
+defclass For {
+    queryFor,
+    bodyFor
+};
+vars procedure newFor = consFor;
 
 endsection;

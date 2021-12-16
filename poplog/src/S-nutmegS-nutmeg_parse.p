@@ -322,7 +322,7 @@ consPostfixEntry( 180, infix_postfix_parser ) -> postfix_table( "/" );
 consPostfixEntry( 570, infix_postfix_parser ) -> postfix_table( "<" );
 consPostfixEntry( 580, infix_postfix_parser ) -> postfix_table( "==" );
 
-;;; --- Nonfix -----------------------------------------------------------------
+;;; --- \ (Nonfix) -------------------------------------------------------------
 
 procedure() with_props nonfix_prefix_parser;
     lvars item = readitem();
@@ -335,10 +335,45 @@ procedure() with_props nonfix_prefix_parser;
     endif
 endprocedure -> prefix_table( "\" );
 
-;;; --- skip -------------------------------------------------------------------
+;;; --- pass -------------------------------------------------------------------
 
-procedure() with_props skip_prefix_parser;
+procedure() with_props pass_prefix_parser;
     newSeq( 0 )
-endprocedure -> prefix_table( "skip" );
+endprocedure -> prefix_table( "pass" );
+
+;;; --- for --------------------------------------------------------------------
+;;; ForExpression ::= 'for' Query ('do'|':') Statements ('end'|'endfor')
+;;; Query ::= Pattern 'in' expression
+
+lconstant do_colon = [ : do ];
+
+define in_postfix_parser( prec, lhs, item );
+    if lhs.isId then
+        lvars rhs = read_expr();
+        newIn( lhs, rhs )
+    else
+        mishap( 'Only single-variable patterns supported at the moment', [ ^lhs ] )
+    endif
+enddefine;
+consPostfixEntry( 910, in_postfix_parser ) -> postfix_table( "in" );
+
+define read_query();
+    lvars e = read_expr();
+    if e.isIn then
+        e
+    else
+        mishap( 'Loop query needed', [ ^e ] )
+    endif
+enddefine;
+
+lconstant for_end_list = [ endfor ^^end_list ];
+
+procedure() with_props for_prefix_parser;
+    lvars e = read_query();
+    pop11_need_nextreaditem( do_colon ) -> _;
+    lvars s = read_stmnt_seq( true );
+    pop11_need_nextreaditem( for_end_list ) -> _;
+    newFor( e, s )
+endprocedure -> prefix_table( "for" );
 
 endsection;

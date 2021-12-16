@@ -92,23 +92,32 @@ define checkUndeclaredInScope( id, scope );
 enddefine;
 
 define resolveIdInScope( id, scope );
-    if scope.isGlobalScope then
-        ;;; It is a global variable.
-        false -> id.isLocalId;
-        false -> id.isAssignableId;
-        declareInGlobalScope( id, scope )
-    elseif scope.isLocalScope then
-        lvars declared_id = findInLocalScope( id, scope );
-        if declared_id then
-            ;;; It is a local variable,
-            true -> id.isLocalId;
-            declared_id.isAssignableId -> id.isAssignableId;
+
+    define lconstant resolve_and_mark_id_in_scope( id, scope, is_non_local );
+        if scope.isGlobalScope then
+            ;;; It is a global variable.
+            false -> id.isLocalId;
+            false -> id.isAssignableId;
+            declareInGlobalScope( id, scope )
+        elseif scope.isLocalScope then
+            lvars declared_id = findInLocalScope( id, scope );
+            if declared_id then
+                ;;; It is a local variable.
+                true -> id.isLocalId;
+                declared_id.isAssignableId -> id.isAssignableId;
+                shareLocalDataId( declared_id, id );
+                if is_non_local then
+                    true -> declared_id.hasNonLocalRefToId;
+                endif
+            else
+                resolve_and_mark_id_in_scope( id, scope.previousScopeLocalScope, true );
+            endif
         else
-            resolveIdInScope( id, scope.previousScopeLocalScope )
+            mishap( 'Internal error', [] )
         endif
-    else
-        mishap( 'Internal error', [] )
-    endif
+    enddefine;
+
+    resolve_and_mark_id_in_scope( id, scope, false )
 enddefine;
 
 ;;; --- resolve ----------------------------------------------------------------
