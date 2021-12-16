@@ -73,7 +73,9 @@ define declareInScope( id, scope );
         conspair( id, scope.idListLocalScope ) -> scope.idListLocalScope;
     elseif scope.isGlobalScope then
         false -> id.isLocalId;
-        false -> id.isAssignableId;
+        if id.isAssignableId then
+            mishap( 'Global variables cannot be declared to be assignable', [% id.nameId %] )
+        endif;
         declareInGlobalScope( id, scope );
     else 
         mishap( 'Internal error invalid scope', [ ^scope ] )
@@ -137,6 +139,9 @@ define resolve( tree, scope );
     elseif tree.isBind then
         resolve( tree.valueBind, scope );
         resolve_pattern( tree.patternBind, scope )
+    elseif tree.isAssign then
+        resolve( tree.targetAssign, scope );
+        resolve( tree.sourceAssign, scope );
     elseif tree.isSeq then
         lvars e;
         for e in_vectorclass tree do

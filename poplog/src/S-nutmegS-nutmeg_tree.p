@@ -15,7 +15,7 @@ defclass Id {
     idRefId
 };
 define newId( name );
-    consId( name, true, true, _ )
+    consId( name, true, false, _ )
 enddefine;
 
 defclass Seq;

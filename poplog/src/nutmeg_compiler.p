@@ -47,12 +47,16 @@ procedure( expr ) with_props plant_assign;
     plant_expr( expr.sourceAssign );
     lvars target = expr.targetAssign;
     if target.isId then
-        if target.isLocalId then
-            sysPOP( target.nameId );
+        if target.isAssignableId then
+            if target.isLocalId then
+                sysPOP( target.nameId );
+            else
+                lvars idref = target.idRefId;
+                sysPUSHQ( idref );
+                sysUFIELD( 1, IdRef_key.class_spec, false, false );
+            endif
         else
-            lvars idref = target.idRefId;
-            sysPUSHQ( idref );
-            sysUFIELD( 1, IdRef_key.class_spec, false, false );
+            mishap( 'Trying to assign to protected variable', [% target.nameId %] )
         endif
     else 
         mishap( 'Assignment is limited to simple identifiers at the moment', [ ^target ] )   

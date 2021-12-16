@@ -138,7 +138,28 @@ enddefine;
 
 lconstant end_list = [end];
 
-;;; -- def --------------------------------------------------------------------
+;;; --- var --------------------------------------------------------------------
+
+define read_variable_name() -> item;
+    readitem() -> item;
+    if item == termin or item.isstring or item.isnumber or punctuation_table( item ) then
+        mishap( 'Variable name required', [ ^item ] )
+    elseif prefix_table( item ) or punctuation_table( item ) or postfix_table( item ) do
+        mishap( 'Syntax found while looking for variable name', [ ^item ] )
+    endif
+enddefine;
+
+define vaX_prefix_parser( assignable ) -> id;
+    lvars w = read_variable_name();
+    newId( w ) -> id;
+    assignable -> id.isAssignableId;
+enddefine;
+
+vaX_prefix_parser(% true %) -> prefix_table( "var" );
+vaX_prefix_parser(% false %) -> prefix_table( "val" );
+
+
+;;; --- def --------------------------------------------------------------------
 
 
 lconstant def_end_list = [ enddef ^^end_list ];
