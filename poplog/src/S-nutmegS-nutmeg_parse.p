@@ -289,11 +289,23 @@ define bind_postfix_parser( prec, lhs, token );
 enddefine;
 consPostfixEntry( 990, bind_postfix_parser ) -> postfix_table( ":=" );
 
+vars current_lhs = false;
 define assign_postfix_parser( prec, lhs, token );
+    dlocal current_lhs = lhs;
     lvars rhs = read_expr_prec( prec );
     newAssign( lhs, rhs )  
 enddefine;
 consPostfixEntry( 990, assign_postfix_parser ) -> postfix_table( "<-" );
+
+define dollardollar_prefix_parser();
+    if current_lhs then
+        ;;; TODO: shortcut that is unlikely to be entirely correct.
+        copydata( current_lhs )
+    else
+        mishap( 'Left-hand-side of assignment syntax used outside of an assignment expression', [] )
+    endif
+enddefine;
+dollardollar_prefix_parser -> prefix_table( "$$" );
 
 ;;; --- Arithmetic -------------------------------------------------------------
 
