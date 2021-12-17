@@ -48,10 +48,11 @@ enddefine;
 
 defclass LocalScope {
     idListLocalScope,
+    isDynamicLocalScope,        ;;; Static or Dynamic
     previousScopeLocalScope
 };
 define newLocalScope( old_scope );
-    consLocalScope( [], old_scope )
+    consLocalScope( [], false, old_scope )
 enddefine;
 
 define findInLocalScope( id, lscope );
@@ -110,7 +111,7 @@ define resolveIdInScope( id, scope );
                     true -> declared_id.hasNonLocalRefToId;
                 endif
             else
-                resolve_and_mark_id_in_scope( id, scope.previousScopeLocalScope, true );
+                resolve_and_mark_id_in_scope( id, scope.previousScopeLocalScope, is_non_local or scope.isDynamicLocalScope );
             endif
         else
             mishap( 'Internal error', [] )
@@ -143,6 +144,7 @@ define resolve( tree, scope );
         resolveIdInScope( tree, scope )
     elseif tree.isFn then
         lvars lscope = newLocalScope( scope );
+        true -> lscope.isDynamicLocalScope;
         resolve_pattern( tree.paramsFn, lscope );
         resolve( tree.bodyFn, lscope );
     elseif tree.isBind then
