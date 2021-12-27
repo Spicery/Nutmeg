@@ -210,7 +210,7 @@ define nutmeg_initialise_loop( item );
             endif
         endprocedure,
         item,
-        _
+        termin
     else
         mishap( 'Cannot iterate over this object', [ ^item ] )
     endif
@@ -258,6 +258,58 @@ procedure( for_expr ) with_props plant_for;
     
     sysLABEL( loop_exit );
 endprocedure -> plant_table( For_key );
+
+define plant_expr_with_count( expr );
+    lvars a = arity_expr( expr );
+    if a.isExactArity then
+        plant_expr( expr );
+        sysPUSHQ( a.countArity );
+    else
+        lvars stklen = sysNEW_LVAR();
+        sysCALL( "stacklength" );
+        sysPOP( stklen );
+        plant_expr( expr );
+        sysCALL( "stacklength" );
+        sysPUSH( stklen );
+        sysCALL( "-" );
+    endif
+enddefine;
+
+procedure( fixed_expr ) with_props plant_fixed_expr;
+
+    define check_counts( actual, expected );
+        returnif( actual == expected );
+        if actual > expected then
+            mishap( sprintf( 'Too many arguments (actual: %p, expected: %p)', [ ^actual ^expected ] ), [] )
+        else
+            mishap( sprintf( 'Insufficient arguments (actual: %p, expected: %p)', [ ^actual ^expected ] ), [] )
+        endif
+    enddefine;
+
+    define check_enough( actual, expected );
+        returnif( actual >= expected );
+        mishap( 'Insufficient arguments', [] )
+    enddefine;
+
+    dlocal pop_new_lvar_list;
+    lvars a = fixed_expr.arityFixedArity;
+    lvars b = arity_expr( fixed_expr.valueFixedArity );
+    if a == b then
+        plant_expr( fixed_expr.valueFixedArity )
+    elseif a.isExactArity then
+        plant_expr_with_count( fixed_expr.valueFixedArity );
+        sysPUSHQ( a.countArity );
+        sysCALLQ( check_counts );
+    elseif a.countArity == 0 then
+        plant_expr( fixed_expr.valueFixedArity )
+    elseif b.countArity >= a.countArity then
+        plant_expr( fixed_expr.valueFixedArity )
+    else
+        plant_expr_with_count( fixed_expr.valueFixedArity );
+        sysPUSHQ( a.countArity );
+        sysCALLQ( check_enough );
+    endif
+endprocedure -> plant_table( FixedArity_key );
 
 ;;;
 ;;; Here we use -proglist_state- and -proglist_new_state-, even though it is

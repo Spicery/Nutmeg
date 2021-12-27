@@ -257,5 +257,20 @@ define Seq( N );
 enddefine;
 to_nutproc_from_counted( Seq, 0 ) -> nutmeg_valof( "Seq" );
 
+;;; --- Print ------------------------------------------------------------------
+
+define Print( N );
+    lvars L = conslist( N );
+    lvars i, first = true;
+    for i in L do
+        if first then
+            false -> first
+        else
+            cucharout( ' ' )
+        endif;
+        nutmeg_print( i )
+    endfor;
+enddefine;
+to_nutproc_from_counted( Print, 0 ) -> nutmeg_valof( "Print" );
 
 endsection;

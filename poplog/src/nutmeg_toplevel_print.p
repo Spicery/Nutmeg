@@ -9,4 +9,11 @@ define global nutmeg_toplevel_print();
     endif
 enddefine;
 
+define global nutmeg_print();
+    dlocal pop_pr_quotes = true;
+    if stacklength() > 0 then
+        sysprarrow( false)
+    endif
+enddefine;
+
 endsection;

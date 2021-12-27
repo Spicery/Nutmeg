@@ -30,7 +30,7 @@ def part2( data ):
         n := p.Tail.Head.ToInteger
         switch p.Head
         case 'forward':
-            x <- $$_ + n
+            x <- $$ + n
             d <- $$ + n * aim
         case 'up':
             aim <- $$ - n
@@ -38,8 +38,10 @@ def part2( data ):
             aim <- $$ + n
         end
     end
-    return( x * d )
+    ( x * d )
 end
 
-def day01part2():
+def day02part2():
+    input := readInput( DAY02_INPUT_FILE )
+    part2( input )
 end
