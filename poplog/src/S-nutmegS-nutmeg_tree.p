@@ -8,42 +8,30 @@ defclass Constant {
 };
 vars procedure newConstant = consConstant;
 
-defclass LocalData {
-    isOuterLocalData
+defclass SharedData {
+    isLocalSharedData,
+    isOuterSharedData,
+    isAssignableSharedData
 };
+define newSharedData();
+    consSharedData( true, false, false )
+enddefine;
 
 defclass Id {
     nameId,
-    isLocalId,
-    localDataId,
-    isAssignableId,
+    sharedDataId,
     idRefId
 };
 define newId( name );
-    consId( name, true, false, false, _ )
+    consId( name, newSharedData(), _ )
 enddefine;
 
-define hasNonLocalRefToId( id );
-    lvars ld = id.localDataId;
-    if ld then
-        ld.isOuterLocalData
-    else
-        false
-    endif
-enddefine;
+vars procedure isLocalId = sharedDataId <> isLocalSharedData;
+vars procedure isAssignableId = sharedDataId <> isAssignableSharedData;
+vars procedure hasNonLocalRefToId = sharedDataId <> isOuterSharedData;
 
-define updaterof hasNonLocalRefToId( bool, id );
-    unless id.localDataId do
-        consLocalData( false ) -> id.localDataId;
-    endunless;
-    bool -> id.localDataId.isOuterLocalData;
-enddefine;
-
-define shareLocalDataId( parent, child );
-    unless parent.localDataId do
-        consLocalData( false ) -> parent.localDataId;
-    endunless;
-    parent.localDataId -> child.localDataId
+define shareData( parent, child );
+    parent.sharedDataId -> child.sharedDataId
 enddefine;
 
 procedure( id ) with_props printId;

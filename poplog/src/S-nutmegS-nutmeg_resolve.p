@@ -78,7 +78,7 @@ define declareInScope( id, scope );
             mishap( 'Global variables cannot be declared to be assignable', [% id.nameId %] )
         endif;
         declareInGlobalScope( id, scope );
-    else 
+    else
         mishap( 'Internal error invalid scope', [ ^scope ] )
     endif
 enddefine;
@@ -96,17 +96,18 @@ define resolveIdInScope( id, scope );
 
     define lconstant resolve_and_mark_id_in_scope( id, scope, is_non_local );
         if scope.isGlobalScope then
-            ;;; It is a global variable.
-            false -> id.isLocalId;
-            false -> id.isAssignableId;
-            declareInGlobalScope( id, scope )
+            ;;; It is a global variable. There's no shared declaration data
+            ;;; for globals because they are very locked-down. They are non-local,
+            ;;; non-assignable and (by definition) non-outers.
+            false -> id.isLocalId;              ;;; Required.
+            false -> id.isAssignableId;         ;;; Strictly speaking this is superfluous.
+            declareInGlobalScope( id, scope );
         elseif scope.isLocalScope then
             lvars declared_id = findInLocalScope( id, scope );
             if declared_id then
-                ;;; It is a local variable.
-                true -> id.isLocalId;
-                declared_id.isAssignableId -> id.isAssignableId;
-                shareLocalDataId( declared_id, id );
+                ;;; It is a local variable & we must share the declaration data.
+                ;;; This effectively copies across is-local, is-outer and is-assignable.
+                shareData( declared_id, id );
                 if is_non_local then
                     true -> declared_id.hasNonLocalRefToId;
                 endif
@@ -123,6 +124,19 @@ enddefine;
 
 ;;; --- resolve ----------------------------------------------------------------
 
+vars procedure resolve_table =
+    newanyproperty(
+        [], 8, 1, false,
+        false, false, "perm",
+        false,
+        procedure( tree, scope );
+            mishap( 'Internal error: unhandled case in resolver', [ ^tree ] )
+        endprocedure
+    );
+
+;;; Forward declaration.
+vars procedure resolve;
+
 define resolve_pattern( patt, scope );
     if patt.isId then
         checkUndeclaredInScope( patt, scope );
@@ -138,6 +152,25 @@ define resolve_pattern( patt, scope );
         mishap( 'Not implemented yet', [ ^p ] )
     endif
 enddefine;
+
+define resolveQuery( query, outer_scope, inner_scope );
+    if query.isIn then
+        lvars id = query.idIn;
+        lvars v = query.valueIn;
+        resolve_pattern( id, inner_scope );
+        resolve( v, outer_scope )
+    else
+        mishap( 'Internal error: Unrecognised query', [ ^query ] )
+    endif
+enddefine;
+
+procedure( tree, scope ) with_props resolveFor;
+    lvars q = tree.queryFor;
+    lvars b = tree.bodyFor;
+    lvars lscope = newLocalScope( scope );
+    resolveQuery( q, scope, lscope );
+    resolve( b, lscope );
+endprocedure -> resolve_table( For_key );
 
 define resolve( tree, scope );
     if tree.isId then
@@ -171,13 +204,13 @@ define resolve( tree, scope );
             resolve_pattern( ct.predicateCaseThen, lscope );
             resolve( ct.actionCaseThen, lscope );
         endfor;
-        if tree.elseSwitch then 
-            resolve( tree.elseSwitch, scope ) 
+        if tree.elseSwitch then
+            resolve( tree.elseSwitch, scope )
         endif;
     elseif tree.isConstant or tree.isHole then
         ;;; Do nothing
     else
-        mishap( 'Internal error: unhandled case in resolver', [ ^tree ] )
+        resolve_table( tree.datakey )( tree, scope )
     endif
 enddefine;
 
