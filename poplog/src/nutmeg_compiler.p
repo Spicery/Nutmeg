@@ -6,7 +6,7 @@ uses $-nutmeg$-nutmeg_parse;
 uses $-nutmeg$-nutmeg_resolve;
 uses $-nutmeg$-nutmeg_builtins;
 
-section $-nutmeg => nutmeg_compiler;
+section $-nutmeg => nutmeg_compiler, nutmeg_initialise_loop;
 
 vars procedure plant_table = (
     newanyproperty( 
@@ -192,14 +192,14 @@ endprocedure -> plant_table( Switch_key );
             ( false ) or
             ( the_next_value, the_value_to_pattern_match, true )
 
-    The initialiser sets this up:
+    The nutmeg_initialise_loop sets this up:
 
-        initialise_loop( object ) -> 
+        nutmeg_initialise_loop( object ) -> 
             ( advancer, that_which_changes, that_that_stays_the_same )
 */
 
 ;;; return( advancer, that_which_changes, that_that_stays_the_same )
-define initialise_loop( item ); 
+define nutmeg_initialise_loop( item ); 
     if item.islist then
         procedure( L, _ );
             if null( L ) then
@@ -226,7 +226,7 @@ procedure( for_expr ) with_props plant_for;
     lvars that_that_stays_the_same = sysNEW_LVAR();
     
     plant_expr( q.valueIn );
-    sysCALL( ident $-nutmeg$-initialise_loop );
+    sysCALL( "nutmeg_initialise_loop" );
     sysPOP( that_that_stays_the_same );
     sysPOP( that_which_changes );
     sysPOP( advancer );
@@ -242,8 +242,8 @@ procedure( for_expr ) with_props plant_for;
     sysLBLOCK( popexecute );
     
     ;;; Bind the pattern.
-    sysLVARS( q.idIn, 0 );
-    sysPOP( q.idIn );
+    sysLVARS( q.idIn.nameId, 0 );
+    sysPOP( q.idIn.nameId );
 
     ;;; Run the body.
     plant_expr( for_expr.bodyFor );
