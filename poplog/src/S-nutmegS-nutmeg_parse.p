@@ -27,7 +27,7 @@ vars procedure postfix_table =
         false, false
     );
 
-lconstant punctuation_list = [ , ; ) ^newline end enddef endswitch case then else ];
+lconstant punctuation_list = [ , ; ) ^newline case do else end enddef endfor endswitch ];
 vars procedure punctuation_table =
     newanyproperty(
         maplist( punctuation_list, procedure( w ); [ ^w true ] endprocedure ),
@@ -111,9 +111,9 @@ define read_optexpr_seq_helper() -> ( expr, non_empty );
     newSeq(#|
         repeat
             lvars e = try_read_expr_prec( pop_max_int );
-            if e then 
+            if e then
                 true -> non_empty;
-                e 
+                e
             endif;
             quitunless( pop11_try_nextreaditem([, ; ^newline]) )
         endrepeat
@@ -293,7 +293,7 @@ vars current_lhs = false;
 define assign_postfix_parser( prec, lhs, token );
     dlocal current_lhs = lhs;
     lvars rhs = read_expr_prec( prec );
-    newAssign( lhs, rhs )  
+    newAssign( lhs, rhs )
 enddefine;
 consPostfixEntry( 990, assign_postfix_parser ) -> postfix_table( "<-" );
 
