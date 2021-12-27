@@ -20,20 +20,38 @@ define check_exact_arity( procedure p, count ) -> closure;
     p.pdprops -> closure.pdprops;
 enddefine;
 
-define add_info( dict, p ) -> p;
-    if dict.isprocedure then
-        unless p do
-            check_exact_arity( dict, dict.pdnargs ) -> p
-        endunless;
-        ${
-            arity = newExactArity( dict.pdnargs ),
-            arityChecked = dict
-        } -> dict
-    endif;
+define add_info( dict, p ) -> p;    
     if p.pdprops.ispair and p.pdprops.back.isdict then
         mishap( 'Internal error', [ ^dict ^p ] )
     endif;
     conspair( p.pdprops, dict ) -> p.pdprops;
+enddefine;
+
+define to_nutproc_from_both( uncounted_p, counted_p ) -> p;
+    lvars dict =
+        ${
+            arity = newExactArity( uncounted_p.pdnargs ),
+            arityChecked = uncounted_p
+        };
+    add_info( dict, counted_p ) -> p;
+enddefine;
+
+define to_nutproc_from_uncounted( d ) -> p;
+    lvars p = check_exact_arity( d, d.pdnargs );
+    lvars dict =
+        ${
+            arity = newExactArity( d.pdnargs ),
+            arityChecked = d
+        };
+    add_info( dict, p ) -> p;
+enddefine;
+
+define to_nutproc_from_counted( p, n ) -> p;
+    lvars dict =
+        ${
+            arity = newInexactArity( n )
+        };
+    add_info( dict, p ) -> p;
 enddefine;
 
 define has_exact_arity( p, count );
@@ -66,7 +84,7 @@ defclass FilePath {
     pathFilePath
 };
 
-add_info(
+to_nutproc_from_both(
     consFilePath,
     procedure( N ) with_props FilePath;
         if N == 1 then
@@ -84,7 +102,7 @@ add_info(
 define ReadLines( filepath );
     discinline( filepath.pathFilePath ).pdtolist.expandlist
 enddefine;
-add_info( ReadLines, false ) -> nutmeg_valof( "ReadLines" );
+to_nutproc_from_uncounted( ReadLines ) -> nutmeg_valof( "ReadLines" );
 
 ;;; --- ToInteger
 
@@ -96,12 +114,12 @@ define ToInteger( str );
         mishap( 'String is not an integer (radix 10)', [ ^str ] )
     endif
 enddefine;
-add_info( ToInteger, false ) -> nutmeg_valof( "ToInteger" );
+to_nutproc_from_uncounted( ToInteger ) -> nutmeg_valof( "ToInteger" );
 
 ;;; --- Length -----------------------------------------------------------------
 
 ;;; TODO: This is almost certainly incorrect. We need Length to work over anything of type Series.
-add_info( length, false ) -> nutmeg_valof( "Length" );
+to_nutproc_from_uncounted( length ) -> nutmeg_valof( "Length" );
 
 ;;; --- Select -----------------------------------------------------------------
 
@@ -120,7 +138,7 @@ define Select( list, procedure fn );
         %]
     endif
 enddefine;
-add_info( Select, false ) -> nutmeg_valof( "Select" );
+to_nutproc_from_uncounted( Select ) -> nutmeg_valof( "Select" );
 
 ;;; --- Where ------------------------------------------------------------------
 
@@ -143,7 +161,7 @@ define Where( list, procedure fn );
         %]
     endif
 enddefine;
-add_info( Where, false ) -> nutmeg_valof( "Where" );
+to_nutproc_from_uncounted( Where ) -> nutmeg_valof( "Where" );
 
 ;;; --- Zip --------------------------------------------------------------------
 
@@ -184,37 +202,30 @@ define Zip( N );
         mishap( 'No arguments to Zip', [] )
     endif
 enddefine;
-add_info(
-    ${ arity = newInexactArity( 1 ) },
-    Zip
-) -> nutmeg_valof( "Zip" );
-
+to_nutproc_from_counted( Zip, 1 ) -> nutmeg_valof( "Zip" );
 
 ;;; --- Split ------------------------------------------------------------------
 
 define Split( string );
     split_by_spaces( string, false, conslist )
 enddefine;
-add_info(
-    Split,
-    false
-) -> nutmeg_valof( "Split" );
+to_nutproc_from_uncounted( Split ) -> nutmeg_valof( "Split" );
 
 ;;; --- Head, Tail & IsEmpty ---------------------------------------------------
 ;;; Consider First, Rest and Last. IsEmpty is fine, I think.
 
 ;;; TODO: The name is incorrect
-add_info( tl, false ) -> nutmeg_valof( "Tail" );
-add_info( hd, false ) -> nutmeg_valof( "Head" );
-add_info( null, false ) -> nutmeg_valof( "IsEmpty" );
+to_nutproc_from_uncounted( tl ) -> nutmeg_valof( "Tail" );
+to_nutproc_from_uncounted( hd ) -> nutmeg_valof( "Head" );
+to_nutproc_from_uncounted( null ) -> nutmeg_valof( "IsEmpty" );
 
 ;;; --- Arithmetic -------------------------------------------------------------
 
 ;;; TODO: the name is incorrect
-add_info( nonop -, false ) -> nutmeg_valof( "-" );
-add_info( nonop +, false ) -> nutmeg_valof( "+" );
-add_info( nonop /, false ) -> nutmeg_valof( "/" );
-add_info( nonop *, false ) -> nutmeg_valof( "*" );
+to_nutproc_from_uncounted( nonop - ) -> nutmeg_valof( "-" );
+to_nutproc_from_uncounted( nonop + ) -> nutmeg_valof( "+" );
+to_nutproc_from_uncounted( nonop / ) -> nutmeg_valof( "/" );
+to_nutproc_from_uncounted( nonop * ) -> nutmeg_valof( "*" );
 
 define SumOf( N );
     0;
@@ -222,10 +233,7 @@ define SumOf( N );
         nonop +()
     endrepeat
 enddefine;
-add_info(
-    ${ arity = newInexactArity( 0 ) },
-    SumOf
-) -> nutmeg_valof( "SumOf" );
+to_nutproc_from_counted( SumOf, 0 ) -> nutmeg_valof( "SumOf" );
 
 define Sum( L );
     if L.islist then 
@@ -234,14 +242,20 @@ define Sum( L );
         mishap( 'Series needed', [^L] )
     endif
 enddefine;
-add_info(
-    Sum,
-    false
-) -> nutmeg_valof( "Sum" );
+to_nutproc_from_uncounted( Sum ) -> nutmeg_valof( "Sum" );
 
 ;;; --- Comparison -------------------------------------------------------------
 
-add_info( nonop <, false ) -> nutmeg_valof( "<" );
-add_info( nonop =, false ) -> nutmeg_valof( "==" );
+to_nutproc_from_uncounted( nonop < ) -> nutmeg_valof( "<" );
+to_nutproc_from_uncounted( nonop = ) -> nutmeg_valof( "==" );
+
+
+;;; --- Sequences --------------------------------------------------------------
+
+define Seq( N );
+    conslist( N )
+enddefine;
+to_nutproc_from_counted( Seq, 0 ) -> nutmeg_valof( "Seq" );
+
 
 endsection;

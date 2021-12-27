@@ -164,7 +164,7 @@ define resolveQuery( query, outer_scope, inner_scope );
     endif
 enddefine;
 
-procedure( tree, scope ) with_props resolveFor;
+procedure( tree, scope ) with_props resolve_for;
     lvars q = tree.queryFor;
     lvars b = tree.bodyFor;
     lvars lscope = newLocalScope( scope );

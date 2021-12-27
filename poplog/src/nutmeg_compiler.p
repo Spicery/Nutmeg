@@ -183,6 +183,82 @@ procedure( expr ) with_props plant_switch;
     sysLABEL( endswitch_label );
 endprocedure -> plant_table( Switch_key );
 
+/*
+    The pattern for loops is that there is a different advancer for each type of 
+    object to iterate over. The advancer takes two inputs and delivers either 
+    a single result or three.
+
+        advancer( that_which_changes, that_that_stays_the_same ) ->
+            ( false ) or
+            ( the_next_value, the_value_to_pattern_match, true )
+
+    The initialiser sets this up:
+
+        initialise_loop( object ) -> 
+            ( advancer, that_which_changes, that_that_stays_the_same )
+*/
+
+;;; return( advancer, that_which_changes, that_that_stays_the_same )
+define initialise_loop( item ); 
+    if item.islist then
+        procedure( L, _ );
+            if null( L ) then
+                false
+            else 
+                fast_destpair( L );
+                true
+            endif
+        endprocedure,
+        item,
+        _
+    else
+        mishap( 'Cannot iterate over this object', [ ^item ] )
+    endif
+enddefine;
+
+procedure( for_expr ) with_props plant_for;
+    dlocal pop_new_lvar_list;
+    lvars q = for_expr.queryFor;
+    lvars b = for_expr.bodyFor;
+    
+    lvars advancer = sysNEW_LVAR();
+    lvars that_which_changes = sysNEW_LVAR();
+    lvars that_that_stays_the_same = sysNEW_LVAR();
+    
+    plant_expr( q.valueIn );
+    sysCALL( ident $-nutmeg$-initialise_loop );
+    sysPOP( that_that_stays_the_same );
+    sysPOP( that_which_changes );
+    sysPOP( advancer );
+    
+    lvars loop_entry = sysNEW_LABEL();
+    lvars loop_exit = sysNEW_LABEL();
+    lvars loop_body_start = sysNEW_LABEL();
+    sysGOTO( loop_entry );
+    
+    sysLABEL( loop_body_start );
+    sysPOP( that_which_changes );
+
+    sysLBLOCK( popexecute );
+    
+    ;;; Bind the pattern.
+    sysLVARS( q.idIn, 0 );
+    sysPOP( q.idIn );
+
+    ;;; Run the body.
+    plant_expr( for_expr.bodyFor );
+
+    sysENDLBLOCK();
+
+    sysLABEL( loop_entry );
+    sysPUSH( that_which_changes );
+    sysPUSH( that_that_stays_the_same );
+    sysCALL( advancer );
+    sysIFSO( loop_body_start );
+    
+    sysLABEL( loop_exit );
+endprocedure -> plant_table( For_key );
+
 ;;;
 ;;; Here we use -proglist_state- and -proglist_new_state-, even though it is
 ;;; overkill, to convert various kinds of source into a character repeater.
