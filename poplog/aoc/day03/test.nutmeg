@@ -1,0 +1,25 @@
+
+
+DAY03_INPUT_FILE := 'aoc/day03/input'
+DAY03_EXAMPLE_FILE := 'aoc/day03/example'
+
+def readInput( file_path ):
+    FilePath( file_path ).ReadLines.Select( Split )
+end
+
+### Things to implement
+###     1.  Comments
+###     2.  Character literals
+###     3.  Immutable character class
+###     4.  Function syntax - fn ARGS =>> BODY endfn
+###     5.  Zip iterates over vectorclasses
+###     6.  returns in tail-call position
+
+
+def part1( data ):
+    var acc := SeqFrom( fn _ => 0 end )
+    for d in data:
+        acc <- $( _ + if n == `0` then -1 else 1 endif ).Zip( acc, d )
+    endif
+    return acc
+end
