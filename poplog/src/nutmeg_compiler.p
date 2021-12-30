@@ -1,6 +1,7 @@
 compile_mode :pop11 +strict;
 
 uses nutmeg_toplevel_print;
+uses nutmeg_loops;
 uses $-nutmeg$-nutmeg_tree;
 uses $-nutmeg$-nutmeg_parse;
 uses $-nutmeg$-nutmeg_resolve;
@@ -182,39 +183,6 @@ procedure( expr ) with_props plant_switch;
     endif;
     sysLABEL( endswitch_label );
 endprocedure -> plant_table( Switch_key );
-
-/*
-    The pattern for loops is that there is a different advancer for each type of 
-    object to iterate over. The advancer takes two inputs and delivers either 
-    a single result or three.
-
-        advancer( that_which_changes, that_that_stays_the_same ) ->
-            ( false ) or
-            ( the_next_value, the_value_to_pattern_match, true )
-
-    The nutmeg_initialise_loop sets this up:
-
-        nutmeg_initialise_loop( object ) -> 
-            ( advancer, that_which_changes, that_that_stays_the_same )
-*/
-
-;;; return( advancer, that_which_changes, that_that_stays_the_same )
-define nutmeg_initialise_loop( item ); 
-    if item.islist then
-        procedure( L, _ );
-            if null( L ) then
-                false
-            else 
-                fast_destpair( L );
-                true
-            endif
-        endprocedure,
-        item,
-        termin
-    else
-        mishap( 'Cannot iterate over this object', [ ^item ] )
-    endif
-enddefine;
 
 procedure( for_expr ) with_props plant_for;
     dlocal pop_new_lvar_list;

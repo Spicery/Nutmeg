@@ -1,6 +1,7 @@
 compile_mode :pop11 +strict;
 
 uses dict
+uses nutmeg_loops;
 uses $-nutmeg$-nutmeg_resolve;
 uses $-nutmeg$-nutmeg_arity;
 uses $-nutmeg$-arity_expr;
@@ -118,23 +119,34 @@ to_nutproc_from_uncounted( ToInteger ) -> nutmeg_valof( "ToInteger" );
 
 ;;; --- Length -----------------------------------------------------------------
 
-;;; TODO: This is almost certainly incorrect. We need Length to work over anything of type Series.
+;;; TODO: This is almost certainly incorrect. We need Length to work over anything of type Seq.
 to_nutproc_from_uncounted( length ) -> nutmeg_valof( "Length" );
 
 ;;; --- Select -----------------------------------------------------------------
 
-;;; TODO: This is almost certainly incorrect. We need Select to work over anything of type Series.
+;;; TODO: This is almost certainly incorrect. We need Select to work over anything of type Seq.
 ;;; TODO: Got to handle out-arity /= 1
-define Select( list, procedure fn );
-    lvars p = has_exact_arity( fn, 1 );
-    if p then
-        maplist( list, p )
-    else
+;;; TODO: Handle infinite lists.
+define Select( seq, procedure fn );
+    if seq.islist then
+        lvars procedure p = has_exact_arity( fn, 1 );
+        if p then
+            maplist( seq, p )
+        else
+            [%
+                lvars i;
+                for i in seq do
+                    fn( i, 1 )
+                endfor
+            %]
+        endif
+    else 
+        lvars ( advancer, that_which_changes, that_that_stays_the_same ) = nutmeg_initialise_loop( seq );
         [%
-            lvars i;
-            for i in list do
-                fn( i, 1 )
-            endfor
+            while advancer( that_which_changes, that_that_stays_the_same ) do
+                () -> that_which_changes;
+                fn( (), 1 )
+            endwhile;
         %]
     endif
 enddefine;
@@ -143,21 +155,31 @@ to_nutproc_from_uncounted( Select ) -> nutmeg_valof( "Select" );
 ;;; --- Where ------------------------------------------------------------------
 
 ;;; TODO: Got to handle out-arity /= 1
-define Where( list, procedure fn );
-    lvars p = has_exact_arity( fn, 1 );
-    if p then
-        [%
-            lvars i;
-            for i in list do
-                if p( i ) then i endif
-            endfor
-        %]
+define Where( seq, procedure fn );
+    if seq.islist then
+        lvars p = has_exact_arity( fn, 1 );
+        if p then
+            [%
+                lvars i;
+                for i in seq do
+                    if p( i ) then i endif
+                endfor
+            %]
+        else
+            [%
+                lvars i;
+                for i in seq do
+                    if fn( i, 1 ) then i endif
+                endfor
+            %]
+        endif
     else
+        lvars ( advancer, that_which_changes, that_that_stays_the_same ) = nutmeg_initialise_loop( seq );
         [%
-            lvars i;
-            for i in list do
-                if fn( i, 1 ) then i endif
-            endfor
+            while advancer( that_which_changes, that_that_stays_the_same ) do
+                () -> that_which_changes;
+                if fn( (), 1 ) then i endif
+            endwhile;
         %]
     endif
 enddefine;
