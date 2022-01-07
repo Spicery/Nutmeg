@@ -1,5 +1,4 @@
 
-
 DAY03_INPUT_FILE := 'aoc/day03/input'
 DAY03_EXAMPLE_FILE := 'aoc/day03/example'
 
@@ -15,9 +14,8 @@ end
 ###     5.  Zip iterates over vectorclasses
 ###     6.  returns in tail-call position
 
-
 def part1( data ):
-    var acc := SeqFrom( fn _ => 0 end )
+    var acc := SeqFrom( fn _ =>> 0 end )
     for d in data:
         acc <- $( _ + if n == `0` then -1 else 1 endif ).Zip( acc, d )
     endif
