@@ -6,6 +6,18 @@ define constant procedure iswhitespacecode( ch );
     ch.isinteger and locchar( ch, 1, '\s\t\r\n' )
 enddefine;
 
+define constant procedure ispunccode( ch );
+    ch.isinteger and locchar( ch, 1, '()[]{};,' )
+enddefine;
+
+define constant procedure issigncode( ch );
+    ch.isinteger and locchar( ch, 1, '+-*/=!$%^&|?.:<>' )
+enddefine;
+
+define constant procedure peek( charsrc );
+    charsrc() ->> charsrc()
+enddefine;
+
 define constant read_identifier( charsrc, ch );
     lvars procedure charsrc;
     consword(#|
@@ -104,6 +116,21 @@ define read_eol_comment( charsrc );
     endrepeat
 enddefine;
 
+define constant procedure read_sign_identifier( charsrc, ch );
+    lvars procedure charsrc;
+    consword(#|
+        ch;
+        repeat
+            charsrc() -> ch;
+            unless ch.issigncode do
+                ch -> charsrc();
+                quitloop
+            endunless;
+            ch;
+        endrepeat
+    |#)
+enddefine;
+
 define tokeniser( charsrc );
     lvars procedure charsrc;
 
@@ -117,13 +144,17 @@ define tokeniser( charsrc );
     elseif ch.isnumbercode then
         ch -> charsrc();
         read_number( charsrc, 1 )
-    elseif ch == `+` or ch == `-` then
+    elseif ( ch == `+` or ch == `-` ) and peek( charsrc ).isnumbercode then
         read_number( charsrc, ch == `-` and -1 or 1 )
     elseif ch == `'` or ch == `"` then
         read_string( charsrc, ch )
     elseif ch == `#` and try_read( charsrc, '##' ) then
         read_eol_comment( charsrc );    ;;; returns no results.
         chain( charsrc, tokeniser );    ;;; tail-call optimised loop.
+    elseif ch.ispunccode then
+        consword( ch, 1 )
+    elseif ch.issigncode then
+        read_sign_identifier( charsrc, ch )
     else
         mishap( 'Unexpected character', [% consstring( ch, 1 ) %] )
     endif
