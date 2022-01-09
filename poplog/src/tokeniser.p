@@ -2,12 +2,15 @@ compile_mode :pop11 +strict;
 
 section $-nutmeg => nutmeg_tokeniser;
 
+uses newpushable;
+
 define constant procedure iswhitespacecode( ch );
-    ch.isinteger and locchar( ch, 1, '\s\t\r\n' )
+    lvars white_chars = popnewline and '\s\t' or '\s\t\r\n';
+    ch.isinteger and locchar( ch, 1, white_chars )
 enddefine;
 
 define constant procedure ispunccode( ch );
-    ch.isinteger and locchar( ch, 1, '()[]{};,' )
+    ch.isinteger and locchar( ch, 1, '()[]{};,\\' )
 enddefine;
 
 define constant procedure issigncode( ch );
@@ -155,6 +158,11 @@ define tokeniser( charsrc );
         consword( ch, 1 )
     elseif ch.issigncode then
         read_sign_identifier( charsrc, ch )
+    elseif ch == `\n` then
+        newline
+    elseif ch == `\r` then
+        try_read( charsrc, '\n' );
+        newline
     else
         mishap( 'Unexpected character', [% consstring( ch, 1 ) %] )
     endif
@@ -163,6 +171,5 @@ enddefine;
 define nutmeg_tokeniser( repeater );
     tokeniser(% newpushable( repeater ) %)
 enddefine;
-
 
 endsection;

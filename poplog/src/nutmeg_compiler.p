@@ -6,6 +6,7 @@ uses $-nutmeg$-nutmeg_tree;
 uses $-nutmeg$-nutmeg_parse;
 uses $-nutmeg$-nutmeg_resolve;
 uses $-nutmeg$-nutmeg_builtins;
+uses tokeniser;
 
 section $-nutmeg => nutmeg_compiler, nutmeg_initialise_loop;
 
@@ -286,9 +287,11 @@ endprocedure -> plant_table( FixedArity_key );
 ;;; character codes.
 ;;;
 define procedure nutmeg_compiler( source );
-    dlocal proglist_state = proglist_new_state(source);
-    lvars itemiser = proglist.isdynamic;
-    item_chartype( `,`, itemiser ) -> item_chartype( `\\`, itemiser );
+    ;;; dlocal proglist_state = proglist_new_state(source);
+    dlocal cucharin = source.isstring and source.discin or source;
+    dlocal proglist = cucharin.nutmeg_tokeniser.pdtolist;
+    ;;; lvars itemiser = proglist.isdynamic;
+    ;;; item_chartype( `,`, itemiser ) -> item_chartype( `\\`, itemiser );
     dlocal pop_pr_quotes = true;
     procedure();
         dlocal popnewline = true;
