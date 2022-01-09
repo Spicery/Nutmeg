@@ -129,7 +129,7 @@ to_nutproc_from_uncounted( length ) -> nutmeg_valof( "Length" );
 ;;; TODO: Handle infinite lists.
 define Select( seq, procedure fn );
     if seq.islist then
-        lvars procedure p = has_exact_arity( fn, 1 );
+        lvars p = has_exact_arity( fn, 1 );
         if p then
             maplist( seq, p )
         else
