@@ -151,6 +151,13 @@ define tokeniser( charsrc );
         read_number( charsrc, ch == `-` and -1 or 1 )
     elseif ch == `'` or ch == `"` then
         read_string( charsrc, ch )
+    elseif ch == ``` then
+        lvars s = read_string( charsrc, ch );
+        if s.datalength == 1 then
+            newCharacter( subscrs( 1, s ) )
+        else
+            mishap( 'Invalid character syntax (must be a single character)', [ ^s ] )
+        endif
     elseif ch == `#` and try_read( charsrc, '##' ) then
         read_eol_comment( charsrc );    ;;; returns no results.
         chain( charsrc, tokeniser );    ;;; tail-call optimised loop.

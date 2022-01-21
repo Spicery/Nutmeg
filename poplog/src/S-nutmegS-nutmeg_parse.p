@@ -48,7 +48,7 @@ define try_read_expr_prec( prec ) -> sofar;
         false
     else
         proglist.destpair -> proglist -> item;
-        if item.isstring or item.isnumber then
+        if item.isstring or item.isnumber or item.isCharacter then
             consConstant( item )
         else
             lvars mini_parser = prefix_table( item );
@@ -163,10 +163,11 @@ vaX_prefix_parser(% false %) -> prefix_table( "val" );
 
 
 lconstant def_end_list = [ enddef ^^end_list ];
+lconstant function_punc_list = [ : =>> ];
 
 define def_prefix_parser();
     lvars template = read_expr();
-    pop11_need_nextreaditem( ":" ) -> _;
+    pop11_need_nextreaditem( function_punc_list ) -> _;
     lvars stmnts = read_stmnt_seq( true );
     pop11_need_nextreaditem( def_end_list ) -> _;
     if template.isApply then
@@ -184,6 +185,24 @@ define def_prefix_parser();
     endif
 enddefine;
 def_prefix_parser -> prefix_table( "def" );
+
+;;; --- fn ---------------------------------------------------------------------
+
+lconstant fn_end_list = [endfn ^^end_list ];
+
+define fn_prefix_parser();
+    lvars template = read_expr();
+    pop11_need_nextreaditem( function_punc_list ) -> _;
+    lvars stmnts = read_stmnt_seq( true );
+    pop11_need_nextreaditem( fn_end_list ) -> _;
+    if template.isSeq or template.isId then
+        newFn( "fn", template, stmnts )
+    else
+        mishap( 'Invalid function arguments', [% template %] )
+    endif
+enddefine;
+fn_prefix_parser -> prefix_table( "fn" );
+
 
 ;;; --- switch -----------------------------------------------------------------
 

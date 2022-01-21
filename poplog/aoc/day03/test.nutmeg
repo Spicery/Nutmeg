@@ -6,15 +6,14 @@ def readInput( file_path ):
     FilePath( file_path ).ReadLines.Select( Split )
 end
 
-/*
 ### Things to implement
-###     1.  Comments
-###     2.  Character literals
-###     3.  Immutable character class
-###     4.  Function syntax - fn ARGS =>> BODY endfn
-###     5.  Zip iterates over vectorclasses
-###     6.  returns in tail-call position
-  */
+###     [x] Comments
+###     [x] Character literals
+###     [x] Immutable character class
+###     [x] Function syntax - fn ARGS =>> BODY endfn
+###     [ ] Discard arguments (maybe make holes look like <>)
+###     [ ] Zip iterates over vectorclasses
+###     [ ] returns in tail-call position
 
 def part1( data ):
     var acc := SeqFrom( fn _ =>> 0 end )
