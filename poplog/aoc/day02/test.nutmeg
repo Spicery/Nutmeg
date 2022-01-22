@@ -7,7 +7,7 @@ def readInput( file_path ):
 end
 
 def sumWhere( L, token ):
-    L.Where( $( _.Head == token ) ).Select( $( _.Tail.Head.ToInteger ) ).Sum
+    L.Where( $( ??.Head == token ) ).Select( ToInteger$( ??.Tail.Head ) ).Sum
 end
 
 def part1( data ):

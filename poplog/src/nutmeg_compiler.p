@@ -31,7 +31,9 @@ procedure( expr ) with_props plant_binding;
     plant_expr( expr.valueBind );
     lvars pattern = expr.patternBind;
     if pattern.isId then
-        if pattern.isLocalId then
+        if pattern.isDiscardId then
+            sysERASE( pattern.nameId );
+        elseif pattern.isLocalId then
             sysLVARS( pattern.nameId, 0 );
             sysPOP( pattern.nameId );
         else
@@ -50,7 +52,9 @@ procedure( expr ) with_props plant_assign;
     lvars target = expr.targetAssign;
     if target.isId then
         if target.isAssignableId then
-            if target.isLocalId then
+            if target.isDiscardId then
+                sysERASE( target.nameId )
+            elseif target.isLocalId then
                 sysPOP( target.nameId );
             else
                 lvars idref = target.idRefId;
@@ -105,7 +109,7 @@ endprocedure -> plant_table( Apply_key );
 
 define dumpParams( args );
     if args.isId then
-        args.nameId
+        args
     elseif args.isSeq then
         appdata( args, dumpParams )
     endif        
@@ -133,8 +137,13 @@ procedure( expr ) with_props plant_fn;
     sysPROCEDURE( name, N );
     lvars a;
     for a in params do
-        sysLVARS( a, 0 );
-        sysPOP( a );
+        if a.isDiscardId then
+            sysERASE( a.nameId )
+        else
+            lvars name = a.nameId;
+            sysLVARS( name, 0 );
+            sysPOP( name );
+        endif
     endfor;
     plant_expr( body );
     sysPUSHQ( sysENDPROCEDURE() );
@@ -184,6 +193,27 @@ procedure( expr ) with_props plant_switch;
     endif;
     sysLABEL( endswitch_label );
 endprocedure -> plant_table( Switch_key );
+
+procedure( expr ) with_props plant_switch;
+    lvars endif_label = sysNEW_LABEL();
+    lvars wtl;
+    for wtl on expr.whenThenListIf do
+        lvars wt = wtl.hd;
+        plant_expr( wt.whenWhenThen );
+        lvars next_case_label = sysNEW_LABEL();
+        sysIFNOT( next_case_label );
+        plant_expr( wt.thenWhenThen );
+        unless wtl.null then
+            ;;; Inhibit the GOTO on the last loop.
+            sysGOTO( endif_label );
+        endunless;
+        sysLABEL( next_case_label );
+    endfor;
+    if expr.elseIf then
+        plant_expr( expr.elseIf )
+    endif;
+    sysLABEL( endif_label );
+endprocedure -> plant_table( If_key );
 
 procedure( for_expr ) with_props plant_for;
     dlocal pop_new_lvar_list;

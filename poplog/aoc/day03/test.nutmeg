@@ -11,14 +11,16 @@ end
 ###     [x] Character literals
 ###     [x] Immutable character class
 ###     [x] Function syntax - fn ARGS =>> BODY endfn
-###     [ ] Discard arguments (maybe make holes look like <>)
-###     [ ] Zip iterates over vectorclasses
+###     [x] Change notation for holes
+###     [x] Discard arguments (maybe make holes look like <>)
+###     [x] if-then-else syntax
 ###     [ ] returns in tail-call position
+###     [ ] Zip iterates over vectorclasses
 
 def part1( data ):
     var acc := SeqFrom( fn _ =>> 0 end )
     for d in data:
-        acc <- $( _ + if n == `0` then -1 else 1 endif ).Zip( acc, d )
-    endif
+        acc <- $( ?? + if ?? == `0` then -1 else 1 endif ).Zip( $$, d )
+    endfor
     return acc
 end

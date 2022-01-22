@@ -9,7 +9,7 @@ define newSingleValue( expr );
     if a.countArity == 1 and a.isExactArity then
         expr
     else
-        consFixedArity( newExactArity( 1 ), expr )
+        newFixedArity( newExactArity( 1 ), expr )
     endif
 enddefine;
 

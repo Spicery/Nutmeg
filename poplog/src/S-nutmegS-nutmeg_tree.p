@@ -11,10 +11,11 @@ vars procedure newConstant = consConstant;
 defclass SharedData {
     isLocalSharedData,
     isOuterSharedData,
-    isAssignableSharedData
+    isAssignableSharedData,
+    isDiscardSharedData
 };
 define newSharedData();
-    consSharedData( true, false, false )
+    consSharedData( true, false, false, false )
 enddefine;
 
 defclass Id {
@@ -29,6 +30,7 @@ enddefine;
 vars procedure isLocalId = sharedDataId <> isLocalSharedData;
 vars procedure isAssignableId = sharedDataId <> isAssignableSharedData;
 vars procedure hasNonLocalRefToId = sharedDataId <> isOuterSharedData;
+vars procedure isDiscardId = sharedDataId <> isDiscardSharedData;
 
 define shareData( parent, child );
     parent.sharedDataId -> child.sharedDataId
@@ -121,6 +123,7 @@ defclass FixedArity {
     arityFixedArity,
     valueFixedArity
 };
+vars procedure newFixedArity = consFixedArity;
 
 defclass CaseThen {
     predicateCaseThen,
@@ -137,6 +140,18 @@ vars procedure newSwitch = consSwitch;
 
 defclass FallThru;
 vars FallThru = consFallThru( 0 );
+
+defclass WhenThen {
+    whenWhenThen,
+    thenWhenThen
+};
+vars procedure newWhenThen = consWhenThen;
+
+defclass If {
+    whenThenListIf,
+    elseIf
+};
+vars procedure newIf = consIf;
 
 defclass In {
     idIn,

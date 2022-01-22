@@ -205,7 +205,17 @@ define resolve( tree, scope );
             resolve( ct.actionCaseThen, lscope );
         endfor;
         if tree.elseSwitch then
-            resolve( tree.elseSwitch, scope )
+            resolve( tree.elseSwitch, newLocalScope( scope ) )
+        endif;
+    elseif tree.isIf then
+        lvars wt;
+        for wt in whenThenListIf do
+            lvars lscope = newLocalScope( scope );
+            resolve( wt.whenWhenThen, lscope );
+            resolve( wt.thenWhenThen, lscope );
+        endfor;
+        if tree.elseIf then
+            resolve( tree.elseIf, newLocalScope( scope ) )
         endif;
     elseif tree.isConstant or tree.isHole then
         ;;; Do nothing

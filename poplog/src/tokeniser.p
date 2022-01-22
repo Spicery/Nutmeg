@@ -13,8 +13,12 @@ define constant procedure ispunccode( ch );
     ch.isinteger and locchar( ch, 1, '()[]{};,\\' )
 enddefine;
 
+define constant procedure isonlyrepeatcode( ch );
+    ch.isinteger and locchar( ch, 1, '.' )
+enddefine;
+
 define constant procedure issigncode( ch );
-    ch.isinteger and locchar( ch, 1, '+-*/=!$%^&|?.:<>' )
+    ch.isinteger and locchar( ch, 1, '+-*/=!$%^&|?:<>' )
 enddefine;
 
 define constant procedure peek( charsrc );
@@ -119,19 +123,28 @@ define read_eol_comment( charsrc );
     endrepeat
 enddefine;
 
-define constant procedure read_sign_identifier( charsrc, ch );
+define constant procedure read_while_condition_identifier( charsrc, ch, condition );
     lvars procedure charsrc;
+    lvars procedure condition;
     consword(#|
         ch;
         repeat
             charsrc() -> ch;
-            unless ch.issigncode do
+            unless ch.condition do
                 ch -> charsrc();
                 quitloop
             endunless;
             ch;
         endrepeat
     |#)
+enddefine;
+
+define constant procedure read_onlyrepeat_identifier( charsrc, ch );
+    read_while_condition_identifier( charsrc, ch, isonlyrepeatcode )
+enddefine;
+
+define constant procedure read_sign_identifier( charsrc, ch );
+    read_while_condition_identifier( charsrc, ch, issigncode )
 enddefine;
 
 define tokeniser( charsrc );
@@ -165,6 +178,8 @@ define tokeniser( charsrc );
         consword( ch, 1 )
     elseif ch.issigncode then
         read_sign_identifier( charsrc, ch )
+    elseif ch.isonlyrepeatcode then
+        read_onlyrepeat_identifier( charsrc, ch )
     elseif ch == `\n` then
         newline
     elseif ch == `\r` then

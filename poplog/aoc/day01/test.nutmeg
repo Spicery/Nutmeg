@@ -7,7 +7,7 @@ def readInput( file_path ):
 end
 
 def part1( data ):
-    (\-).Zip( data, data.Tail ).Where( $( _ < 0 ) ).Length
+    (\-).Zip( data, data.Tail ).Where( $( ?? < 0 ) ).Length
 end
 
 def day01part1():
