@@ -7,7 +7,7 @@ Nutmeg is a teaching-oriented imperative programming language that aims to provi
 - Declaring functions side-effect free and/or to only work on immutable values.
 - Both mutable and immutable versions for all built-in classes.
 - Copy-on-write updating of objects.
-- Deferring individual expressions to be evaluated lazily and/or declaring function bodies to use lazy evalation throughout.
+- Deferring individual expressions to be evaluated lazily and/or declaring function bodies to use lazy evaluation throughout.
 - 'Locking' values against change temporarily or permanently.
 
 ## Temporary list of contents
