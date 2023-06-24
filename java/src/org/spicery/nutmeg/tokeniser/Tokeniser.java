@@ -95,7 +95,7 @@ public class Tokeniser<T> {
 		} else {	
 			final char pch = this.peekChar( '\0' );
 			if ( Character.isLetter( pch ) ) {
-				return this.gatherNonEmptyName();
+				return this.gatherIdentifier();
 			} else if ( ( pch == DOUBLE_QUOTE || pch == SINGLE_QUOTE ) ) {
 				return this.gatherString();
 			} else if ( Character.isDigit( pch ) || pch == '-' ) {
@@ -122,7 +122,7 @@ public class Tokeniser<T> {
 		return Character.isLetterOrDigit( ch ) || ch == '-' || ch == '.';
 	}
 	
-	T gatherNonEmptyName() {
+	T gatherIdentifier() {
 		final StringBuilder name = new StringBuilder();
 		while ( this.hasNextChar() ) {
 			final char ch = this.nextChar();
