@@ -22,7 +22,7 @@ package org.spicery.nutmeg.powerups.charrepeater;
  * This is an interface for a char based stream that
  * supports unlimited pushback. 
  */
-public interface CharRepeater {
+public interface CharRepeaterInterface {
 	/**
 	 * Returns true if it there are characters available to be consumed
 	 * from the input, otherwise false.

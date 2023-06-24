@@ -26,7 +26,7 @@ import java.io.Reader;
  * This class is used to convert a java.lang.Reader into
  * character repeater that supports arbitrary pushback.
  */
-public class ReaderCharRepeater implements CharRepeater {
+public class ReaderCharRepeater implements CharRepeaterInterface {
 
 	private final Reader reader;
 	private final CharBuffer buffer = new CharBuffer();
