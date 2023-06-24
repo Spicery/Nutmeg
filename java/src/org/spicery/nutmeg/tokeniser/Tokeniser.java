@@ -1,17 +1,25 @@
 package org.spicery.nutmeg.tokeniser;
 
 import org.spicery.nutmeg.powerups.alert.Alert;
-import org.spicery.nutmeg.powerups.charrepeater.CharRepeater;
+import org.spicery.nutmeg.powerups.charrepeater.CharRepeaterInterface;
+import org.spicery.nutmeg.powerups.charrepeater.RecordingCharRepeater;
+import org.spicery.nutmeg.powerups.charrepeater.RecordingCharRepeaterInterface;
 
 public class Tokeniser<T> {
 
-	TokenFactory<T> factory;
-	CharRepeater cucharin;
+	TokenFactoryInterface<T> factory;
+	RecordingCharRepeaterInterface cucharin;
 	
-	public Tokeniser( TokenFactory< T > factory, CharRepeater cucharin ) {
+	public Tokeniser( TokenFactoryInterface< T > factory, RecordingCharRepeaterInterface cucharin ) {
 		super();
 		this.factory = factory;
 		this.cucharin = cucharin;
+	}
+	
+	public Tokeniser( TokenFactoryInterface< T > factory, CharRepeaterInterface cucharin ) {
+		super();
+		this.factory = factory;
+		this.cucharin = new RecordingCharRepeater( cucharin );
 	}	
 	
 	//-----------------------------------------------------------------
@@ -87,20 +95,34 @@ public class Tokeniser<T> {
 		} else {	
 			final char pch = this.peekChar( '\0' );
 			if ( Character.isLetter( pch ) ) {
-				return factory.nameToken( this.gatherNonEmptyName() );
+				return this.gatherNonEmptyName();
 			} else if ( ( pch == DOUBLE_QUOTE || pch == SINGLE_QUOTE ) ) {
-				return factory.stringToken( this.gatherString() );
+				return this.gatherString();
+			} else if ( Character.isDigit( pch ) || pch == '-' ) {
+				return this.gatherNumber();
 			} else {
 				throw Alert.unimplemented();
 			}
 		}
 	}
 	
+	T gatherNumber() {
+		cucharin.startRecording();
+		this.nextChar();
+		for (;;) {
+			char ch = this.nextChar( '\0' );
+			if ( !Character.isDigit( ch ) ) break;
+		}
+		cucharin.backUp();
+		String original = cucharin.stopRecording();
+		return this.factory.intToken( original, Integer.parseInt( original ) );
+	}
+	
 	boolean isNameChar( final char ch ) {
 		return Character.isLetterOrDigit( ch ) || ch == '-' || ch == '.';
 	}
 	
-	String gatherNonEmptyName() {
+	T gatherNonEmptyName() {
 		final StringBuilder name = new StringBuilder();
 		while ( this.hasNextChar() ) {
 			final char ch = this.nextChar();
@@ -114,10 +136,12 @@ public class Tokeniser<T> {
 		if ( name.length() == 0 ) {
 			throw new Alert( "Name missing" );
 		}
-		return name.toString();
+		
+		return factory.nameToken( name.toString() );
 	}
 	
-	String gatherString() {
+	T gatherString() {
+		cucharin.startRecording();
 		final StringBuilder attr = new StringBuilder();
 		final char opening_quote_mark = this.nextChar();
 		if ( opening_quote_mark != DOUBLE_QUOTE && opening_quote_mark != SINGLE_QUOTE ) throw new Alert( "Attribute value not quoted" ).culprit( "Character", opening_quote_mark );
@@ -130,7 +154,8 @@ public class Tokeniser<T> {
 				attr.append( ch );
 			}
 		}
-		return attr.toString();
+		String original = cucharin.stopRecording();
+		return factory.stringToken( original, attr.toString() );
 	}
 	
 	char readJSONStyleEscapeChar() {
