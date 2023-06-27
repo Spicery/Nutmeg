@@ -78,8 +78,8 @@ class TokeniserTest {
 		assertEquals("rats", t1);
 		assertEquals("in", t2);
 		assertEquals("a", t3);
-		assertEquals("sack.", t4);
-		assertNull(t5);
+		assertEquals("sack", t4);
+		assertEquals(".", t5);
 		assertNull(t6);
 		
 	}
@@ -104,8 +104,8 @@ class TokeniserTest {
 		assertEquals("'rats'", t1);
 		assertEquals("in", t2);
 		assertEquals("a", t3);
-		assertEquals("sack.", t4);
-		assertNull(t5);
+		assertEquals("sack", t4);
+		assertEquals(".", t5);
 		assertNull(t6);
 		
 	}

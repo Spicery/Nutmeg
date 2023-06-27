@@ -94,12 +94,15 @@ public class Tokeniser<T> {
 			return this.factory.endOfFile();
 		} else {	
 			final char pch = this.peekChar( '\0' );
-			if ( Character.isLetter( pch ) ) {
+			if ( isNameFirstChar( pch ) ) {
 				return this.gatherIdentifier();
 			} else if ( ( pch == DOUBLE_QUOTE || pch == SINGLE_QUOTE ) ) {
 				return this.gatherString();
 			} else if ( Character.isDigit( pch ) || pch == '-' ) {
 				return this.gatherNumber();
+			} else if ( "()[]{}.,;".indexOf( pch ) != -1) {
+				this.skipChar();
+				return factory.nameToken( String.valueOf(pch) );
 			} else {
 				throw Alert.unimplemented();
 			}
@@ -118,8 +121,12 @@ public class Tokeniser<T> {
 		return this.factory.intToken( original, Integer.parseInt( original ) );
 	}
 	
+	boolean isNameFirstChar( final char ch ) {
+		return Character.isLetter( ch ) || ch == '_';
+	}
+	
 	boolean isNameChar( final char ch ) {
-		return Character.isLetterOrDigit( ch ) || ch == '-' || ch == '.';
+		return Character.isLetterOrDigit( ch ) || ch == '_';
 	}
 	
 	T gatherIdentifier() {
