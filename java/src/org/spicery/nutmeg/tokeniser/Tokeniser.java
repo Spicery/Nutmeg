@@ -1,5 +1,6 @@
 package org.spicery.nutmeg.tokeniser;
 
+import org.omg.CORBA.portable.ApplicationException;
 import org.spicery.nutmeg.powerups.alert.Alert;
 import org.spicery.nutmeg.powerups.charrepeater.CharRepeaterInterface;
 import org.spicery.nutmeg.powerups.charrepeater.RecordingCharRepeater;
@@ -79,10 +80,17 @@ public class Tokeniser<T> {
 		return read;
 	}
 	
+	void mustReadChar( final char next_ch ) {
+		if ( ! this.isNextChar( next_ch ) ) {
+			throw new Alert("Expected next character to match opening quote (`)").culprit( "Character", String.valueOf( this.nextChar() ) );
+		}
+	}
+	
 	// -----------------------------------------------------------------
 	
 	private static final char SINGLE_QUOTE = '\'';
 	private static final char DOUBLE_QUOTE = '"';
+	private static final char BACK_QUOTE = '`';
 	private static final char FORWARD_SLASH = '/';
 	private static final char BACK_SLASH = '\\';
 	final static int MAX_CHARACTER_ENTITY_LENGTH = 32;
@@ -95,9 +103,11 @@ public class Tokeniser<T> {
 		} else {	
 			final char pch = this.peekChar( '\0' );
 			if ( isNameFirstChar( pch ) ) {
-				return this.gatherIdentifier();
+				return this.gatherNameToken();
 			} else if ( ( pch == DOUBLE_QUOTE || pch == SINGLE_QUOTE ) ) {
 				return this.gatherString();
+			} else if ( pch == BACK_QUOTE ) {
+				return this.gatherChar();
 			} else if ( Character.isDigit( pch ) || pch == '-' ) {
 				return this.gatherNumber();
 			} else if ( "()[]{}.,;".indexOf( pch ) != -1) {
@@ -107,6 +117,15 @@ public class Tokeniser<T> {
 				throw Alert.unimplemented();
 			}
 		}
+	}
+	
+	T gatherChar() {
+		cucharin.startRecording();
+		this.skipChar();
+		char ch = this.nextChar();
+		this.mustReadChar(BACK_QUOTE);
+		String original = cucharin.stopRecording();
+		return this.factory.intToken( original, Integer.parseInt( original ) );
 	}
 	
 	T gatherNumber() {
@@ -129,7 +148,7 @@ public class Tokeniser<T> {
 		return Character.isLetterOrDigit( ch ) || ch == '_';
 	}
 	
-	T gatherIdentifier() {
+	T gatherNameToken() {
 		final StringBuilder name = new StringBuilder();
 		while ( this.hasNextChar() ) {
 			final char ch = this.nextChar();
@@ -162,7 +181,7 @@ public class Tokeniser<T> {
 			}
 		}
 		String original = cucharin.stopRecording();
-		return factory.stringToken( original, attr.toString() );
+		return factory.stringToken( original, attr.toString(), opening_quote_mark );
 	}
 	
 	char readJSONStyleEscapeChar() {

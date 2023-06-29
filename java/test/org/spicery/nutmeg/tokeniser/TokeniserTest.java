@@ -18,7 +18,7 @@ class TokeniserTest {
 		}
 
 		@Override
-		public String stringToken( String original, String value ) {
+		public String stringToken( String original, String value, char quote ) {
 			return original;
 		}
 
@@ -31,8 +31,19 @@ class TokeniserTest {
 		public String endOfFile() {
 			return null;
 		}
+
+		@Override
+		public String charToken( String original, String value ) {
+			return original;
+		}
+
+		@Override
+		public String symbolToken( String original, String value ) {
+			return original;
+		}
 		
 	}	
+	
 	class FactoryTestDouble implements TokenFactoryInterface<String> {
 
 		@Override
@@ -41,7 +52,7 @@ class TokeniserTest {
 		}
 
 		@Override
-		public String stringToken( String original, String value ) {
+		public String stringToken( String original, String value, char quote ) {
 			return value;
 		}
 
@@ -54,6 +65,16 @@ class TokeniserTest {
 		public String endOfFile() {
 			return null;
 		}
+
+		@Override
+		public String charToken( String original, String value ) {
+			return value;
+		}
+
+		@Override
+		public String symbolToken( String original, String value ) {
+			return value;
+		}
 		
 	}
 	
@@ -61,7 +82,7 @@ class TokeniserTest {
 	@Test
 	void testReadToken() {
 		//	Arrange
-		String input = "Two 'rats' in a sack.";
+		String input = "Two 'rats' in a \"sack\".";
 		Tokeniser<String> tokenizer = new Tokeniser<String>(new FactoryTestDouble(), new ReaderCharRepeater(new StringReader(input)));
 		
 		//	Act
@@ -87,7 +108,7 @@ class TokeniserTest {
 	@Test
 	void test_OriginalString_ReadToken() {
 		//	Arrange
-		String input = "Two 'rats' in a sack.";
+		String input = "Two 'rats' in a \"sack\".";
 		Tokeniser<String> tokenizer = new Tokeniser<String>(new OriginalStringTestDouble(), new ReaderCharRepeater(new StringReader(input)));
 		
 		//	Act
@@ -104,7 +125,7 @@ class TokeniserTest {
 		assertEquals("'rats'", t1);
 		assertEquals("in", t2);
 		assertEquals("a", t3);
-		assertEquals("sack", t4);
+		assertEquals("\"sack\"", t4);
 		assertEquals(".", t5);
 		assertNull(t6);
 		
