@@ -1,23 +1,25 @@
 package org.spicery.nutmeg.tokeniser;
 
-import org.omg.CORBA.portable.ApplicationException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.spicery.nutmeg.powerups.alert.Alert;
 import org.spicery.nutmeg.powerups.charrepeater.CharRepeaterInterface;
 import org.spicery.nutmeg.powerups.charrepeater.RecordingCharRepeater;
 import org.spicery.nutmeg.powerups.charrepeater.RecordingCharRepeaterInterface;
 
-public class Tokeniser<T> {
+public class Tokenizer<T> implements TokenizerInterface< T > {
 
 	TokenFactoryInterface<T> factory;
 	RecordingCharRepeaterInterface cucharin;
 	
-	public Tokeniser( TokenFactoryInterface< T > factory, RecordingCharRepeaterInterface cucharin ) {
+	public Tokenizer( TokenFactoryInterface< T > factory, RecordingCharRepeaterInterface cucharin ) {
 		super();
 		this.factory = factory;
 		this.cucharin = cucharin;
 	}
 	
-	public Tokeniser( TokenFactoryInterface< T > factory, CharRepeaterInterface cucharin ) {
+	public Tokenizer( TokenFactoryInterface< T > factory, CharRepeaterInterface cucharin ) {
 		super();
 		this.factory = factory;
 		this.cucharin = new RecordingCharRepeater( cucharin );
@@ -26,8 +28,6 @@ public class Tokeniser<T> {
 	//-----------------------------------------------------------------
 	//	DELEGATED FUNCTIONS
 	//-----------------------------------------------------------------
-
-
 
 	char nextChar() {
 		return this.cucharin.nextChar();
@@ -68,6 +68,10 @@ public class Tokeniser<T> {
 		return this.cucharin.isNextString( wanted );
 	}
 	
+	boolean tryReadString( String wanted ) {
+		return this.cucharin.tryReadString( wanted );
+	}
+	
 	boolean hasNextChar() {
 		return this.cucharin.hasNextChar();
 	}
@@ -94,6 +98,8 @@ public class Tokeniser<T> {
 	private static final char FORWARD_SLASH = '/';
 	private static final char BACK_SLASH = '\\';
 	final static int MAX_CHARACTER_ENTITY_LENGTH = 32;
+	private static final String SIGN_CHARS = "+?=_^%$!@&*:|/~-";
+	private static final String PUNCTUATION_CHARS = "()[]{}.,;";
 
 	
 	public T readToken() {
@@ -110,13 +116,38 @@ public class Tokeniser<T> {
 				return this.gatherChar();
 			} else if ( Character.isDigit( pch ) || pch == '-' ) {
 				return this.gatherNumber();
-			} else if ( "()[]{}.,;".indexOf( pch ) != -1) {
-				this.skipChar();
-				return factory.nameToken( String.valueOf(pch) );
+			} else if ( PUNCTUATION_CHARS.indexOf( pch ) != -1) {
+				return this.gatherPunctuation();
+			} else if ( SIGN_CHARS.indexOf(pch) != -1 ) {
+				return this.gatherSign();
 			} else {
-				throw Alert.unimplemented();
+				throw new Alert("Unexpected character").culprit( "character", pch );
 			}
 		}
+	}
+	
+	public List<T> toList() {
+		List<T> list = new ArrayList<T>();
+		while (this.hasNextChar()) {
+			list.add( this.readToken() );
+		}
+		return list;
+	}
+	
+	T gatherPunctuation() {
+		return factory.nameToken( String.valueOf(this.nextChar()) );
+	}
+	
+	T gatherSign() {
+		cucharin.startRecording();
+		this.skipChar();
+		for (;;) {
+			char ch = this.nextChar( '\0' );
+			if ( SIGN_CHARS.indexOf(ch) == -1 ) break;
+		}
+		cucharin.backUp();
+		String original = cucharin.stopRecording();
+		return factory.nameToken( original );
 	}
 	
 	T gatherChar() {
@@ -125,7 +156,7 @@ public class Tokeniser<T> {
 		char ch = this.nextChar();
 		this.mustReadChar(BACK_QUOTE);
 		String original = cucharin.stopRecording();
-		return this.factory.intToken( original, Integer.parseInt( original ) );
+		return this.factory.charToken( original, ch );
 	}
 	
 	T gatherNumber() {
@@ -255,9 +286,7 @@ public class Tokeniser<T> {
 	void eatWhiteSpace() {
 		while ( this.hasNextChar() ) {
 			final char ch = this.nextChar();
-			if (ch == '#' && isNextString("##")) {
-				this.skipChar();
-				this.skipChar();
+			if (ch == '#' && tryReadString("##")) {
 				while (true) {
 					final char n = this.nextChar();
 					if (n == '\n' || n == 'r') 

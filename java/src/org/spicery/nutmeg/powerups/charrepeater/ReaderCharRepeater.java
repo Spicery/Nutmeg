@@ -74,24 +74,30 @@ public class ReaderCharRepeater implements CharRepeaterInterface {
 	
 	/**
 	 * Checks whether or not the sequence of characters in the string wanted
-	 * is waiting to be read off the input. This is the same as calling
-	 * isNextString( wanted, 0 ).
+	 * is waiting to be read off the input, without modifying the input.
 	 * @param wanted The sequence of characters that we are looking for. 
 	 * @return True if the input matches wanted.
 	 */
 	@Override
 	public boolean isNextString( final String wanted ) {
-		return this.isNextStringHelper( wanted, 0 );	
+		return this.isNextStringHelper( wanted, 0, false );	
 	}
 	
-	private boolean isNextStringHelper( final String wanted, final int offset ) {
+	@Override
+	public boolean tryReadString( final String wanted ) {
+		return this.isNextStringHelper( wanted, 0, true );	
+	}
+	
+	private boolean isNextStringHelper( final String wanted, final int offset, boolean consume ) {
 		if ( offset >= wanted.length() ) {
 			return true;
 		} else {
 			if ( this.isNextChar( wanted.charAt( offset ) ) ) {
 				final char ch = this.nextChar();
-				final boolean result = this.isNextStringHelper( wanted, offset + 1 );
-				this.pushChar( ch );
+				final boolean result = this.isNextStringHelper( wanted, offset + 1, consume );
+				if (!result || !consume) {
+					this.pushChar( ch );
+				}
 				return result;
 			} else {
 				return false;

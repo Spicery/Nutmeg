@@ -40,13 +40,22 @@ public interface CharRepeaterInterface {
 	boolean isNextChar( char wanted );
 	
 	/**
-	 * Returns true if it the next sequence of characters matches the string wanted,
-	 * otherwise false and advances. If the input is exhausted then this method
-	 * returns false.
+	 * Returns true if it the next sequence of characters matches the string wanted.
+	 * If the input is exhausted then this method returns false. No input is consumed.
 	 * @param wanted the sequence of characters that we are looking for
 	 * @return if true then the wanted string is waiting to be read
 	 */
 	boolean isNextString( String wanted );
+	
+	
+	/**
+	 * Returns true if it the next sequence of characters matches the string wanted,
+	 * consuming the input if so. If the input is exhausted then this method
+	 * returns false.
+	 * @param wanted the sequence of characters that we are looking for
+	 * @return if true then the wanted string has been consumed from the input.
+	 */	
+	boolean tryReadString( String wanted );
 	
 	/**
 	 * Returns the next character from the input, consuming it from the input. 
