@@ -51,7 +51,12 @@ IfExpression ::= 'if' Expression ('then'|':') Statements ( ('elseif'|'elseifnot'
 
 IfNotExpression ::= 'ifnot' Expression ('then'|':') Statements ( ('elseif'|'elseifnot') Expression ('then'|':') Statments )* ('else' ':'? Statements)? ('endifnot'|'end')
 
-SwitchExpression ::= 'switch' Expression ':'? ( ( 'case' Pattern )+ ('then'|':') Statements )* ('else' ':'? Statements)? ('endswitch'|'end')
+SwitchExpression ::= 
+    'switch' Expression ':'?
+        ( ( 'case' Expression )+ ( 'then' | ':' ) Statements )+
+        ( 'else' ':'? Expression )? 
+        ( 'end' | 'endcase' )
+    ( 'end' | 'endswitch' )
 
 LoopExpression ::= 'for' Query ('do'|':') Statements ('endfor'|'end')
 
