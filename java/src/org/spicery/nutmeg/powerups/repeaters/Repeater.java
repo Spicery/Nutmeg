@@ -26,5 +26,6 @@ public interface Repeater< T > {
 	default T next( T value_if_at_end ) {
 		return hasNext() ? next() : value_if_at_end;
 	}
-	
+
+	PushableRepeater<T> newPushable();
 }
