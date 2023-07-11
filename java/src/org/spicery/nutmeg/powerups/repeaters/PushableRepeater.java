@@ -20,7 +20,7 @@ public interface PushableRepeater<T> extends Repeater<T> {
 
 
     public static class Implementation<T> implements PushableRepeater<T> {
-        Deque<T> buffer = new ArrayDeque<T>();
+    	ArrayDeque<T> buffer = new ArrayDeque<T>();
         Repeater<T> repeater;
 
         public Implementation(Repeater<T> repeater) {
@@ -29,15 +29,15 @@ public interface PushableRepeater<T> extends Repeater<T> {
 
         @Override
         public void pushBack( T t ) {
-            buffer.addFirst( t );
+            buffer.push( t );
         }
 
         @Override
         public Maybe<T> peek() {
             if ( buffer.isEmpty() ) {
                 if (repeater.hasNext()) {
-                    buffer.addLast( repeater.next() );
-                    return Maybe.of(buffer.getFirst());
+                    buffer.push( repeater.next() );
+                    return Maybe.of(buffer.pop());
                 } else {
                     return Maybe.empty();
                 }
@@ -48,7 +48,14 @@ public interface PushableRepeater<T> extends Repeater<T> {
 
         @Override
         public Maybe<T> peek(int n) {
-            return null;
+        	while (buffer.size() < n) {
+        		if (repeater.hasNext()) {
+        			buffer.addLast( repeater.next() );
+        		} else {
+        			return Maybe.empty();
+        		}
+        	}
+            return buffer.
         }
 
         @Override
