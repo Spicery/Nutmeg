@@ -22,6 +22,14 @@ public class RecordingCharRepeater implements RecordingCharRepeaterInterface {
 	public boolean isNextString( String wanted ) {
 		return rep.isNextString( wanted );
 	}
+	
+	public boolean tryReadString( String wanted ) {
+		boolean found = rep.tryReadString( wanted );
+		if ( found && is_recording ) {
+			pushToRecording( wanted );
+		}
+		return found;
+	}
 
 	public char nextChar() {
 		char ch = rep.nextChar();
@@ -106,6 +114,10 @@ public class RecordingCharRepeater implements RecordingCharRepeaterInterface {
 	
 	private void pushToRecording( char ch ) {
 		this.builder.append( ch );
+	}
+
+	private void pushToRecording( String s) {
+		this.builder.append( s );
 	}
 
 	private char popFromRecording() {
