@@ -155,7 +155,7 @@ public class Tokeniser<T> {
 			}
 		}
 		String original = cucharin.stopRecording();
-		return factory.stringToken( original, attr.toString() );
+		return factory.stringToken( original, attr.toString(), opening_quote_mark );
 	}
 	
 	char readJSONStyleEscapeChar() {

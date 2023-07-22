@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-class DequeTest {
+class DequeListTest {
 
 	@Test
 	void empty_test_isEmpty() {
 		//	Arrange
-		Deque<String> d = new Deque<String>();
+		DequeList<String> d = new DequeList<String>();
 		
 		//	Act
 		boolean b = d.isEmpty();
@@ -23,7 +23,7 @@ class DequeTest {
 	@Test
 	void nonEmpty_test_isEmpty() {
 		//	Arrange
-		Deque<String> d = new Deque<String>();
+		DequeList<String> d = new DequeList<String>();
 		d.add( "foo" );
 		
 		//	Act
@@ -41,7 +41,7 @@ class DequeTest {
 	@Test
 	void test_clear() {
 		//	Arrange
-		Deque<String> d = new Deque<String>();
+		DequeList<String> d = new DequeList<String>();
 		d.add( "foo" );
 		
 		//	Act
@@ -57,7 +57,7 @@ class DequeTest {
 	@Test
 	void empty_test_contains() {
 		//	Arrange
-		Deque<String> d = new Deque<String>();
+		DequeList<String> d = new DequeList<String>();
 		
 		//	Act
 		boolean b = d.contains("foo");
@@ -71,7 +71,7 @@ class DequeTest {
 	@Test
 	void nonEmpty_test_contains() {
 		//	Arrange
-		Deque<String> d = new Deque<String>();
+		DequeList<String> d = new DequeList<String>();
 		d.add( "bar" );
 		d.add( "foo" );
 		d.add( "gort" );

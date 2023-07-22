@@ -1,6 +1,7 @@
 package org.spicery.nutmeg.powerups.repeaters;
 
 import org.spicery.nutmeg.powerups.common.Maybe;
+import org.spicery.nutmeg.powerups.common.DequeList;
 
 import java.sql.Array;
 import java.util.ArrayDeque;
@@ -20,7 +21,7 @@ public interface PushableRepeater<T> extends Repeater<T> {
 
 
     public static class Implementation<T> implements PushableRepeater<T> {
-    	ArrayDeque<T> buffer = new ArrayDeque<T>();
+    	DequeList<T> buffer = new DequeList<T>();
         Repeater<T> repeater;
 
         public Implementation(Repeater<T> repeater) {
@@ -29,20 +30,20 @@ public interface PushableRepeater<T> extends Repeater<T> {
 
         @Override
         public void pushBack( T t ) {
-            buffer.push( t );
+            buffer.addLast( t );
         }
 
         @Override
         public Maybe<T> peek() {
             if ( buffer.isEmpty() ) {
                 if (repeater.hasNext()) {
-                    buffer.push( repeater.next() );
-                    return Maybe.of(buffer.pop());
+                    buffer.addLast( repeater.next() );
+                    return Maybe.of(buffer.removeLast());
                 } else {
                     return Maybe.empty();
                 }
            } else {
-                return Maybe.of(buffer.getFirst());
+                return Maybe.of(buffer.first());
             }
         }
 
@@ -55,7 +56,7 @@ public interface PushableRepeater<T> extends Repeater<T> {
         			return Maybe.empty();
         		}
         	}
-            return buffer.
+            return Maybe.of(buffer.get(n));
         }
 
         @Override

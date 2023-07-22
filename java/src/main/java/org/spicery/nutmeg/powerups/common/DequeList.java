@@ -7,7 +7,7 @@ import java.util.Iterator;
 
 import org.spicery.nutmeg.powerups.alert.Alert;
 
-public class Deque<T> extends AbstractCollection<T> implements Collection<T>
+public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
 {
 	
     /// <summary>
@@ -24,7 +24,7 @@ public class Deque<T> extends AbstractCollection<T> implements Collection<T>
     private int _head;  
 
     /// <summary>
-    /// One past the first element. If empty then it is the same as the first element.
+    /// One past the last element. If empty then it is the same as _head.
     /// </summary>
     private int _tail;
 
@@ -35,10 +35,10 @@ public class Deque<T> extends AbstractCollection<T> implements Collection<T>
     /// </summary>
     private int _size;
 
-    private static int InitialCapacity = 4;
+    private static final int InitialCapacity = 4;
 
     @SuppressWarnings("unchecked")
-	public Deque()
+	public DequeList()
     {
     	_items = (T[])new Object[InitialCapacity];
         _head = 0;
@@ -60,8 +60,9 @@ public class Deque<T> extends AbstractCollection<T> implements Collection<T>
 
     public T first()
     {
-        if (_size == 0)
+        if (_size == 0) {
             throw new Alert("Taking first item from an empty deque");
+        }
         return _items[ _head ];
     }
 
@@ -145,7 +146,7 @@ public class Deque<T> extends AbstractCollection<T> implements Collection<T>
 
     public Iterator<T> iterator()
     {
-    	final Deque<T> deque = this;
+    	final DequeList<T> deque = this;
 
         return new Iterator<T>() {
         	

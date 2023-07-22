@@ -139,3 +139,6 @@ dmypy.json
 /scrapbook/
 /attic/
 /tmp/
+/java/out/
+/java/.idea/
+/java/Nutmeg.iml
