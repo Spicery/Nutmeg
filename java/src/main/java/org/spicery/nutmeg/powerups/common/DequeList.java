@@ -46,7 +46,9 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
         _size = 0;
     }
 
-    public int size() { return _size; }
+    public int size() {
+        return _size;
+    }
 
     public T get(int subscript) {
         checkSubscript(subscript);
@@ -58,16 +60,14 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
         _items[ normalise(subscript) ] = value;
     }
 
-    public T first()
-    {
+    public T first() {
         if (_size == 0) {
             throw new Alert("Taking first item from an empty deque");
         }
         return _items[ _head ];
     }
 
-    public T last()
-    {
+    public T last() {
         if (_size == 0) {
             throw new Alert("Taking last item from an empty deque");
         }
@@ -85,8 +85,7 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
         _size += 1;
     }
 
-    public void addLast(T item)
-    {
+    public void addLast(T item) {
         resizeIfNeeded();
 
         // Add item.
@@ -97,8 +96,7 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
         _size += 1;
     }
 
-    public void clear()
-    {
+    public void clear() {
         Arrays.fill(_items, null);
         _head = 0;
         _tail = 0;
@@ -106,19 +104,17 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
     }
 
     @Override
-    public boolean contains(Object item)
-    {
+    public boolean contains(Object item) {
     	return this.findIndexOf(item) != -1;
     }
 
-    public T removeFirst()
-    {
+    public T removeFirst() {
         //  GUARD
         if (_size == 0) {
             throw new Alert("Trying to remove an element from an empty deque");
         }
         
-        T result = _items[ _head ];
+        final T result = _items[ _head ];
         _items[ _head ] = null;
 
         // update head position
@@ -128,25 +124,22 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
         return result;
     }
 
-    public T removeLast()
-    {
-        if (_size == 0)
-        {
+    public T removeLast() {
+        if (_size == 0) {
             throw new Alert("Trying to remove an element from an empty deque");
         }
 
         // update tail position
         _tail = decrIndex(_tail);
 
-        T result = _items[ _tail ];
+        final T result = _items[ _tail ];
         _items[ _tail ] = null;
         _size -= 1;
 
         return result;
     }
 
-    public Iterator<T> iterator()
-    {
+    public Iterator<T> iterator() {
     	final DequeList<T> deque = this;
 
         return new Iterator<>() {
@@ -174,20 +167,16 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
     }
 
     @Override
-    public boolean add(T item)
-    {
+    public boolean add(T item) {
         this.addLast(item);
         return true;
     }
 
     @Override
-    public boolean remove(Object item)
-    {
+    public boolean remove(Object item) {
         int index = _head;
-        for (int i = 0; i < _size; i++)
-        {
-            if (_items[ index ].equals(item))
-            {
+        for (int i = 0; i < _size; i++) {
+            if (_items[ index ].equals(item)) {
                 this.removeAt(index);
                 return true;
             }
@@ -197,16 +186,13 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
         return false;
     }
 
-    public int indexOf(T item)
-    {
+    public int indexOf(T item) {
         return this.findIndexOf(item);
     }
     
-    private int findIndexOf(Object item)
-    {
+    private int findIndexOf(Object item) {
         int index = _head;
-        for (int i = 0; i < _size; i++)
-        {
+        for (int i = 0; i < _size; i++) {
             if (_items[ index ].equals(item))
                 return i;
 
@@ -215,24 +201,17 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
         return -1;
     }
 
-    public void insert(int subscript, T item)
-    {
-        if (subscript == 0)
-        {
+    public void insert(int subscript, T item) {
+        if (subscript == 0) {
             addFirst(item);
-        }
-        else if (subscript == _size)
-        {
+        } else if (subscript == _size) {
             addLast(item);
-        }
-        else
-        {
+        } else {
             checkSubscript(subscript);
             resizeIfNeeded();
 
             int prev = normalise(_size);
-            for (int i = _size - 1; i >= subscript; i--)
-            {
+            for (int i = _size - 1; i >= subscript; i--) {
                 int current = normalise(i);
                 _items[ prev ] = _items[ current ];
                 prev = current;
@@ -247,20 +226,14 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
     {
         checkSubscript(subscript);
 
-        if (subscript == 0)
-        {
+        if (subscript == 0) {
             removeFirst();
-        }
-        else if (subscript == _size) 
-        { 
+        } else if (subscript == _size) {
             removeLast(); 
-        }
-        else
-        {
+        } else {
             int prev = normalise(subscript);
-            for (int j = subscript + 1; j < _size; j++)
-            {
-                int current = normalise(j);
+            for (int j = subscript + 1; j < _size; j++) {
+                final int current = normalise(j);
                 _items[ prev ] = _items[ current ];
                 prev = current;
             }
@@ -268,29 +241,21 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
         }
     }
 
-    private void checkSubscript(int subscript)
-    {
-        if (subscript < 0 || subscript >= _size)
-        {
+    private void checkSubscript(int subscript) {
+        if (subscript < 0 || subscript >= _size) {
             throw new Alert("Index out of range").culprit( "Index", subscript ).culprit( "Size", _size );
         }
     }
 
-    private int normalise(int subscript)
-    {
+    private int normalise(int subscript) {
         int index = _head + subscript;
-        if (index < 0)
-        {
-            while (true)
-            {
+        if (index < 0) {
+            while (true) {
                 index += _items.length;
                 if (index >= 0) break;
             }
-        }
-        else if (index >= _items.length)
-        {
-            while (true)
-            {
+        } else if (index >= _items.length) {
+            while (true) {
                 index -= _items.length;
                 if (index < _items.length) break;
             }
@@ -298,8 +263,7 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
         return index;
     }
 
-    private int decrIndex(int index)
-    {
+    private int decrIndex(int index) {
         index -= 1;
         if (index < 0) {
             index = _items.length - 1;
@@ -307,8 +271,7 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
         return index;
     }
 
-    private int incrIndex(int index)
-    {
+    private int incrIndex(int index) {
         index += 1;
         if (index >= _items.length) {
             index = 0;
@@ -316,31 +279,25 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
         return index;
     }
 
-    private void resizeIfNeeded()
-    {
-        if (_size >= _items.length)
-            resize(1);
+    private void resizeIfNeeded() {
+        if (_size >= _items.length) {
+            resize( 1 );
+        }
     }
 
-    private void resize(int n)
-    {
+    private void resize(int n) {
         //  Improves the storage utilisation vs doubling.
         setCapacity(16 + (Math.max(_size + n, _items.length) * 3) / 2);
     }
 
-    private void setCapacity(int capacity)
-    {
+    private void setCapacity(int capacity) {
         @SuppressWarnings("unchecked")
-		T[] newItems = (T[])new Object[ capacity ];
+		final T[] newItems = (T[])new Object[ capacity ];
 
-        if (_size > 0)
-        {
-            if (_head < _tail)
-            {
+        if (_size > 0) {
+            if (_head < _tail) {
             	System.arraycopy( _items, _head, newItems, 0, _size );
-            }
-            else
-            {
+            } else {
             	System.arraycopy( _items, _head, newItems, 0, _items.length - _head );
             	System.arraycopy( _items, 0, newItems, _items.length - _head, _tail );
             }
