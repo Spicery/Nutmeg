@@ -68,13 +68,13 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
 
     public T last()
     {
-        if (_size == 0)
-        	throw new Alert("Taking last item from an empty deque");
+        if (_size == 0) {
+            throw new Alert("Taking last item from an empty deque");
+        }
         return _tail > 0 ? _items[ _tail - 1 ] : _items[ _items.length - 1 ];
     }
 
-    public void addFirst(T item)
-    {
+    public void addFirst(T item) {
         resizeIfNeeded();
 
         // Update head position.
@@ -114,8 +114,9 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
     public T removeFirst()
     {
         //  GUARD
-        if (_size == 0)
+        if (_size == 0) {
             throw new Alert("Trying to remove an element from an empty deque");
+        }
         
         T result = _items[ _head ];
         _items[ _head ] = null;
@@ -148,7 +149,7 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
     {
     	final DequeList<T> deque = this;
 
-        return new Iterator<T>() {
+        return new Iterator<>() {
         	
         	int _index = deque._head;
      
@@ -166,11 +167,7 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
 			
 			@Override
 			public void remove() {
-				int count = _index - deque._head;
-				if ( count < 0 ) {
-					count += deque._items.length;
-				}
-				deque.removeAt( count );
+                deque.removeAt(_index = decrIndex(_index));
 			}
         	
         };
@@ -321,13 +318,8 @@ public class DequeList<T> extends AbstractCollection<T> implements Collection<T>
 
     private void resizeIfNeeded()
     {
-    	resizeIfNeeded(1);
-    }
-
-    private void resizeIfNeeded(int n)
-    {
-        if (_size + n > _items.length)
-            resize(n);
+        if (_size >= _items.length)
+            resize(1);
     }
 
     private void resize(int n)
