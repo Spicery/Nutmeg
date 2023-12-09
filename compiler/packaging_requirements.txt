@@ -1,4 +1,4 @@
 altgraph==0.17
 macholib==1.14
-pyinstaller==4.3
+pyinstaller==5.13.1
 pyinstaller-hooks-contrib==2020.7
